@@ -8,6 +8,8 @@ build/
 bin/*
 # Ignore documentation build directory
 doc/build
+# Ignore tests bin directory
+tests/bin*
 
 ### c++ and system-wide ignores ###
 
