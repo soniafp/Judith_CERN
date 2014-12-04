@@ -8,6 +8,8 @@ build/
 bin/*
 # Ignore documentation build directory
 doc/build
+# Ignore the built PDF
+ignore doc/*.pdf
 # Ignore tests bin directory
 tests/bin*
 
