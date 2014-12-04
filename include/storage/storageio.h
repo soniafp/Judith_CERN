@@ -26,7 +26,30 @@ class Plane;
 class Track;
 class Event;
 
+/**
+  * Interface for a `TFile` used for either input or output. Caches the event-
+  * by-event objects generated on each read/write; i.e. hits, clusters, tracks
+  * and the event object, but not planes.
+  *
+  * Local memory is filled either by an `Event` object, and then read into the
+  * output `TFile`, or is filled by a `TFile` and then used to populate an
+  * `Event` object. Given the amount of memory allocated to an `Event` object
+  * (including all hits, clusters, tracks), all such objects are cached.
+  *
+  * Includes the ability to mask parts of the file (i.e. do not read/write
+  * some variables, or entire sets of variables). Also provids the ability to
+  * apply a noise mask either by flagging hits in noisy pixels as masked, or
+  * by not reading/writing them entirely. Note that a passive (flagging) mask
+  * will not store its outcome into the file.
+  *
+  * @author Garrin McGoldrick (garrin.mcgoldrick@cern.ch)
+  */
 class StorageIO {
+private:
+  // Disable copy and assignment operators
+  StorageIO(const StorageIO&);
+  StorageIO& operator=(const StorageIO&);
+
 public:
   enum TreeFlags {
     NONE = 0,
@@ -136,10 +159,6 @@ protected:
   Double_t trackChi2[MAX_TRACKS];
 
   void clearVariables();
-
-  // Disable copy and assignment operators
-  StorageIO(const StorageIO&);
-  StorageIO& operator=(const StorageIO&);
 
   // Default argument for plane mask vector
   static const std::vector<bool> s_dummyMask;
