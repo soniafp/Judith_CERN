@@ -86,6 +86,10 @@ void Event::print() {
 }
 
 Hit& Event::newHit(size_t nplane) {
+  // Make sure the hit's plane is in the range of planes
+  if (nplane >= getNumPlanes())
+    throw std::out_of_range(
+        "Event::newHit: requested plane out of range");
   Hit* hit = 0;
   // If the event is managed by storage, use its cache for the hit
   if (m_storage) {
@@ -104,6 +108,9 @@ Hit& Event::newHit(size_t nplane) {
 }
 
 Cluster& Event::newCluster(size_t nplane) {
+  if (nplane >= getNumPlanes())
+    throw std::out_of_range(
+        "Event::newCluster: requested plane out of range");
   Cluster* cluster = 0;
   if (m_storage) {
     cluster = &m_storage->newCluster();
