@@ -51,7 +51,9 @@ StorageO::StorageO(
       hits->Branch("PosZ", hitPosZ, "HitPosZ[NHits]/D");
       hits->Branch("Value", hitValue, "HitValue[NHits]/D");
       hits->Branch("Timing", hitTiming, "HitTiming[NHits]/D");
-      hits->Branch("InCluster", hitInCluster, "HitInCluster[NHits]/I");
+      // Only register a "in cluster" value if clusters are present
+      if (!(treeMask & CLUSTERS))
+        hits->Branch("InCluster", hitInCluster, "HitInCluster[NHits]/I");
     }
 
     if (!(treeMask & CLUSTERS)) {
@@ -70,7 +72,8 @@ StorageO::StorageO(
       clusters->Branch("PosErrZ", clusterPosErrZ, "ClusterPosErrZ[NClusters]/D");
       clusters->Branch("Value", clusterValue, "ClusterValue[NClusters]/D");
       clusters->Branch("Timing", clusterTiming, "ClusterTiming[NClusters]/D");
-      clusters->Branch("InTrack", clusterInTrack, "ClusterInTrack[NClusters]/I");
+      if (!(treeMask & TRACKS))
+        clusters->Branch("InTrack", clusterInTrack, "ClusterInTrack[NClusters]/I");
     }
   }  // Loop over planes
 
