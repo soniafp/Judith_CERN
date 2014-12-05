@@ -13,6 +13,9 @@
 #include "storage/cluster.h"
 #include "storage/hit.h"
 
+#define NPLANES 1
+#define NEVENTS 2
+
 bool approxEqual(double v1, double v2, double tol=1E-10) {
   return std::fabs(v1-v2) < tol;
 }
@@ -181,128 +184,246 @@ int test_storageio() {
   return 0;
 }
 
-int test_storageioReadWrite() {
-  const size_t nplanes = 1;
-  const Int_t nevents = 2;
-  {  // Scope so that the output is closed
-    Storage::StorageO store("tmp.root", nplanes);
+int test_storageioWrite() {
+  Storage::StorageO store("tmp.root", NPLANES);
 
-    // Make some number of events
-    for (size_t n = 0; n < nevents; n++) {
-      Storage::Event& event = store.newEvent();
+  // Make some number of events
+  for (size_t n = 0; n < NEVENTS; n++) {
+    Storage::Event& event = store.newEvent();
 
-      // Alternate the plane populated at each event
-      Storage::Hit& hit = event.newHit(n%nplanes);
-      // Scale the values by the event
-      hit.setPix(1*n+1, 2*n+1);
-      hit.setPos(.1*n+1, .2*n+1, .3*n+1);
-      hit.setTiming(.1*n+1);
-      hit.setValue(.2*n+1);
-      hit.setMasked(true);
+    event.setTimeStamp(n);
+    event.setFrameNumber(n+1);
+    event.setTriggerOffset(n+2);
+    event.setTriggerInfo(n+3);
 
-      Storage::Cluster& cluster = event.newCluster(n%nplanes);
-      cluster.setPix(.1*n+1, .2*n+1);
-      cluster.setPixErr(.1*n+1, .2*n+1);
-      cluster.setPos(.1*n+1, .2*n+1, .3*n+1);
-      cluster.setPosErr(.1*n+1, .2*n+1, .3*n+1);
-      cluster.setTiming(.1*n+1);
-      cluster.setValue(.2*n+1);
+    // Alternate the plane populated at each event
+    Storage::Hit& hit = event.newHit(n%NPLANES);
+    // Scale the values by the event
+    hit.setPix(1*n+1, 2*n+1);
+    hit.setPos(.1*n+1, .2*n+1, .3*n+1);
+    hit.setTiming(.1*n+1);
+    hit.setValue(.2*n+1);
+    hit.setMasked(true);
 
-      Storage::Track& track = event.newTrack();
-      track.setOrigin(.1*n+1, .2*n+1);
-      track.setOriginErr(.1*n+1, .2*n+1);
-      track.setSlope(.1*n+1, .2*n+1);
-      track.setSlopeErr(.1*n+1, .2*n+1);
-      track.setCovariance(.1*n+1, .2*n+1);
-      track.setChi2(.1*n+1);
+    Storage::Cluster& cluster = event.newCluster(n%NPLANES);
+    cluster.setPix(.1*n+1, .2*n+1);
+    cluster.setPixErr(.1*n+1, .2*n+1);
+    cluster.setPos(.1*n+1, .2*n+1, .3*n+1);
+    cluster.setPosErr(.1*n+1, .2*n+1, .3*n+1);
+    cluster.setTiming(.1*n+1);
+    cluster.setValue(.2*n+1);
 
-      cluster.addHit(hit);
-      track.addCluster(cluster);
+    Storage::Track& track = event.newTrack();
+    track.setOrigin(.1*n+1, .2*n+1);
+    track.setOriginErr(.1*n+1, .2*n+1);
+    track.setSlope(.1*n+1, .2*n+1);
+    track.setSlopeErr(.1*n+1, .2*n+1);
+    track.setCovariance(.1*n+1, .2*n+1);
+    track.setChi2(.1*n+1);
 
-      store.writeEvent(event);
-    }
-  }  // output scope
+    cluster.addHit(hit);
+    track.addCluster(cluster);
 
-  {  // Scope the read-back separately
-    Storage::StorageI store("tmp.root");
+    store.writeEvent(event);
+  }
 
-    if (nevents != store.getNumEvents()) {
-      std::cerr << "Storage::StorageI: incorrect number of events" << std::endl;
+  return 0;
+}
+
+int test_storageioRead() {
+  Storage::StorageI store("tmp.root");
+
+  if (NEVENTS != store.getNumEvents()) {
+    std::cerr << "Storage::StorageI: incorrect number of events" << std::endl;
+    return -1;
+  }
+
+  if (NPLANES != store.getNumPlanes()) {
+    std::cerr << "Storage::StorageI: incorrect number of planes" << std::endl;
+    return -1;
+  }
+
+  // Read back the events in the file
+  for (Int_t n = 0; n < store.getNumEvents(); n++) {
+    Storage::Event& event = store.readEvent(n);
+
+    if (event.getTimeStamp() != (unsigned int)n ||
+        event.getFrameNumber() != (unsigned int)n+1 ||
+        event.getTriggerOffset() != n+2 ||
+        event.getTriggerInfo() != n+3) {
+      std::cerr << "StorageI::StorageI: event read back incorrect" << std::endl;
       return -1;
     }
 
-    if (nplanes != store.getNumPlanes()) {
-      std::cerr << "Storage::StorageI: incorrect number of planes" << std::endl;
+    if (event.getNumTracks() != 1) {
+      std::cerr << "Storage::StorageI: incorrect number of tracks" << std::endl;
       return -1;
     }
+
+    Storage::Track& track = event.getTrack(0);
+    if (!approxEqual(track.getOriginX(), .1*n+1) ||
+        !approxEqual(track.getOriginY(), .2*n+1) ||
+        !approxEqual(track.getOriginErrX(), .1*n+1) ||
+        !approxEqual(track.getOriginErrY(), .2*n+1) ||
+        !approxEqual(track.getSlopeX(), .1*n+1) ||
+        !approxEqual(track.getSlopeY(), .2*n+1) ||
+        !approxEqual(track.getSlopeErrX(), .1*n+1) ||
+        !approxEqual(track.getSlopeErrY(), .2*n+1) ||
+        !approxEqual(track.getCovarianceX(), .1*n+1) ||
+        !approxEqual(track.getCovarianceY(), .2*n+1) ||
+        !approxEqual(track.getChi2(), .1*n+1)) {
+      std::cerr << "Storage::StorageI: track read back incorrect" << std::endl;
+      return -1;
+    }
+
+    if (event.getNumClusters() != 1) {
+      std::cerr << "Storage::StorageI: incorrect number of clusters" << std::endl;
+      return -1;
+    }
+
+    Storage::Cluster& cluster = event.getCluster(0);
+    if (!approxEqual(cluster.getPixX(), .1*n+1) ||
+        !approxEqual(cluster.getPixY(), .2*n+1) ||
+        !approxEqual(cluster.getPixErrX(), .1*n+1) ||
+        !approxEqual(cluster.getPixErrY(), .2*n+1) ||
+        !approxEqual(cluster.getPosX(), .1*n+1) ||
+        !approxEqual(cluster.getPosY(), .2*n+1) ||
+        !approxEqual(cluster.getPosZ(), .3*n+1) ||
+        !approxEqual(cluster.getPosErrX(), .1*n+1) ||
+        !approxEqual(cluster.getPosErrY(), .2*n+1) ||
+        !approxEqual(cluster.getPosErrZ(), .3*n+1) ||
+        !approxEqual(cluster.getTiming(), .1*n+1) ||
+        !approxEqual(cluster.getValue(), .2*n+1)) {
+      std::cerr << "Storage::StorageI: cluster read back incorrect" << std::endl;
+      return -1;
+    }
+
+    if (event.getNumClusters() != 1) {
+      std::cerr << "Storage::StorageI: incorrect number of clusters" << std::endl;
+      return -1;
+    }
+
+    Storage::Hit& hit = event.getHit(0);
+    if (!approxEqual(hit.getPixX(), 1*n+1) ||
+        !approxEqual(hit.getPixY(), 2*n+1) ||
+        !approxEqual(hit.getPosX(), .1*n+1) ||
+        !approxEqual(hit.getPosY(), .2*n+1) ||
+        !approxEqual(hit.getPosZ(), .3*n+1) ||
+        !approxEqual(hit.getTiming(), .1*n+1) ||
+        !approxEqual(hit.getValue(), .2*n+1)) {
+      std::cerr << "Storage::StorageI: hit read back incorrect" << std::endl;
+      return -1;
+    }
+  }
+
+  return 0;
+}
+
+int test_storageioReadMasking() {
+  {  // Hit masking
+    Storage::StorageI store(
+        "tmp.root",
+        Storage::StorageIO::HITS);
+
+    // Read back the events in the file
+    for (Int_t n = 0; n < store.getNumEvents(); n++) {
+      Storage::Event& event = store.readEvent(n);
+      if (event.getNumHits() > 0) {
+        std::cerr << "Storage::StorageI: hit tree mask failed" << std::endl;
+        return -1;
+      }
+    }
+  }
+
+  {  // Cluster masking
+    Storage::StorageI store(
+        "tmp.root",
+        Storage::StorageIO::CLUSTERS);
 
     for (Int_t n = 0; n < store.getNumEvents(); n++) {
       Storage::Event& event = store.readEvent(n);
-
-      if (event.getNumTracks() != 1) {
-        std::cerr << "Storage::StorageI: incorrect number of tracks" << std::endl;
-        return -1;
-      }
-
-      Storage::Track& track = event.getTrack(0);
-      if (!approxEqual(track.getOriginX(), .1*n+1) ||
-          !approxEqual(track.getOriginY(), .2*n+1) ||
-          !approxEqual(track.getOriginErrX(), .1*n+1) ||
-          !approxEqual(track.getOriginErrY(), .2*n+1) ||
-          !approxEqual(track.getSlopeX(), .1*n+1) ||
-          !approxEqual(track.getSlopeY(), .2*n+1) ||
-          !approxEqual(track.getSlopeErrX(), .1*n+1) ||
-          !approxEqual(track.getSlopeErrY(), .2*n+1) ||
-          !approxEqual(track.getCovarianceX(), .1*n+1) ||
-          !approxEqual(track.getCovarianceY(), .2*n+1) ||
-          !approxEqual(track.getChi2(), .1*n+1)) {
-        std::cerr << "Storage::StorageI: track read back incorrect" << std::endl;
-        return -1;
-      }
-
-      if (event.getNumClusters() != 1) {
-        std::cerr << "Storage::StorageI: incorrect number of clusters" << std::endl;
-        return -1;
-      }
-
-      Storage::Cluster& cluster = event.getCluster(0);
-      if (!approxEqual(cluster.getPixX(), .1*n+1) ||
-          !approxEqual(cluster.getPixY(), .2*n+1) ||
-          !approxEqual(cluster.getPixErrX(), .1*n+1) ||
-          !approxEqual(cluster.getPixErrY(), .2*n+1) ||
-          !approxEqual(cluster.getPosX(), .1*n+1) ||
-          !approxEqual(cluster.getPosY(), .2*n+1) ||
-          !approxEqual(cluster.getPosZ(), .3*n+1) ||
-          !approxEqual(cluster.getPosErrX(), .1*n+1) ||
-          !approxEqual(cluster.getPosErrY(), .2*n+1) ||
-          !approxEqual(cluster.getPosErrZ(), .3*n+1) ||
-          !approxEqual(cluster.getTiming(), .1*n+1) ||
-          !approxEqual(cluster.getValue(), .2*n+1)) {
-        std::cerr << "Storage::StorageI: cluster read back incorrect" << std::endl;
-        return -1;
-      }
-
-      if (event.getNumClusters() != 1) {
-        std::cerr << "Storage::StorageI: incorrect number of clusters" << std::endl;
-        return -1;
-      }
-
-      Storage::Hit& hit = event.getHit(0);
-      if (!approxEqual(hit.getPixX(), 1*n+1) ||
-          !approxEqual(hit.getPixY(), 2*n+1) ||
-          !approxEqual(hit.getPosX(), .1*n+1) ||
-          !approxEqual(hit.getPosY(), .2*n+1) ||
-          !approxEqual(hit.getPosZ(), .3*n+1) ||
-          !approxEqual(hit.getTiming(), .1*n+1) ||
-          !approxEqual(hit.getValue(), .2*n+1)) {
-        std::cerr << "Storage::StorageI: hit read back incorrect" << std::endl;
+      if (event.getNumClusters() > 0) {
+        std::cerr << "Storage::StorageI: cluster tree mask failed" << std::endl;
         return -1;
       }
     }
+  }
 
-  }  // input scope
+  {  // Track masking
+    Storage::StorageI store(
+        "tmp.root",
+        Storage::StorageIO::TRACKS);
 
-  //gSystem->Exec("rm -f tmp.root");
+    for (Int_t n = 0; n < store.getNumEvents(); n++) {
+      Storage::Event& event = store.readEvent(n);
+      if (event.getNumTracks() > 0) {
+        std::cerr << "Storage::StorageI: track tree mask failed" << std::endl;
+        return -1;
+      }
+    }
+  }
+
+  {  // Event info masking
+    Storage::StorageI store(
+        "tmp.root",
+        Storage::StorageIO::EVENTINFO);
+
+    for (Int_t n = 0; n < store.getNumEvents(); n++) {
+      Storage::Event& event = store.readEvent(n);
+      if (event.getTimeStamp() != 0 ||
+          event.getFrameNumber() != 0 ||
+          event.getTriggerOffset() != 0 ||
+          event.getTriggerInfo() != 0) {
+        std::cerr << "Storage::StorageI: event info tree mask failed" << std::endl;
+        return -1;
+      }
+    }
+  }
+
+  {  // Position, value and timing masking
+    Storage::StorageI store(
+        "tmp.root",
+        Storage::StorageIO::POS |
+        Storage::StorageIO::VALUE |
+        Storage::StorageIO::TIMING);
+
+    for (Int_t n = 0; n < store.getNumEvents(); n++) {
+      Storage::Event& event = store.readEvent(n);
+      Storage::Hit& hit = event.getHit(0);
+      Storage::Cluster& cluster = event.getCluster(0);
+      if (hit.getPosX() != 0 ||
+          hit.getPosY() != 0 ||
+          hit.getPosZ() != 0 ||
+          hit.getValue() != 0 ||
+          hit.getTiming() != 0 ||
+          cluster.getPosX() != 0 ||
+          cluster.getPosY() != 0 ||
+          cluster.getPosZ() != 0 ||
+          cluster.getValue() != 0 ||
+          cluster.getTiming() != 0) {
+        std::cerr << "Storage::StorageI: pos, value, timing  mask failed" << std::endl;
+        return -1;
+      }
+    }
+  }
+
+  {  // Fit masking
+    Storage::StorageI store(
+        "tmp.root",
+        Storage::StorageIO::TRACKFIT | Storage::StorageIO::CLUSTERFIT);
+
+    //for (Int_t n = 0; n < store.getNumEvents(); n++) {
+    //  Storage::Event& event = store.readEvent(n);
+    //  Storage::Cluster& cluster = event.getCluster(0);
+    //  Storage::Track& track = event.getTrack(0);
+    //  if (cluster.getPixX() != 0 ||  // only checking two values
+    //      track.getSlopeX() != 0) {
+    //    std::cerr << "Storage::StorageI: fit mask failed" << std::endl;
+    //    return -1;
+    //  }
+    //}
+  }
+
   return 0;
 }
 
@@ -311,13 +432,18 @@ int main() {
 
   try {
     if ((retval = test_storageio()) != 0) return retval;
-    if ((retval = test_storageioReadWrite()) != 0) return retval;
+    if ((retval = test_storageioWrite()) != 0) return retval;
+    if ((retval = test_storageioRead()) != 0) return retval;
+    if ((retval = test_storageioReadMasking()) != 0) return retval;
   }
   
   catch (std::exception& e) {
     std::cerr << "ERROR: " << e.what() << std::endl;
     return -1;
   }
+
+  // Remove file on success, otherwise keep it so it can be consulted
+  gSystem->Exec("rm -f tmp.root");
 
   return 0;
 }
