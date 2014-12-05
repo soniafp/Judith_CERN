@@ -90,6 +90,8 @@ StorageI::StorageI(
       clusters->SetBranchAddress("PosErrX", clusterPosErrX);
       clusters->SetBranchAddress("PosErrY", clusterPosErrY);
       clusters->SetBranchAddress("PosErrZ", clusterPosErrZ);
+      clusters->SetBranchAddress("Timing", clusterTiming);
+      clusters->SetBranchAddress("Value", clusterValue);
     }
   }  // Loop over planes
 
@@ -228,6 +230,8 @@ Event& StorageI::readEvent(Long64_t n) {
       cluster.setPixErr(clusterPixErrX[ncluster], clusterPixErrY[ncluster]);
       cluster.setPos(clusterPosX[ncluster], clusterPosY[ncluster], clusterPosZ[ncluster]);
       cluster.setPosErr(clusterPosErrX[ncluster], clusterPosErrY[ncluster], clusterPosErrZ[ncluster]);
+      cluster.setTiming(clusterTiming[ncluster]);
+      cluster.setValue(clusterValue[ncluster]);
 
       // If this cluster is in a track, mark this (and the tracks tree is active)
       if (m_tracksTree && clusterInTrack[ncluster] >= 0) {
