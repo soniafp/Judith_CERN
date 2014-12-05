@@ -153,7 +153,7 @@ Plane& Event::getPlane(size_t n) const {
 Track& Event::getTrack(size_t n) const {
   if (n >= getNumTracks())
     throw std::out_of_range(
-        "Event::getTrack: requested hit out of range");
+        "Event::getTrack: requested track out of range");
   return *m_tracks[n];
 }
 
