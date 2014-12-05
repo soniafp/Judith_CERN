@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cassert>
 #include <vector>
+#include <stdexcept>
 
 #include "storage/hit.h"
 #include "storage/cluster.h"
@@ -29,6 +30,20 @@ void Plane::print() {
   for (std::vector<Hit*>::iterator it = m_hits.begin();
       it != m_hits.end(); ++it)
     (*it)->print();
+}
+
+Hit& Plane::getHit(size_t n) const {
+  if (n >= getNumHits())
+    throw std::out_of_range(
+        "Plane::getHit: requested hit out of range");
+  return *m_hits[n];
+}
+
+Cluster& Plane::getCluster(size_t n) const {
+  if (n >= getNumClusters())
+    throw std::out_of_range(
+        "Plane::getCluster: requated cluster out of range");
+  return *m_clusters[n];
 }
 
 }

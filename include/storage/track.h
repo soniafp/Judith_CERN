@@ -57,10 +57,10 @@ public:
   /** Set all clusters matched to this track */
   void setMatchedClusters(const std::vector<Cluster*>& clusters);
 
+  Cluster& getCluster(size_t n) const;
+  Cluster& getMatchedCluster(size_t n) const;
   inline size_t getNumClusters() const { return m_clusters.size(); }
-  inline Cluster& getCluster(size_t n) const { return *m_clusters[n]; }
   inline size_t getNumMatchedClusters() const { return m_matchedClusters.size(); }
-  inline Cluster& getMatchedCluster(size_t n) const { return *m_matchedClusters[n]; }
   inline double getOriginX() const { return m_originX; }
   inline double getOriginY() const { return m_originY; }
   inline double getOriginErrX() const { return m_originErrX; }

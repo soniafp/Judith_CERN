@@ -36,8 +36,8 @@ public:
   /** Print hit information to standard output */
   void print();
 
-  inline Hit& getHit(size_t n) const { return *m_hits[n]; }
-  inline Cluster& getCluster(size_t n) const { return *m_clusters[n]; }
+  Hit& getHit(size_t n) const;
+  Cluster& getCluster(size_t n) const;
 
   inline size_t getPlaneNum() const { return m_planeNum; }
   inline size_t getNumHits() const { return m_hits.size(); }

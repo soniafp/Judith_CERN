@@ -72,4 +72,12 @@ void Cluster::addHit(Hit& hit) {
   m_hits.push_back(&hit);
 }
 
+Hit& Cluster::getHit(size_t n) const {
+  if (n >= getNumHits())
+    throw std::out_of_range(
+        "Cluster::getHit: requested hit out of range");
+  return *m_hits[n];
 }
+
+}
+

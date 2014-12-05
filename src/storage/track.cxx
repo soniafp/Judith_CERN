@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cassert>
+#include <stdexcept>
 
 #include "storage/cluster.h"
 #include "storage/track.h"
@@ -55,6 +56,20 @@ void Track::addMatchedCluster(Cluster& cluster) {
 
 void Track::setMatchedClusters(const std::vector<Cluster*>& clusters) {
   m_matchedClusters = clusters;
+}
+
+Cluster& Track::getCluster(size_t n) const {
+  if (n >= getNumClusters())
+    throw std::out_of_range(
+        "Track::getCluster: requested cluster out of range");
+  return *m_clusters[n];
+}
+
+Cluster& Track::getMatchedCluster(size_t n) const { 
+  if (n >= getNumMatchedClusters())
+    throw std::out_of_range(
+        "Track::getMatchedCluster: requested matched cluster out of range");
+  return *m_matchedClusters[n];
 }
 
 }

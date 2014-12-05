@@ -86,10 +86,6 @@ void Event::print() {
 }
 
 Hit& Event::newHit(size_t nplane) {
-  // Make sure the hit's plane is in the range of planes
-  if (nplane >= getNumPlanes())
-    throw std::out_of_range(
-        "Event::newHit: requested plane out of range");
   Hit* hit = 0;
   // If the event is managed by storage, use its cache for the hit
   if (m_storage) {
@@ -101,16 +97,13 @@ Hit& Event::newHit(size_t nplane) {
   // This event now owns the hit's memory, unless it is cleared
   m_hits.push_back(hit);
   // Do the two way plane association
-  m_planes.at(nplane)->m_hits.push_back(hit);
-  hit->m_plane = m_planes.at(nplane);
+  m_planes[nplane]->m_hits.push_back(hit);
+  hit->m_plane = m_planes[nplane];
   // Return a reference to make ownership clear
   return *hit;
 }
 
 Cluster& Event::newCluster(size_t nplane) {
-  if (nplane >= getNumPlanes())
-    throw std::out_of_range(
-        "Event::newCluster: requested plane out of range");
   Cluster* cluster = 0;
   if (m_storage) {
     cluster = &m_storage->newCluster();
@@ -119,8 +112,8 @@ Cluster& Event::newCluster(size_t nplane) {
   }
   cluster->m_index = getNumClusters();
   m_clusters.push_back(cluster);
-  m_planes.at(nplane)->m_clusters.push_back(cluster);
-  cluster->m_plane = m_planes.at(nplane);
+  m_planes[nplane]->m_clusters.push_back(cluster);
+  cluster->m_plane = m_planes[nplane];
   return *cluster;
 }
 
@@ -134,6 +127,34 @@ Track& Event::newTrack() {
   track->m_index = getNumTracks();
   m_tracks.push_back(track);
   return *track;
+}
+
+Hit& Event::getHit(size_t n) const {
+  if (n >= getNumHits())
+    throw std::out_of_range(
+        "Event::getHit: requested hit out of range");
+  return *m_hits[n];
+}
+
+Cluster& Event::getCluster(size_t n) const {
+  if (n >= getNumClusters())
+    throw std::out_of_range(
+        "Event::getCluster: requested cluster out of range");
+  return *m_clusters[n];
+}
+
+Plane& Event::getPlane(size_t n) const {
+  if (n >= getNumPlanes())
+    throw std::out_of_range(
+        "Event::getPlane: requested plane out of range");
+  return *m_planes[n];
+}
+
+Track& Event::getTrack(size_t n) const {
+  if (n >= getNumTracks())
+    throw std::out_of_range(
+        "Event::getTrack: requested hit out of range");
+  return *m_tracks[n];
 }
 
 }

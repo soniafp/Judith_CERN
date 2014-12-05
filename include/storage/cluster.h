@@ -66,8 +66,8 @@ public:
   /** Compute the properties of the cluster from the provided hits */
   void compute();
 
+  Hit& getHit(size_t n) const;
   inline size_t getNumHits() const { return m_hits.size(); }
-  inline Hit& getHit(size_t n) const { return *m_hits[n]; }
   inline double getMatchDistance() const { return m_matchDistance; }
   inline double getPixX() const { return m_pixX; }
   inline double getPixY() const { return m_pixY; }

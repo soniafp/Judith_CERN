@@ -77,10 +77,10 @@ public:
   /** Make a new track owned by this event */
   Track& newTrack();
 
-  Hit& getHit(size_t n) const { return *m_hits[n]; }
-  Cluster& getCluster(size_t n) const { return *m_clusters[n]; }
-  Plane& getPlane(size_t n) const { return *m_planes[n]; }
-  Track& getTrack(size_t n) const { return *m_tracks[n]; }
+  Hit& getHit(size_t n) const;
+  Cluster& getCluster(size_t n) const;
+  Plane& getPlane(size_t n) const;
+  Track& getTrack(size_t n) const;
 
   inline void setInvalid(bool value) { m_invalid = value; }
   inline void setTimeStamp(ULong64_t timeStamp) { m_timeStamp = timeStamp; }
