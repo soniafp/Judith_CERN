@@ -64,8 +64,8 @@ StorageIO::~StorageIO() {
   }
 
   // Clear trees
-  for (std::vector<TTree*>::iterator it = m_clustersTrees.begin();
-      it != m_clustersTrees.end(); ++it)
+  for (std::vector<TTree*>::iterator it = m_hitsTrees.begin();
+      it != m_hitsTrees.end(); ++it)
     if (*it) delete (*it);
   for (std::vector<TTree*>::iterator it = m_clustersTrees.begin();
       it != m_clustersTrees.end(); ++it)
@@ -75,8 +75,6 @@ StorageIO::~StorageIO() {
 
   // Write, close and delete the file as approrpriate
   if (m_file) {
-    if (m_fileMode == OUTPUT)
-      m_file->Write();
     m_file->Close();
     delete m_file;
   }
