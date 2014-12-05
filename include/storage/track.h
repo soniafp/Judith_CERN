@@ -48,7 +48,7 @@ public:
   Track();
   ~Track() {}
 
-  /** Add a cluster to the track. */
+  /** Add a cluster to the track. Does bi-directional linking. */
   void addCluster(Cluster& cluster);
   /** Set all cluster in the track. */
   void setClusters(const std::vector<Cluster*>& clusters);

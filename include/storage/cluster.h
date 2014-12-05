@@ -61,7 +61,7 @@ public:
   /** Print hit information to standard output */
   void print();
 
-  /** Add a hit to this cluster. Updates the value and timing members. */
+  /** Add a hit to this cluster. Does bi-directional linking. */
   void addHit(Hit& hit);
   /** Compute the properties of the cluster from the provided hits */
   void compute();
