@@ -54,6 +54,8 @@ StorageI::StorageI(
     if (planeMask && planeMask->at(planeCount-1))
       continue;
 
+    m_numPlanes += 1;
+
     // Load the hits tree if it is found and not masked
     TTree* hits = 0;
     m_file->GetObject((ss.str()+"/Hits").c_str(), hits);
@@ -91,14 +93,17 @@ StorageI::StorageI(
     }
   }  // Loop over planes
 
-  if (!m_hitsTrees.empty() && !m_clustersTrees.empty() &&
-      m_hitsTrees.size() != m_clustersTrees.size())
+  if (m_numPlanes == 0)
     throw std::runtime_error(
-        "StorageI::StorageI: different number of planes in hits and cluters");
+        "StorageI::StorageI: zero planes read from file");
 
-  // Number of planes is whichever has planes, or 0 
-  m_numPlanes = (m_hitsTrees.empty()) ?
-      m_clustersTrees.size() : m_hitsTrees.size();
+  if (!m_hitsTrees.empty() && m_hitsTrees.size() != m_numPlanes)
+    throw std::runtime_error(
+        "StorageI::StorageI: hits trees number does not match planes");
+
+  if (!m_clustersTrees.empty() && m_clustersTrees.size() != m_numPlanes)
+    throw std::runtime_error(
+        "StorageI::StorageI: clusters trees number does not match planes");
 
   m_file->GetObject("Event", m_eventInfoTree);
   if (!(treeMask & EVENTINFO) && m_eventInfoTree) {
