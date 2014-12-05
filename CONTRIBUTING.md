@@ -6,16 +6,16 @@ Editing the code
 ----------------
 
 1. Get a [GitHub account](https://github.com/signup/free)
-2. [Fork this repository](https://github.com/gmcgoldr/RooFBU/fork)
+2. [Fork this repository](https://github.com/gmcgoldr/judith/fork)
 3. Clone your fork:  
-   `git clone htts://github.com/yourusername/RooFBU.git`
+   `git clone htts://github.com/yourusername/judith.git`
 4. Make a branch in which you will work:  
    `git checkout -b name_describing_work master`
 5. Modify your branch and make commits as you implement feautres:  
    `git commit -m "Describe what was accomplished"`
 6. Push your branch:  
    `git push -u origin name_describing_work`
-7. [Submit a pull request](https://github.com/gmcgoldr/RooFBU/compare)
+7. [Submit a pull request](https://github.com/gmcgoldr/judith/compare)
 
 Code Style
 ----------
@@ -86,7 +86,7 @@ Examples:
 void NameSpace::SomeFunction() {
    if (errorWillPropage) {
       std::cerr << "ERROR: message about the circumstances" << std::endl;
-      throw std::runtime_exception("Namespace::functionName: message identifies the error");
+      throw std::runtime_error("Namespace::functionName: message identifies the error");
    }
 }
 ```
