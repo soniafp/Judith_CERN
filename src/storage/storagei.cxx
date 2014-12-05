@@ -28,7 +28,7 @@ StorageI::StorageI(
     const std::string& filePath,
     int treeMask,
     const std::vector<bool>* planeMask) :
-    StorageIO(filePath, INPUT, treeMask) {
+    StorageIO(filePath, INPUT, 0, treeMask) {
 
   // Keep track of the number of planes read from the file
   size_t planeCount = 0;
