@@ -56,9 +56,12 @@ StorageI::StorageI(
 
     m_numPlanes += 1;
 
-    // Load the hits tree if it is found and not masked
     TTree* hits = 0;
-    m_file->GetObject((ss.str()+"/Hits").c_str(), hits);
+    // Try to the load the hits tree from this plane, unless the hits tree
+    // is masked
+    if (!(treeMask & HITS))
+      m_file->GetObject((ss.str()+"/Hits").c_str(), hits);
+    // Check that a hits tree was loaded
     if (!(treeMask & HITS) && hits) {
       // Add this tree to the current plane
       m_hitsTrees.push_back(hits);
@@ -75,8 +78,9 @@ StorageI::StorageI(
     }
 
     TTree* clusters = 0;
-    m_file->GetObject((ss.str()+"/Clusters").c_str(), clusters);
-    if (!(treeMask & CLUSTERS) && clusters) {
+    if (!(treeMask & CLUSTERS))
+      m_file->GetObject((ss.str()+"/Clusters").c_str(), clusters);
+    if (clusters) {
       m_clustersTrees.push_back(clusters);
       clusters->SetBranchAddress("NClusters", &numClusters);
       clusters->SetBranchAddress("PixX", clusterPixX);
@@ -107,8 +111,9 @@ StorageI::StorageI(
     throw std::runtime_error(
         "StorageI::StorageI: clusters trees number does not match planes");
 
-  m_file->GetObject("Event", m_eventInfoTree);
-  if (!(treeMask & EVENTINFO) && m_eventInfoTree) {
+  if (!(treeMask & EVENTINFO))
+    m_file->GetObject("Event", m_eventInfoTree);
+  if (m_eventInfoTree) {
     m_eventInfoTree->SetBranchAddress("TimeStamp", &timeStamp);
     m_eventInfoTree->SetBranchAddress("FrameNumber", &frameNumber);
     m_eventInfoTree->SetBranchAddress("TriggerOffset", &triggerOffset);
@@ -116,8 +121,9 @@ StorageI::StorageI(
     m_eventInfoTree->SetBranchAddress("Invalid", &invalid);
   }
 
-  m_file->GetObject("Tracks", m_tracksTree);
-  if (!(treeMask & TRACKS) && m_tracksTree) {
+  if (!(treeMask & TRACKS))
+    m_file->GetObject("Tracks", m_tracksTree);
+  if (m_tracksTree) {
     m_tracksTree->SetBranchAddress("NTracks", &numTracks);
     m_tracksTree->SetBranchAddress("SlopeX", trackSlopeX);
     m_tracksTree->SetBranchAddress("SlopeY", trackSlopeY);
@@ -214,12 +220,12 @@ Event& StorageI::readEvent(Long64_t n) {
 
   for (size_t nplane = 0; nplane < m_numPlanes; nplane++) {
     // Try to read the hits tree for this plane
-    if (m_hitsTrees.at(nplane) && m_hitsTrees.at(nplane)->GetEntry(n) <= 0)
+    if (!m_hitsTrees.empty() && m_hitsTrees[nplane]->GetEntry(n) <= 0)
       throw std::runtime_error(
           "StorageIO::readEvent: error reading hits tree");
     
     // Try to read the clusters tree for this plane
-    if (m_clustersTrees.at(nplane) && m_clustersTrees.at(nplane)->GetEntry(n) <= 0)
+    if (!m_clustersTrees.empty() && m_clustersTrees[nplane]->GetEntry(n) <= 0)
       throw std::runtime_error(
           "StorageIO::readEvent: error reading clusters tree");
 
