@@ -53,10 +53,10 @@ private:
 public:
   enum TreeFlags {
     NONE = 0,
-    HITS,
-    CLUSTERS,
-    TRACKS,
-    EVENTINFO,
+    HITS = 1<<0,
+    CLUSTERS = 1<<1,
+    TRACKS = 1<<2,
+    EVENTINFO = 1<<3
   };
 
   enum FileMode {
