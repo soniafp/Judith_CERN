@@ -29,7 +29,7 @@
 \chapter{Introduction}
 \label{ch:introduction}
 
-Do read this chapter, it will probably save you some time down the road. This (brief) introduction is meant to explain where you can find what you are seeking in this document, and where you can find information you weren't looking for but probably need.
+Do read this chapter, it will probably save you some time down the road. This introduction is meant to explain where you can find what you are seeking in this document, and where you can find information you weren't looking for but probably need.
 
 This document isn't an exhaustive reference, it is instead only a guide describing the organization and general features of \Judith. The exhaustive reference is the source code which is well commented and meant to be very readable (in that way it is self-documenting).
 
@@ -37,15 +37,31 @@ If you aren't an experienced C++ programmer (i.e. you read C++ code, and you wri
 
 The typical user is expected to have some level of familiarity with C++ and Unix, but may not be well versed in either topic. Some basic information about both subjects will be included in this document to put all readers on equal footing.
 
-\subsubsection*{Navigating the source code}
+\section{Uses for Judith}
 
-This document is meant to be used as a sort of map whereby you can look up a topic on which you want more information, and it will indicate where and how it is implemented in the source code.
+\Judith can be useful for any analysis involving a pixelated (or strip) detector in a testbeam-like environment. It is tailored to analysis involving reconstructing minimum ionizing particle (MIP) tracks using a multi-plane reference device, and projecting them into device under test (DUT) sensors, though it is flexible enough to accommodate different work flows.
 
-For the Unix uninitiated, you should know of at least two tools: \Verb`man` and \Verb`grep`. \Verb`man name` will show you the manual entry for the binary called \Verb`name`. \Verb`grep` will allow you to search within a directory for any occurrences of a string of text, allowing for regular expressions. \Verb`man grep` will get you started.
+\Judith can be used to perform a full analysis, leading up to detector efficiency measurements, or as a step in a larger work flow. Here are some example uses for \Judith:
 
-Say you want to find where the method \Verb`getPixX` is implemented. From the program's base directory run: \Verb`grep -rn 'Hit::getPixX(' src/`. Or, better yet, where the error ``plane mask is too small'' is thrown: \Verb`grep -rn 'plane mask is too small' src/`. If any of this seems like a foreign language, you may need to bush up on any or all of: Unix, bash, C++.
+\begin{itemize}
+	\item \textbf{Providing tracks, clusters and hit objects} for an external analysis. In this case \Verb`libjudstorage` can be used access \Judith's memory representation of triggered events (linked hits, clusters and tracks) and to manage the IO from/to \ROOT n-tuples.
+	\item \textbf{Alignment and track reconstruction} for an external analysis. In this case, \Verb`libjudtstorage`, \Verb`libjudmechanics`, \Verb`libjudprocessors`, and \Verb`libjudutils` can be used and configured to process data and produce n-tuples.
+	\item \textbf{Full analysis}. \Judith's binary can be used in conjunction with a series of configuration files to provide a full analysis workflow from an input n-tuple of hits to detector efficiency measurement and other analysis histograms. In this case, the \Verb`analysis` module can be extended by the user to add customized analysis algorithms, if the defaults aren't adequate.
+\end{itemize}
 
-\subsubsection*{Finding a topic}
+Following are limitations of \Judith arising from \Judith's focus on testbeam analysis:
+
+\begin{itemize}
+	\item No tracking in magnetic fields.
+	\item Poor performance for densely occupied sensors. The number of occupied channels on a sensor should be on the order of $1\times10^1$, not $1\times10^2$.
+	\item Poor performance for large MIP multiplicity in the DUT. The DUT should detect on the order of 1 MIP per trigger, not $1\times10^1$.
+\end{itemize}
+
+\section{Finding information}
+
+The Unix uninitiated should know of at least two tools: \Verb`man` and \Verb`grep`. \Verb`man name` will show you the manual entry for the binary called \Verb`name`. \Verb`grep` will search within a directory for all occurrences of a string of text. \Verb`man grep` will get you started.
+
+Say you want to find where the method \Verb`getPixX` is implemented. From the program's base directory run: \Verb`grep -rn 'Hit::getPixX(' src/`. Similarly, if you want to find where the error ``plane mask is too small'' is thrown: \Verb`grep -rn 'plane mask is too small' src/`. If any of this seems like a foreign language, you may need to bush up on any or all of: Unix, bash, C++.
 
 This document and the source code are organized into modules, described in chapter \ref{ch:modules}. The source code is organized in a typical C++ directory structure. Following is an overview of the important parts of the source:
 
@@ -78,15 +94,15 @@ Following is a brief overview of the modules' contents:
 	\item[\Verb`configuration`]: configuration and instantiation of program elements from configuration files.
 \end{description}
 
-\subsubsection*{Program gaols}
+\section{Program gaols}
 
-The following is a vague statement of the goals of \Judith:
+Following is a list of goals driving \Judith's development:
 
 \begin{itemize}
-	\item Transparent: the main goal is for the program to be transparent to users. It is expected that every use case will differ, and some customization will be desired. For this reason, the program should be easily understood and extended by non-expert-programmers (i.e. physicists).
-	\item Fast: this program is expected to be used in testbeam type situations where time is constrained and very valuable. Testbeam users will need to see results quickly so they can react to them in real-time. The time scale for performing tasks should be minutes at most, and preferably seconds.
-	\item Simple: this follows from the two previous point. The program should implement simple algorithms which are efficient, easily understood, and easily extended or modified.
-	\item Portable (except on Windows, because Windows): the program should be deployable in a variety of contexts. E.g. on a user's laptop which can be carried into different laboratories, on a DAQ desktop controlling some testbeam hardware, on a work computer for analysis. The targeted deployment systems are Linux and Mac.
+	\item \textbf{Transparent}: the main goal is for the program to be transparent to users. It is important for the user to be able to understand the algorithms to know: how they apply to their analysis, what are their limitations, how they can be extended. The program should be easily understood and extended by non-expert-programmers (i.e. physicists).
+	\item \textbf{Fast}: this program is expected to be used in testbeam type situations where time is constrained and very valuable. Testbeam users will need to quickly see results so they can react to them in real-time. The time scale for performing tasks should be minutes at most, and preferably seconds.
+	\item \textbf{Simple}: this follows from the two previous points. The program should implement simple algorithms which are efficient, easily understood, and easily extended.
+	\item \textbf{Portable} (except for Windows): the program should be deployable in a variety of contexts. E.g. on a user's laptop which can be carried into different laboratories, on a DAQ desktop controlling some testbeam hardware, on a work computer for analysis. The targeted deployment systems are Linux and Mac.
 \end{itemize}
 
 \chapter{Quick start guide}
@@ -131,17 +147,17 @@ The \Verb`Event` class provides access to its components which describe the even
 
 \subsubsection*{Access and ownership}
 
-There are three general manners in which an object's properties can be accessed:
+There three types of interface to storage object properties. Example properties: \Verb`pixX`, a hit pixel's column; \Verb`chi2`, a track's $\chi^2$; \Verb`Cluster`, the cluster in which a hit belongs...
 
 \begin{enumerate}
-	\item \Verb`getProperty()`: returns either a value, or a reference to an object. If an object is returned, it is clearly not owned by the user, and is guaranteed to exits.
-	\item \Verb`fetchProperty()`: returns a pointer to an object. The returned pointer can be \Verb`NULL` if the property does not exist in the called object. The returned pointer \textbf{is not owned} by the caller, and it is up to the caller to ensure it is not null.
+	\item \Verb`getProperty()`: returns either a value, or a reference to an object. If an object is returned, it is clearly not owned by the caller, and is guaranteed to exits (enforced by the reference).
+	\item \Verb`fetchProperty()`: returns a pointer to an object. The returned pointer can be \Verb`NULL` if the property does not exist in the called object. The returned pointer \textbf{is not owned by the caller}, and it is up to the caller to ensure it is valid before dereferencing it.
 	\item \Verb`getProperty(size_t n)`: returns either a value or a reference to an object, from a list of such values or objects. A corresponding member \Verb`getNumProperties()` will be provided by the called object, and it is up to the caller to ensure \Verb`n` is smaller than this number, otherwise an out of range exception will be thrown.
 \end{enumerate}
 
 \subsection{Hit}
 
-The \Verb`Hit` class is the most fundamental unit of each event. It describes the digitized hits recorded by the device sensors. Hits belong to a \Verb`Plane` and optionally to a \Verb`Cluster` which can be accessed as per the calls outlined in figure \ref{fig:modules_storage_objects}.
+The \Verb`Hit` class is the most fundamental unit of each event. It describes the digitized hits recorded by the device sensors. Hits can belong to a \Verb`Plane` and to a \Verb`Cluster` which can be accessed as per the calls outlined in figure \ref{fig:modules_storage_objects}.
 
 The \Verb`timing` member is provided to accommodate timing information for individual hits (e.g. offset of hit from trigger). The \Verb`value` member is provided to accomodate a digitzied ``intensity'' value for hits (e.g. time-over-threshold).
 
@@ -149,11 +165,13 @@ A \Verb`masked` member is provided to indicate if this hit is from a masked pixe
 
 \subsection{Cluster}
 
-The \Verb`Cluster` class represents clusters of hits within one sensor plane which are thought to have been generated by a single particle traversing the sensor. The class contains a list of hits, and some properties calculated from these hits. Clusters belong to a \verb`Plane` and optionally to a \verb`Track` which can be accessed as per the calls outline in figure \ref{fig:modules_storage_objects}.
+The \Verb`Cluster` class represents clusters of hits within one sensor plane which are thought to have been generated by a single particle traversing the sensor. The class contains a list of hits, and some properties calculated from these hits. Clusters can belong to a \verb`Plane` and to a \verb`Track` which can be accessed as per the calls outline in figure \ref{fig:modules_storage_objects}.
 
 The center of gravity (COG) and size of the cluster are stored in the \Verb`pix` and \Verb`pixErr` members respectively in pixel coordinates. The same information is stored in the \Verb`pos` and \Verb`posErr` members in global coordinates.
 
-The \Verb`timing` member contains the lowest timing value from hits comprising the cluster, and the \Verb`value` member contains the sum of values of all hits in the cluster.
+The \Verb`timing` and \Verb`value` members are meant to be aggregate properties of the cluster's constituent hits.
+
+It is up to the algorithm generating the clusters to fill the cluster's properties based on its constituent hits.
 
 \subsection{Track}
 
@@ -188,31 +206,31 @@ The event serves as a centralized repository from where all event information ca
 \chapter{Unit testing}
 \label{ch:unittesting}
 
-The \Judith directory structure includes the \Verb`tests` directory. As the name suggests, it is inhabited by tests: small pieces of code which invoke features of \Judith and compare the outcome to what is expected.
+The \Judith directory structure includes the \Verb`tests` directory. As the name suggests, it is populated with tests: small pieces of code which invoke features of \Judith and compare the outcome to what is expected.
 
-Typically, when developing code, a programmer will want to know if a modification or new feature actually works. First it is compiled, then some ad-hock code might be added to the main method to invoke the feature and check its outcome. \Judith's unit testing is simply a way to centralize and formalize this process. It is probably the simplest form of unit testing but should be sufficient and encourage the writing of tests.
+Typically, when developing code, a programmer will want to know if a modification or new feature works as expected. First the program is compiled, then some ad-hock code might be added to the main method to invoke the new work and check its outcome. \Judith's unit testing is simply a way to centralize and formalize this process. It is probably the simplest form of unit testing but should be sufficient while encouraging the writing of tests.
 
 Its purpose to twofold:
 
 \begin{enumerate}
-	\item Make writing and running test code easier. The programmer need not hack at a larger piece of code to introduce their test, it can be deployed in a stand-alone main. This is then compiled with the latest code and run from a simple script.
-	\item The test code doesn't need to be removed after the test is completed. This adds some level of documentation to the project and allows the test to be used over and over again to ensure the feature is not broken with future development.
+	\item Make writing and running test code easier. The programmer need not hack the main function to introduce their test; the test can be deployed in a stand-alone main. This is then compiled with the latest program binary and run from a simple script.
+	\item The test code doesn't need to be removed after its first run. This adds some level of documentation to the project and allows the test to be used over and over again to ensure the feature is not broken with future development.
 \end{enumerate}
 
-Following is an outline of the testing procedure when adding a feature to the code:
+Following is an outline of the testing procedure when adding or modifying a feature:
 
 \begin{itemize}
 	\item Develop the feature, and compile the program. Good development will result in most bugs being caught by the compiler.
-	\item Open the \Verb`tests/module/tests_filename.cxx` file corresponding to the module file worked on.
+	\item Open or make a file of the form: \\
+	      \Verb`tests/module/tests_filename.cxx`.
 	\item Add a test function to the file:\\
 		  \Verb`int test_featureToTest()`.
 	\item Add the call to that function in the main:\\
 		  \Verb`if ((retval = test_featureToTest()) != 0) return retval;`
 	\item Write your test code in your test function. The function must return non-zero when a test has failed, stopping the execution of following tests which might rely on the previous one.
 	\item From the root project directory, run:\\
-		  \Verb`tests/run.sh`
-	\item If compilation fails, you can get the full compilation output by the following:
-		  \Verb`cd tests/ && make`
+		  \Verb`tests/run.sh` \\
+		  This compiles the test, links it to the latest program binary, and runs it.
 \end{itemize}
 
 \appendix
