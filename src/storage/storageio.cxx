@@ -83,6 +83,7 @@ void StorageIO::clearVariables() {
   timeStamp = 0;
   frameNumber = 0;
   triggerOffset = 0;
+  triggerInfo = 0;
   invalid = false;
   numHits = 0;
   numClusters = 0;
