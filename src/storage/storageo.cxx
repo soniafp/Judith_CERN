@@ -35,6 +35,8 @@ StorageO::StorageO(
     // Make a directory for this plane
     std::stringstream ss;
     ss << "Plane" << nplane;  // Directories are named PlaneX
+
+    // Make the hits and clusters trees in the corresponding plane directory
     TDirectory* dir = m_file->mkdir(ss.str().c_str());
     dir->cd();
 
@@ -69,6 +71,9 @@ StorageO::StorageO(
       clusters->Branch("PosErrZ", clusterPosErrZ, "ClusterPosErrZ[NClusters]/D");
     }
   }  // Loop over planes
+
+  // Make the event and track trees in the root directory
+  m_file->cd();
 
   if (!(treeMask & EVENTINFO)) {
     m_eventInfoTree = new TTree("Event", "Event information");
