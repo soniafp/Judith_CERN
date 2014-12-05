@@ -93,7 +93,8 @@ public:
   inline void setPos(double x, double y, double z) { m_posX = x; m_posY = y; m_posZ = z; }
   inline void setPixErr(double x, double y) { m_pixErrX = x; m_pixErrY = y; }
   inline void setPosErr(double x, double y, double z) { m_posErrX = x; m_posErrY = y; m_posErrZ = z; }
-  // Note: timing and value are calculated when hits are added, so no direct access
+  inline void setTiming(double timing) { m_timing = timing; }
+  inline void setValue(double value) { m_value = value; }
 
   friend class StorageIO;  // Sets values
   friend class Event;  // Access index
