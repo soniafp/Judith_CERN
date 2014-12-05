@@ -203,7 +203,7 @@ Following is an outline of the testing procedure when adding a feature to the co
 
 \begin{itemize}
 	\item Develop the feature, and compile the program. Good development will result in most bugs being caught by the compiler.
-	\item Open the \Verb`tests/tests_modulename.cxx` file corresponding to the module worked on.
+	\item Open the \Verb`tests/module/tests_filename.cxx` file corresponding to the module file worked on.
 	\item Add a test function to the file:\\
 		  \Verb`int test_featureToTest()`.
 	\item Add the call to that function in the main:\\
@@ -290,13 +290,15 @@ To summarize, \textbf{anything which can be declared \Verb`const` should be decl
 
 \section{Use of references over pointers}
 
-Pointers are initially terrifying to novice C and C++ programmers. Eventually, (surely through some kind of Stockholm Syndrome mechanism), programmers learn to love pointers and cherish them as the answer to all woes. But eventually, given enough bad experiences, it becomes clear that \textbf{pointers are evil}.
+Pointers are initially terrifying to novice C and C++ programmers. Eventually, (surely through some kind of Stockholm Syndrome mechanism), programmers learn to love pointers and cherish them as the answer to all woes. But eventually, given enough bad experiences, it becomes clear that \textbf{pointers are evil} when misused.
 
-Borrowing from the previous section, pointers tend to cause run-time error when handled inappropriately, or introduce overhead in order to be handled appropriately.
+Borrowing from the previous section, pointers tend to cause run-time errors when handled inappropriately, or introduce overhead in order to be handled appropriately.
 
 Pointers definitely have their uses, but a casual C++ programmer might not realize that most uses for pointers can be achieved using references, only with less risk of incurring run-time errors. This is especially true of C++ programmers who learned C++ in tandem with \ROOT which attempts to hide the inherent issues relating to pointers (often resulting in stack traces).
 
-Following is a summary of issues that arise when using pointers but not when using references:
+It's worth noting that references aren't completely immune to errors; it is possible to make invalid references, but you either need to try pretty hard (e.g. \Verb`int* pi = 0; int& ri = *pi;`), or the compiler will emit a warning.
+
+Following is a summary of issues that arise when using pointers but not when using references.:
 
 \begin{itemize}
 	\item Dereferencing a null pointer: null pointers are often passed to indicate that the underlying data doesn't exist. The user might try to use the pointer without checking if it is null, especially when the pointer \emph{should} have been valid.
@@ -304,7 +306,11 @@ Following is a summary of issues that arise when using pointers but not when usi
 	\item Ownership: when an object returns a pointer, as in \Verb` calledObject->getMemberObject()`, who is responsible for freeing the member object? And what of \Verb`calledObject->newObject()`? Often, the called object source must be read to be sure it is correctly used.
 \end{itemize}
 
-References are equally well suited for passing complex objects without copying their contents, they can be used with forward declarations, and they can even have default arguments in argument lists. Pointers are still better suited for storing objects in sequential memory (\Verb`std::vector<Type&>` is not allowed), and for passing around objects which might not exist, in which case it is clear that the user much check if they are null.
+References are equally well suited for passing complex objects without copying their contents, they can be used with forward declarations, and they can even have default arguments in argument lists (e.g. \Verb`void function(const std::string& arg="default")` is valid).
+
+Pointers are still better suited for storing objects in containers (\Verb`std::vector<Type&>` is not allowed), and for passing around objects which might not exist. They generally solve the problem of needing a place-holder for an object, which is not bound to a particular object or any object at all.
+
+To summarize, \textbf{if a pointer can be replaced by a reference, it probably should be}.
 
 \section{Throwing exceptions}
 
