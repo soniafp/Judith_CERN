@@ -29,10 +29,12 @@ StorageI::StorageI(
     int contentMask,
     const std::vector<bool>* planeMask) :
     // Initialize base with 0 planes
-    StorageIO(filePath, INPUT, 0) {
+    StorageIO(filePath, INPUT, 0),
+    // Store the content mask as it is also needed when reading, and flip its
+    // bits to avoid having to check !
+    m_contentMask(~contentMask) {
 
-  // Flip the content mask to avoid always checking !
-  contentMask = ~contentMask;
+  // NOTE: contentMask is mostly used here to avoid branch missing warnings
 
   // Keep track of the number of planes read from the file
   size_t planeCount = 0;
@@ -62,7 +64,7 @@ StorageI::StorageI(
 
     TTree* hits = 0;
     // Try to load the tree if hits are enabled
-    if (contentMask & HITS)
+    if (m_contentMask & HITS)
       m_file->GetObject((ss.str()+"/Hits").c_str(), hits);
     // Check that a hits tree was loaded
     if (hits) {
@@ -73,36 +75,36 @@ StorageI::StorageI(
       hits->SetBranchAddress("PixX", hitPixX);
       hits->SetBranchAddress("PixY", hitPixY);
       // Check if position space content is enabled
-      if (contentMask & POS) {
+      if (m_contentMask & POS) {
         hits->SetBranchAddress("PosX", hitPosX);
         hits->SetBranchAddress("PosY", hitPosY);
         hits->SetBranchAddress("PosZ", hitPosZ);
       }
       // Check if the hit / cluster value is enabled
-      if (contentMask & VALUE)
+      if (m_contentMask & VALUE)
         hits->SetBranchAddress("Value", hitValue);
       // Likewise for the timing
-      if (contentMask & TIMING)
+      if (m_contentMask & TIMING)
         hits->SetBranchAddress("Timing", hitTiming);
       // Don't associate to a cluster unless clusters are enabled
-      if (contentMask & CLUSTERS)
+      if (m_contentMask & CLUSTERS)
         hits->SetBranchAddress("InCluster", hitInCluster);
     }
 
     TTree* clusters = 0;
-    if (contentMask & CLUSTERS)
+    if (m_contentMask & CLUSTERS)
       m_file->GetObject((ss.str()+"/Clusters").c_str(), clusters);
     if (clusters) {
       m_clustersTrees.push_back(clusters);
+      clusters->SetBranchAddress("NClusters", &numClusters);
       // Only store cluster info if enabled, otherwise clusters are just containers
       // for hits
-      if (contentMask & CLUSTERFIT) {
-        clusters->SetBranchAddress("NClusters", &numClusters);
+      if (m_contentMask & CLUSTERFIT) {
         clusters->SetBranchAddress("PixX", clusterPixX);
         clusters->SetBranchAddress("PixY", clusterPixY);
         clusters->SetBranchAddress("PixErrX", clusterPixErrX);
         clusters->SetBranchAddress("PixErrY", clusterPixErrY);
-        if (contentMask & POS) {
+        if (m_contentMask & POS) {
           clusters->SetBranchAddress("PosX", clusterPosX);
           clusters->SetBranchAddress("PosY", clusterPosY);
           clusters->SetBranchAddress("PosZ", clusterPosZ);
@@ -110,12 +112,12 @@ StorageI::StorageI(
           clusters->SetBranchAddress("PosErrY", clusterPosErrY);
           clusters->SetBranchAddress("PosErrZ", clusterPosErrZ);
         }
-        if (contentMask & TIMING)
+        if (m_contentMask & TIMING)
           clusters->SetBranchAddress("Timing", clusterTiming);
-        if (contentMask & VALUE)
+        if (m_contentMask & VALUE)
           clusters->SetBranchAddress("Value", clusterValue);
       }
-      if (contentMask & TRACKS)
+      if (m_contentMask & TRACKS)
         clusters->SetBranchAddress("InTrack", clusterInTrack);
     }
   }  // Loop over planes
@@ -132,7 +134,7 @@ StorageI::StorageI(
     throw std::runtime_error(
         "StorageI::StorageI: clusters trees number does not match planes");
 
-  if (contentMask & EVENTINFO)
+  if (m_contentMask & EVENTINFO)
     m_file->GetObject("Event", m_eventInfoTree);
   if (m_eventInfoTree) {
     m_eventInfoTree->SetBranchAddress("TimeStamp", &timeStamp);
@@ -142,13 +144,13 @@ StorageI::StorageI(
     m_eventInfoTree->SetBranchAddress("Invalid", &invalid);
   }
 
-  if (contentMask & TRACKS)
+  if (m_contentMask & TRACKS)
     m_file->GetObject("Tracks", m_tracksTree);
   if (m_tracksTree) {
     m_tracksTree->SetBranchAddress("NTracks", &numTracks);
     // Only store track info if enabled, otherwise tracks are just containers
     // for clusters
-    if (contentMask & TRACKFIT) {
+    if (m_contentMask & TRACKFIT) {
       m_tracksTree->SetBranchAddress("SlopeX", trackSlopeX);
       m_tracksTree->SetBranchAddress("SlopeY", trackSlopeY);
       m_tracksTree->SetBranchAddress("SlopeErrX", trackSlopeErrX);
@@ -221,6 +223,9 @@ Event& StorageI::readEvent(Long64_t n) {
     throw std::runtime_error(
         "StorageIO::readEvent: error reading tracks tree");
 
+  // NOTE: masks need to be re-applied here. The array values aren't zeroed
+  // so they can't be read in
+
   // This will clear the previous event and cache its objects
   Event& event = newEvent();
   // Fill the event info fro what was read from the event info tree
@@ -234,13 +239,15 @@ Event& StorageI::readEvent(Long64_t n) {
   for (int ntrack = 0; ntrack < numTracks; ntrack++) {
     // Ask the event to prepare a new track (comes from this objects' cache)
     Track& track = event.newTrack();
-    // Fill it with values read from the tree
-    track.setOrigin(trackOriginX[ntrack], trackOriginY[ntrack]);
-    track.setOriginErr(trackOriginErrX[ntrack], trackOriginErrY[ntrack]);
-    track.setSlope(trackSlopeX[ntrack], trackSlopeY[ntrack]);
-    track.setSlopeErr(trackSlopeErrX[ntrack], trackSlopeErrY[ntrack]);
-    track.setCovariance(trackCovarianceX[ntrack], trackCovarianceY[ntrack]);
-    track.setChi2(trackChi2[ntrack]);
+    if (m_contentMask & TRACKFIT) {
+      // Fill it with values read from the tree
+      track.setOrigin(trackOriginX[ntrack], trackOriginY[ntrack]);
+      track.setOriginErr(trackOriginErrX[ntrack], trackOriginErrY[ntrack]);
+      track.setSlope(trackSlopeX[ntrack], trackSlopeY[ntrack]);
+      track.setSlopeErr(trackSlopeErrX[ntrack], trackSlopeErrY[ntrack]);
+      track.setCovariance(trackCovarianceX[ntrack], trackCovarianceY[ntrack]);
+      track.setChi2(trackChi2[ntrack]);
+    }
   }
 
   for (size_t nplane = 0; nplane < m_numPlanes; nplane++) {
@@ -257,12 +264,24 @@ Event& StorageI::readEvent(Long64_t n) {
     // Generate the cluster objects
     for (int ncluster = 0; ncluster < numClusters; ncluster++) {
       Cluster& cluster = event.newCluster(nplane);
-      cluster.setPix(clusterPixX[ncluster], clusterPixY[ncluster]);
-      cluster.setPixErr(clusterPixErrX[ncluster], clusterPixErrY[ncluster]);
-      cluster.setPos(clusterPosX[ncluster], clusterPosY[ncluster], clusterPosZ[ncluster]);
-      cluster.setPosErr(clusterPosErrX[ncluster], clusterPosErrY[ncluster], clusterPosErrZ[ncluster]);
-      cluster.setTiming(clusterTiming[ncluster]);
-      cluster.setValue(clusterValue[ncluster]);
+      if (m_contentMask & CLUSTERFIT) {
+        cluster.setPix(clusterPixX[ncluster], clusterPixY[ncluster]);
+        cluster.setPixErr(clusterPixErrX[ncluster], clusterPixErrY[ncluster]);
+        if (m_contentMask & POS) {
+          cluster.setPos(
+              clusterPosX[ncluster],
+              clusterPosY[ncluster],
+              clusterPosZ[ncluster]);
+          cluster.setPosErr(
+              clusterPosErrX[ncluster],
+              clusterPosErrY[ncluster],
+              clusterPosErrZ[ncluster]);
+        }
+        if (m_contentMask & TIMING)
+          cluster.setTiming(clusterTiming[ncluster]);
+        if (m_contentMask & VALUE)
+          cluster.setValue(clusterValue[ncluster]);
+      }
 
       // If this cluster is in a track, mark this (and the tracks tree is active)
       if (m_tracksTree && clusterInTrack[ncluster] >= 0) {
@@ -286,9 +305,12 @@ Event& StorageI::readEvent(Long64_t n) {
 
       Hit& hit = event.newHit(nplane);
       hit.setPix(hitPixX[nhit], hitPixY[nhit]);
-      hit.setPos(hitPosX[nhit], hitPosY[nhit], hitPosZ[nhit]);
-      hit.setValue(hitValue[nhit]);
-      hit.setTiming(hitTiming[nhit]);
+      if (m_contentMask & POS) 
+        hit.setPos(hitPosX[nhit], hitPosY[nhit], hitPosZ[nhit]);
+      if (m_contentMask & VALUE) 
+        hit.setValue(hitValue[nhit]);
+      if (m_contentMask & TIMING) 
+        hit.setTiming(hitTiming[nhit]);
       hit.setMasked(isMasked);
 
       // If this hit is in a cluster, mark this (and the clusters tree is active)

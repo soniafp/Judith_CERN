@@ -14,6 +14,8 @@ private:
   StorageI(const StorageI&);
   StorageI& operator=(const StorageI&);
 
+  const int m_contentMask;
+
 public:
   StorageI(
       const std::string& filePath,
