@@ -232,8 +232,7 @@ Event& StorageI::readEvent(Long64_t n) {
       // If this cluster is in a track, mark this (and the tracks tree is active)
       if (m_tracksTree && clusterInTrack[ncluster] >= 0) {
         Track& track = event.getTrack(clusterInTrack[ncluster]);
-        track.addCluster(cluster);
-        cluster.setTrack(track);
+        track.addCluster(cluster);  // Bidirectional linking
       }
     }
 
@@ -260,7 +259,7 @@ Event& StorageI::readEvent(Long64_t n) {
       // If this hit is in a cluster, mark this (and the clusters tree is active)
       if (!m_clustersTrees.empty() && hitInCluster[nhit] >= 0) {
         Cluster& cluster = event.getCluster(hitInCluster[nhit]);
-        cluster.addHit(hit);
+        cluster.addHit(hit);  // Bidirectional linking
       }
     }
   }  // Loop over planes
