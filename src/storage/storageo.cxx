@@ -46,11 +46,11 @@ StorageO::StorageO(
       hits->Branch("NHits", &numHits, "NHits/I");
       hits->Branch("PixX", hitPixX, "HitPixX[NHits]/I");
       hits->Branch("PixY", hitPixY, "HitPixY[NHits]/I");
-      hits->Branch("Value", hitValue, "HitValue[NHits]/D");
-      hits->Branch("Timing", hitTiming, "HitTiming[NHits]/D");
       hits->Branch("PosX", hitPosX, "HitPosX[NHits]/D");
       hits->Branch("PosY", hitPosY, "HitPosY[NHits]/D");
       hits->Branch("PosZ", hitPosZ, "HitPosZ[NHits]/D");
+      hits->Branch("Value", hitValue, "HitValue[NHits]/D");
+      hits->Branch("Timing", hitTiming, "HitTiming[NHits]/D");
       hits->Branch("InCluster", hitInCluster, "HitInCluster[NHits]/I");
     }
 
@@ -68,8 +68,8 @@ StorageO::StorageO(
       clusters->Branch("PosErrX", clusterPosErrX, "ClusterPosErrX[NClusters]/D");
       clusters->Branch("PosErrY", clusterPosErrY, "ClusterPosErrY[NClusters]/D");
       clusters->Branch("PosErrZ", clusterPosErrZ, "ClusterPosErrZ[NClusters]/D");
-      clusters->Branch("Timing", clusterTiming, "ClusterTiming[NClusters]/D");
       clusters->Branch("Value", clusterValue, "ClusterValue[NClusters]/D");
+      clusters->Branch("Timing", clusterTiming, "ClusterTiming[NClusters]/D");
       clusters->Branch("InTrack", clusterInTrack, "ClusterInTrack[NClusters]/I");
     }
   }  // Loop over planes

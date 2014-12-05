@@ -66,12 +66,12 @@ StorageI::StorageI(
       hits->SetBranchAddress("NHits", &numHits);
       hits->SetBranchAddress("PixX", hitPixX);
       hits->SetBranchAddress("PixY", hitPixY);
-      hits->SetBranchAddress("Value", hitValue);
-      hits->SetBranchAddress("Timing", hitTiming);
-      hits->SetBranchAddress("InCluster", hitInCluster);
       hits->SetBranchAddress("PosX", hitPosX);
       hits->SetBranchAddress("PosY", hitPosY);
       hits->SetBranchAddress("PosZ", hitPosZ);
+      hits->SetBranchAddress("Value", hitValue);
+      hits->SetBranchAddress("Timing", hitTiming);
+      hits->SetBranchAddress("InCluster", hitInCluster);
     }
 
     TTree* clusters = 0;
@@ -83,7 +83,6 @@ StorageI::StorageI(
       clusters->SetBranchAddress("PixY", clusterPixY);
       clusters->SetBranchAddress("PixErrX", clusterPixErrX);
       clusters->SetBranchAddress("PixErrY", clusterPixErrY);
-      clusters->SetBranchAddress("InTrack", clusterInTrack);
       clusters->SetBranchAddress("PosX", clusterPosX);
       clusters->SetBranchAddress("PosY", clusterPosY);
       clusters->SetBranchAddress("PosZ", clusterPosZ);
@@ -92,6 +91,7 @@ StorageI::StorageI(
       clusters->SetBranchAddress("PosErrZ", clusterPosErrZ);
       clusters->SetBranchAddress("Timing", clusterTiming);
       clusters->SetBranchAddress("Value", clusterValue);
+      clusters->SetBranchAddress("InTrack", clusterInTrack);
     }
   }  // Loop over planes
 

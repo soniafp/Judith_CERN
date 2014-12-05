@@ -137,8 +137,8 @@ protected:
   Double_t clusterPosErrX[MAX_CLUSTERS];
   Double_t clusterPosErrY[MAX_CLUSTERS];
   Double_t clusterPosErrZ[MAX_CLUSTERS];
-  Double_t clusterTiming[MAX_CLUSTERS];
   Double_t clusterValue[MAX_CLUSTERS];
+  Double_t clusterTiming[MAX_CLUSTERS];
   Int_t    clusterInTrack[MAX_CLUSTERS];
 
   ULong64_t timeStamp;
