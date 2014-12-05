@@ -177,36 +177,99 @@ int test_storageio() {
 }
 
 int test_storageioReadWrite() {
-  const unsigned int nplanes = 1;
-  Storage::StorageO storeo("tmp.root", Storage::StorageIO::OUTPUT, nplanes);
+  const size_t nplanes = 1;
+  const Int_t nevents = 2;
+  {  // Scope so that the output is closed
+    Storage::StorageO store("tmp.root", nplanes);
 
-  Storage::Event& event = storeo.newEvent();
+    // Make some number of events
+    for (size_t n = 0; n < nevents; n++) {
+      Storage::Event& event = store.newEvent();
 
-  Storage::Hit& hit = event.newHit(0);
-  hit.setPix(1, 2);
-  hit.setPos(.1, .2, .3);
-  hit.setValue(.1);
-  hit.setTiming(.2);
-  hit.setMasked(true);
+      // Alternate the plane populated at each event
+      Storage::Hit& hit = event.newHit(n%nplanes);
+      // Scale the values by the event
+      hit.setPix(1*n, 2*n);
+      hit.setPos(.1*n, .2*n, .3*n);
+      hit.setValue(.1*n);
+      hit.setTiming(.2*n);
+      hit.setMasked(true);
 
-  Storage::Cluster& cluster = event.newCluster(0);
-  cluster.setPix(.1, .2);
-  cluster.setPixErr(.1, .2);
-  cluster.setPos(.1, .2, .3);
-  cluster.setPosErr(.1, .2, .3);
-  cluster.setTiming(.1);
-  cluster.setValue(.2);
+      Storage::Cluster& cluster = event.newCluster(n%nplanes);
+      cluster.setPix(.1*n, .2*n);
+      cluster.setPixErr(.1*n, .2*n);
+      cluster.setPos(.1*n, .2*n, .3*n);
+      cluster.setPosErr(.1*n, .2*n, .3*n);
+      cluster.setTiming(.1*n);
+      cluster.setValue(.2*n);
 
-  Storage::Track& track = event.newTrack();
-  track.setOrigin(.1, .2);
-  track.setOriginErr(.1, .2);
-  track.setSlope(.1, .2);
-  track.setSlopeErr(.1, .2);
-  track.setCovariance(.1, .2);
-  track.setChi2(.1);
+      Storage::Track& track = event.newTrack();
+      track.setOrigin(.1*n, .2*n);
+      track.setOriginErr(.1*n, .2*n);
+      track.setSlope(.1*n, .2*n);
+      track.setSlopeErr(.1*n, .2*n);
+      track.setCovariance(.1*n, .2*n);
+      track.setChi2(.1*n);
 
-  cluster.addHit(hit);
-  track.addCluster(cluster);
+      cluster.addHit(hit);
+      track.addCluster(cluster);
+
+      store.writeEvent(event);
+    }
+  }  // output scope
+
+  {  // Scope the read-back separately
+    Storage::StorageI store("tmp.root");
+
+    if (nevents != store.getNumEvents()) {
+      std::cerr << "Storage::StorageI: incorrect number of events" << std::endl;
+      return -1;
+    }
+
+    if (nplanes != store.getNumPlanes()) {
+      std::cerr << "Storage::StorageI: incorrect number of planes" << std::endl;
+      return -1;
+    }
+
+    // Make some number of events
+    for (Int_t n = 0; n < store.getNumEvents(); n++) {
+      Storage::Event& event = store.readEvent(n);
+
+      Storage::Track& track = event.getTrack(0);
+      if (track.getOriginX() != .1*n ||
+          track.getOriginY() != .2*n ||
+          track.getOriginErrX() != .1*n ||
+          track.getOriginErrY() != .2*n ||
+          track.getSlopeX() != .1*n ||
+          track.getSlopeY() != .2*n ||
+          track.getSlopeErrX() != .1*n ||
+          track.getSlopeErrY() != .2*n ||
+          track.getCovarianceX() != .1*n ||
+          track.getCovarianceY() != .2*n ||
+          track.getChi2() != .2*n) {
+        std::cerr << "Storage::StorageI: track read back incorrect" << std::endl;
+        return -1;
+      }
+
+      //// Alternate the plane populated at each event
+      //Storage::Hit& hit = event.newHit(n%nplanes);
+      //// Scale the values by the event
+      //hit.setPix(1*n, 2*n);
+      //hit.setPos(.1*n, .2*n, .3*n);
+      //hit.setValue(.1*n);
+      //hit.setTiming(.2*n);
+      //hit.setMasked(true);
+
+      //Storage::Cluster& cluster = event.newCluster(n%nplanes);
+      //cluster.setPix(.1*n, .2*n);
+      //cluster.setPixErr(.1*n, .2*n);
+      //cluster.setPos(.1*n, .2*n, .3*n);
+      //cluster.setPosErr(.1*n, .2*n, .3*n);
+      //cluster.setTiming(.1*n);
+      //cluster.setValue(.2*n);
+    }
+
+  }  // input scope
 
   gSystem->Exec("rm -f tmp.root");
   return 0;
