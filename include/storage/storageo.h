@@ -19,7 +19,8 @@ public:
       const std::string& filePath,
       size_t numPlanes,
       int treeMask = NONE);
-  virtual ~StorageO() {}
+  // Write to the file
+  virtual ~StorageO();
 
   /** Write the `Event` object to the file */
   void writeEvent(Event& event);

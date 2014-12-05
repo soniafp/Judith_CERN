@@ -96,6 +96,10 @@ StorageO::StorageO(
   }
 }
 
+StorageO::~StorageO() {
+  if (m_file) m_file->Write();
+}
+
 void StorageO::writeEvent(Event& event) {
   clearVariables();  // clear any lingering values
 
