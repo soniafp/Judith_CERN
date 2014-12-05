@@ -18,7 +18,7 @@ public:
   StorageO(
       const std::string& filePath,
       size_t numPlanes,
-      int treeMask = NONE);
+      int contentMask = NONE);
   // Write to the file
   virtual ~StorageO();
 

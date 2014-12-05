@@ -23,8 +23,7 @@ namespace Storage {
 StorageIO::StorageIO(
     const std::string& filePath,
     FileMode fileMode,
-    size_t numPlanes,
-    int treeMask) :
+    size_t numPlanes) :
     m_file(0),
     m_fileMode(fileMode),
     m_numPlanes(numPlanes),
@@ -152,39 +151,6 @@ Hit& StorageIO::newHit() {
     hit->clear();
   }
   return *hit;
-}
-
-// Disable the branch by the given name in the given tree, throw an exception
-// if the branch doesn't exist
-void disableBranch(TTree& tree, const std::string& name) {
-  UInt_t found = 0;
-  tree.SetBranchStatus(name.c_str(), 0, &found);
-  if (!found) {
-    std::cerr << "ERROR: branch not found: " << name 
-        << " in tree " << tree.GetName() << std::endl;
-    throw std::runtime_error(
-        "StorageIO: disableBranch: no such branch");
-  }
-}
-
-void StorageIO::disableHitsBranch(const std::string& name) {
-  for (std::vector<TTree*>::iterator it = m_hitsTrees.begin();
-      it != m_hitsTrees.end(); ++it)
-    disableBranch(**it, name);
-}
-
-void StorageIO::disableClustersBranch(const std::string& name) {
-  for (std::vector<TTree*>::iterator it = m_clustersTrees.begin();
-      it != m_clustersTrees.end(); ++it)
-    disableBranch(**it, name);
-}
-
-void StorageIO::disableTracksBranch(const std::string& name) {
-  if (m_tracksTree) disableBranch(*m_tracksTree, name);
-}
-
-void StorageIO::disableEventInfoBranch(const std::string& name) {
-  if (m_eventInfoTree) disableBranch(*m_eventInfoTree, name);
 }
 
 }

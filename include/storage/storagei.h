@@ -17,7 +17,7 @@ private:
 public:
   StorageI(
       const std::string& filePath,
-      int treeMask=NONE,
+      int contentMask=NONE,
       const std::vector<bool>* planeMask=0);
   virtual ~StorageI() {}
 

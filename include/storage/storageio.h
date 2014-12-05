@@ -51,12 +51,17 @@ private:
   StorageIO& operator=(const StorageIO&);
 
 public:
-  enum TreeFlags {
+  enum ContentFlags {
     NONE = 0,
     HITS = 1<<0,
     CLUSTERS = 1<<1,
     TRACKS = 1<<2,
-    EVENTINFO = 1<<3
+    EVENTINFO = 1<<3,
+    POS = 1<<4,
+    VALUE = 1<<5,
+    TIMING = 1<<6,
+    CLUSTERFIT = 1<<7,
+    TRACKFIT = 1<<8,
   };
 
   enum FileMode {
@@ -173,27 +178,12 @@ public:
   StorageIO(
       const std::string& filePath,
       FileMode fileMode,
-      size_t numPlanes=1,
-      int treeMask=NONE);
+      size_t numPlanes=1);
   virtual ~StorageIO();
 
   /** Provides the `Event` object cleared to be filled. NOTE: this event is
     * overwritten whenever this method is called. */
   Event& newEvent();
-
-  /** Disable a branch for reading & writing from all Hits trees */
-  void disableHitsBranch(const std::string& name);
-  /** Disable a branch for reading & writing from all Clusters trees */
-  void disableClustersBranch(const std::string& name);
-  /** Disable a branch for reading & writing from the Tracks tree */
-  void disableTracksBranch(const std::string& name);
-  /** Disable a branch for reading & writing from the EventInfo tree */
-  void disableEventInfoBranch(const std::string& name);
-
-  /** Mask out some planes which won't be read or written */
-  void setMask(size_t nplane, const NoiseMask& mask);
-  /** Choose strategy for dealitg with noisy pixels */
-  void setMaskMode(MaskMode mode) { m_maskMode = mode; }
 
   Long64_t getNumEvents() const { return m_numEvents; }
   size_t getNumPlanes() const { return m_numPlanes; }

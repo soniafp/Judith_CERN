@@ -27,8 +27,13 @@ namespace Storage {
 StorageO::StorageO(
     const std::string& filePath,
     size_t numPlanes,
-    int treeMask) :
-    StorageIO(filePath, OUTPUT, numPlanes, treeMask) {
+    int contentMask) :
+    StorageIO(filePath, OUTPUT, numPlanes) {
+
+  // NOTE: check storagei.cxx for information about the contentMask effects
+
+  // Avoid always checking !
+  contentMask = ~contentMask;
 
   // Make hit and clusters trees for all the planes
   for (size_t nplane = 0; nplane < m_numPlanes; nplane++) {
@@ -40,39 +45,48 @@ StorageO::StorageO(
     TDirectory* dir = m_file->mkdir(ss.str().c_str());
     dir->cd();
 
-    if (!(treeMask & HITS)) {
+    if (contentMask & HITS) {
       TTree* hits = new TTree("Hits", "Hits");
       m_hitsTrees.push_back(hits);
       hits->Branch("NHits", &numHits, "NHits/I");
       hits->Branch("PixX", hitPixX, "HitPixX[NHits]/I");
       hits->Branch("PixY", hitPixY, "HitPixY[NHits]/I");
-      hits->Branch("PosX", hitPosX, "HitPosX[NHits]/D");
-      hits->Branch("PosY", hitPosY, "HitPosY[NHits]/D");
-      hits->Branch("PosZ", hitPosZ, "HitPosZ[NHits]/D");
-      hits->Branch("Value", hitValue, "HitValue[NHits]/D");
-      hits->Branch("Timing", hitTiming, "HitTiming[NHits]/D");
-      // Only register a "in cluster" value if clusters are present
-      if (!(treeMask & CLUSTERS))
+      if (contentMask & POS) {
+        hits->Branch("PosX", hitPosX, "HitPosX[NHits]/D");
+        hits->Branch("PosY", hitPosY, "HitPosY[NHits]/D");
+        hits->Branch("PosZ", hitPosZ, "HitPosZ[NHits]/D");
+      }
+      if (contentMask & VALUE)
+        hits->Branch("Value", hitValue, "HitValue[NHits]/D");
+      if (contentMask & TIMING)
+        hits->Branch("Timing", hitTiming, "HitTiming[NHits]/D");
+      if (contentMask & CLUSTERS)
         hits->Branch("InCluster", hitInCluster, "HitInCluster[NHits]/I");
     }
 
-    if (!(treeMask & CLUSTERS)) {
+    if (contentMask & CLUSTERS) {
       TTree* clusters = new TTree("Clusters", "Clusters");
       m_clustersTrees.push_back(clusters);
       clusters->Branch("NClusters", &numClusters, "NClusters/I");
-      clusters->Branch("PixX", clusterPixX, "ClusterPixX[NClusters]/D");
-      clusters->Branch("PixY", clusterPixY, "ClusterPixY[NClusters]/D");
-      clusters->Branch("PixErrX", clusterPixErrX, "ClusterPixErrX[NClusters]/D");
-      clusters->Branch("PixErrY", clusterPixErrY, "ClusterPixErrY[NClusters]/D");
-      clusters->Branch("PosX", clusterPosX, "ClusterPosX[NClusters]/D");
-      clusters->Branch("PosY", clusterPosY, "ClusterPosY[NClusters]/D");
-      clusters->Branch("PosZ", clusterPosZ, "ClusterPosZ[NClusters]/D");
-      clusters->Branch("PosErrX", clusterPosErrX, "ClusterPosErrX[NClusters]/D");
-      clusters->Branch("PosErrY", clusterPosErrY, "ClusterPosErrY[NClusters]/D");
-      clusters->Branch("PosErrZ", clusterPosErrZ, "ClusterPosErrZ[NClusters]/D");
-      clusters->Branch("Value", clusterValue, "ClusterValue[NClusters]/D");
-      clusters->Branch("Timing", clusterTiming, "ClusterTiming[NClusters]/D");
-      if (!(treeMask & TRACKS))
+      if (contentMask & CLUSTERFIT) {
+        clusters->Branch("PixX", clusterPixX, "ClusterPixX[NClusters]/D");
+        clusters->Branch("PixY", clusterPixY, "ClusterPixY[NClusters]/D");
+        clusters->Branch("PixErrX", clusterPixErrX, "ClusterPixErrX[NClusters]/D");
+        clusters->Branch("PixErrY", clusterPixErrY, "ClusterPixErrY[NClusters]/D");
+        if (contentMask & POS) {
+          clusters->Branch("PosX", clusterPosX, "ClusterPosX[NClusters]/D");
+          clusters->Branch("PosY", clusterPosY, "ClusterPosY[NClusters]/D");
+          clusters->Branch("PosZ", clusterPosZ, "ClusterPosZ[NClusters]/D");
+          clusters->Branch("PosErrX", clusterPosErrX, "ClusterPosErrX[NClusters]/D");
+          clusters->Branch("PosErrY", clusterPosErrY, "ClusterPosErrY[NClusters]/D");
+          clusters->Branch("PosErrZ", clusterPosErrZ, "ClusterPosErrZ[NClusters]/D");
+        }
+        if (contentMask & VALUE)
+          clusters->Branch("Value", clusterValue, "ClusterValue[NClusters]/D");
+        if (contentMask & TIMING)
+          clusters->Branch("Timing", clusterTiming, "ClusterTiming[NClusters]/D");
+      }
+      if (contentMask & TRACKS)
         clusters->Branch("InTrack", clusterInTrack, "ClusterInTrack[NClusters]/I");
     }
   }  // Loop over planes
@@ -80,7 +94,7 @@ StorageO::StorageO(
   // Make the event and track trees in the root directory
   m_file->cd();
 
-  if (!(treeMask & EVENTINFO)) {
+  if (contentMask & EVENTINFO) {
     m_eventInfoTree = new TTree("Event", "Event information");
     m_eventInfoTree->Branch("TimeStamp", &timeStamp, "TimeStamp/l");
     m_eventInfoTree->Branch("FrameNumber", &frameNumber, "FrameNumber/l");
@@ -89,20 +103,22 @@ StorageO::StorageO(
     m_eventInfoTree->Branch("Invalid", &invalid, "Invalid/O");
   }
 
-  if (!(treeMask & TRACKS)) {
+  if (contentMask & TRACKS) {
     m_tracksTree = new TTree("Tracks", "Track parameters");
     m_tracksTree->Branch("NTracks", &numTracks, "NTracks/I");
-    m_tracksTree->Branch("SlopeX", trackSlopeX, "TrackSlopeX[NTracks]/D");
-    m_tracksTree->Branch("SlopeY", trackSlopeY, "TrackSlopeY[NTracks]/D");
-    m_tracksTree->Branch("SlopeErrX", trackSlopeErrX, "TrackSlopeErrX[NTracks]/D");
-    m_tracksTree->Branch("SlopeErrY", trackSlopeErrY, "TrackSlopeErrY[NTracks]/D");
-    m_tracksTree->Branch("OriginX", trackOriginX, "TrackOriginX[NTracks]/D");
-    m_tracksTree->Branch("OriginY", trackOriginY, "TrackOriginY[NTracks]/D");
-    m_tracksTree->Branch("OriginErrX", trackOriginErrX, "TrackOriginErrX[NTracks]/D");
-    m_tracksTree->Branch("OriginErrY", trackOriginErrY, "TrackOriginErrY[NTracks]/D");
-    m_tracksTree->Branch("CovarianceX", trackCovarianceX, "TrackCovarianceX[NTracks]/D");
-    m_tracksTree->Branch("CovarianceY", trackCovarianceY, "TrackCovarianceY[NTracks]/D");
-    m_tracksTree->Branch("Chi2", trackChi2, "TrackChi2[NTracks]/D");
+    if (contentMask & TRACKFIT) {
+      m_tracksTree->Branch("SlopeX", trackSlopeX, "TrackSlopeX[NTracks]/D");
+      m_tracksTree->Branch("SlopeY", trackSlopeY, "TrackSlopeY[NTracks]/D");
+      m_tracksTree->Branch("SlopeErrX", trackSlopeErrX, "TrackSlopeErrX[NTracks]/D");
+      m_tracksTree->Branch("SlopeErrY", trackSlopeErrY, "TrackSlopeErrY[NTracks]/D");
+      m_tracksTree->Branch("OriginX", trackOriginX, "TrackOriginX[NTracks]/D");
+      m_tracksTree->Branch("OriginY", trackOriginY, "TrackOriginY[NTracks]/D");
+      m_tracksTree->Branch("OriginErrX", trackOriginErrX, "TrackOriginErrX[NTracks]/D");
+      m_tracksTree->Branch("OriginErrY", trackOriginErrY, "TrackOriginErrY[NTracks]/D");
+      m_tracksTree->Branch("CovarianceX", trackCovarianceX, "TrackCovarianceX[NTracks]/D");
+      m_tracksTree->Branch("CovarianceY", trackCovarianceY, "TrackCovarianceY[NTracks]/D");
+      m_tracksTree->Branch("Chi2", trackChi2, "TrackChi2[NTracks]/D");
+    }
   }
 }
 

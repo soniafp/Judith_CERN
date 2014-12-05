@@ -26,9 +26,13 @@ namespace Storage {
 
 StorageI::StorageI(
     const std::string& filePath,
-    int treeMask,
+    int contentMask,
     const std::vector<bool>* planeMask) :
-    StorageIO(filePath, INPUT, 0, treeMask) {
+    // Initialize base with 0 planes
+    StorageIO(filePath, INPUT, 0) {
+
+  // Flip the content mask to avoid always checking !
+  contentMask = ~contentMask;
 
   // Keep track of the number of planes read from the file
   size_t planeCount = 0;
@@ -57,45 +61,62 @@ StorageI::StorageI(
     m_numPlanes += 1;
 
     TTree* hits = 0;
-    // Try to the load the hits tree from this plane, unless the hits tree
-    // is masked
-    if (!(treeMask & HITS))
+    // Try to load the tree if hits are enabled
+    if (contentMask & HITS)
       m_file->GetObject((ss.str()+"/Hits").c_str(), hits);
     // Check that a hits tree was loaded
-    if (!(treeMask & HITS) && hits) {
+    if (hits) {
       // Add this tree to the current plane
       m_hitsTrees.push_back(hits);
       // Associate its branches to local memory
       hits->SetBranchAddress("NHits", &numHits);
       hits->SetBranchAddress("PixX", hitPixX);
       hits->SetBranchAddress("PixY", hitPixY);
-      hits->SetBranchAddress("PosX", hitPosX);
-      hits->SetBranchAddress("PosY", hitPosY);
-      hits->SetBranchAddress("PosZ", hitPosZ);
-      hits->SetBranchAddress("Value", hitValue);
-      hits->SetBranchAddress("Timing", hitTiming);
-      hits->SetBranchAddress("InCluster", hitInCluster);
+      // Check if position space content is enabled
+      if (contentMask & POS) {
+        hits->SetBranchAddress("PosX", hitPosX);
+        hits->SetBranchAddress("PosY", hitPosY);
+        hits->SetBranchAddress("PosZ", hitPosZ);
+      }
+      // Check if the hit / cluster value is enabled
+      if (contentMask & VALUE)
+        hits->SetBranchAddress("Value", hitValue);
+      // Likewise for the timing
+      if (contentMask & TIMING)
+        hits->SetBranchAddress("Timing", hitTiming);
+      // Don't associate to a cluster unless clusters are enabled
+      if (contentMask & CLUSTERS)
+        hits->SetBranchAddress("InCluster", hitInCluster);
     }
 
     TTree* clusters = 0;
-    if (!(treeMask & CLUSTERS))
+    if (contentMask & CLUSTERS)
       m_file->GetObject((ss.str()+"/Clusters").c_str(), clusters);
     if (clusters) {
       m_clustersTrees.push_back(clusters);
-      clusters->SetBranchAddress("NClusters", &numClusters);
-      clusters->SetBranchAddress("PixX", clusterPixX);
-      clusters->SetBranchAddress("PixY", clusterPixY);
-      clusters->SetBranchAddress("PixErrX", clusterPixErrX);
-      clusters->SetBranchAddress("PixErrY", clusterPixErrY);
-      clusters->SetBranchAddress("PosX", clusterPosX);
-      clusters->SetBranchAddress("PosY", clusterPosY);
-      clusters->SetBranchAddress("PosZ", clusterPosZ);
-      clusters->SetBranchAddress("PosErrX", clusterPosErrX);
-      clusters->SetBranchAddress("PosErrY", clusterPosErrY);
-      clusters->SetBranchAddress("PosErrZ", clusterPosErrZ);
-      clusters->SetBranchAddress("Timing", clusterTiming);
-      clusters->SetBranchAddress("Value", clusterValue);
-      clusters->SetBranchAddress("InTrack", clusterInTrack);
+      // Only store cluster info if enabled, otherwise clusters are just containers
+      // for hits
+      if (contentMask & CLUSTERFIT) {
+        clusters->SetBranchAddress("NClusters", &numClusters);
+        clusters->SetBranchAddress("PixX", clusterPixX);
+        clusters->SetBranchAddress("PixY", clusterPixY);
+        clusters->SetBranchAddress("PixErrX", clusterPixErrX);
+        clusters->SetBranchAddress("PixErrY", clusterPixErrY);
+        if (contentMask & POS) {
+          clusters->SetBranchAddress("PosX", clusterPosX);
+          clusters->SetBranchAddress("PosY", clusterPosY);
+          clusters->SetBranchAddress("PosZ", clusterPosZ);
+          clusters->SetBranchAddress("PosErrX", clusterPosErrX);
+          clusters->SetBranchAddress("PosErrY", clusterPosErrY);
+          clusters->SetBranchAddress("PosErrZ", clusterPosErrZ);
+        }
+        if (contentMask & TIMING)
+          clusters->SetBranchAddress("Timing", clusterTiming);
+        if (contentMask & VALUE)
+          clusters->SetBranchAddress("Value", clusterValue);
+      }
+      if (contentMask & TRACKS)
+        clusters->SetBranchAddress("InTrack", clusterInTrack);
     }
   }  // Loop over planes
 
@@ -111,7 +132,7 @@ StorageI::StorageI(
     throw std::runtime_error(
         "StorageI::StorageI: clusters trees number does not match planes");
 
-  if (!(treeMask & EVENTINFO))
+  if (contentMask & EVENTINFO)
     m_file->GetObject("Event", m_eventInfoTree);
   if (m_eventInfoTree) {
     m_eventInfoTree->SetBranchAddress("TimeStamp", &timeStamp);
@@ -121,21 +142,25 @@ StorageI::StorageI(
     m_eventInfoTree->SetBranchAddress("Invalid", &invalid);
   }
 
-  if (!(treeMask & TRACKS))
+  if (contentMask & TRACKS)
     m_file->GetObject("Tracks", m_tracksTree);
   if (m_tracksTree) {
     m_tracksTree->SetBranchAddress("NTracks", &numTracks);
-    m_tracksTree->SetBranchAddress("SlopeX", trackSlopeX);
-    m_tracksTree->SetBranchAddress("SlopeY", trackSlopeY);
-    m_tracksTree->SetBranchAddress("SlopeErrX", trackSlopeErrX);
-    m_tracksTree->SetBranchAddress("SlopeErrY", trackSlopeErrY);
-    m_tracksTree->SetBranchAddress("OriginX", trackOriginX);
-    m_tracksTree->SetBranchAddress("OriginY", trackOriginY);
-    m_tracksTree->SetBranchAddress("OriginErrX", trackOriginErrX);
-    m_tracksTree->SetBranchAddress("OriginErrY", trackOriginErrY);
-    m_tracksTree->SetBranchAddress("CovarianceX", trackCovarianceX);
-    m_tracksTree->SetBranchAddress("CovarianceY", trackCovarianceY);
-    m_tracksTree->SetBranchAddress("Chi2", trackChi2);
+    // Only store track info if enabled, otherwise tracks are just containers
+    // for clusters
+    if (contentMask & TRACKFIT) {
+      m_tracksTree->SetBranchAddress("SlopeX", trackSlopeX);
+      m_tracksTree->SetBranchAddress("SlopeY", trackSlopeY);
+      m_tracksTree->SetBranchAddress("SlopeErrX", trackSlopeErrX);
+      m_tracksTree->SetBranchAddress("SlopeErrY", trackSlopeErrY);
+      m_tracksTree->SetBranchAddress("OriginX", trackOriginX);
+      m_tracksTree->SetBranchAddress("OriginY", trackOriginY);
+      m_tracksTree->SetBranchAddress("OriginErrX", trackOriginErrX);
+      m_tracksTree->SetBranchAddress("OriginErrY", trackOriginErrY);
+      m_tracksTree->SetBranchAddress("CovarianceX", trackCovarianceX);
+      m_tracksTree->SetBranchAddress("CovarianceY", trackCovarianceY);
+      m_tracksTree->SetBranchAddress("Chi2", trackChi2);
+    }
   }
 
   // Test the validity of the file
