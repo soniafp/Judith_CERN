@@ -58,10 +58,16 @@ Event::~Event() {
 }
 
 void Event::clear() {
-  // WARNING: clearing will reqlinquish ownership of objects within
+  // WARNING: clearing will reqlinquish ownership of objects within. These
+  // objects will be cached by StorageIO and cleared when needed again
   m_hits.clear();
   m_clusters.clear();
   m_tracks.clear();
+  
+  // Still own planes, so clear manually
+  for (std::vector<Plane*>::iterator it = m_planes.begin();
+      it != m_planes.end(); ++it)
+    (*it)->clear();
 
   m_timeStamp = 0;
   m_frameNumber = 0;
