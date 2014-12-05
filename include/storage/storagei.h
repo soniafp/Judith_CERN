@@ -18,7 +18,7 @@ public:
   StorageI(
       const std::string& filePath,
       int treeMask=NONE,
-      const std::vector<bool>& planeMask=s_dummyMask);
+      const std::vector<bool>* planeMask=0);
   virtual ~StorageI() {}
 
   /** Generate the `Event` object filled from entry `n` */

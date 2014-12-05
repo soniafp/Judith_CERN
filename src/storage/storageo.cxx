@@ -25,13 +25,10 @@
 namespace Storage {
 
 StorageO::StorageO(
-    size_t numPlanes,
     const std::string& filePath,
-    int treeMask,
-    const std::vector<bool>& planeMask) :
-    StorageIO(filePath, OUTPUT, treeMask) {
-
-  m_numPlanes = numPlanes;
+    size_t numPlanes,
+    int treeMask) :
+    StorageIO(filePath, OUTPUT, numPlanes, treeMask) {
 
   // Make hit and clusters trees for all the planes
   for (size_t nplane = 0; nplane < m_numPlanes; nplane++) {

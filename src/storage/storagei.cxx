@@ -27,7 +27,7 @@ namespace Storage {
 StorageI::StorageI(
     const std::string& filePath,
     int treeMask,
-    const std::vector<bool>& planeMask) :
+    const std::vector<bool>* planeMask) :
     StorageIO(filePath, INPUT, treeMask) {
 
   // Keep track of the number of planes read from the file
@@ -46,12 +46,12 @@ StorageI::StorageI(
 
     planeCount += 1;
 
-    if (!planeMask.empty() && planeCount > planeMask.size())
+    if (planeMask && planeCount > planeMask->size())
       throw std::runtime_error(
           "StorageI::StorageI: plane mask is too small");
 
     // Skip loading this plane from file if masked
-    if (!planeMask.empty() && planeMask[planeCount-1])
+    if (planeMask && planeMask->at(planeCount-1))
       continue;
 
     // Load the hits tree if it is found and not masked

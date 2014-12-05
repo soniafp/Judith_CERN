@@ -87,10 +87,10 @@ protected:
   TFile* m_file;
   /** Remember if the file is being read or written */
   const FileMode m_fileMode;
-  /** Strategy for dealing with masked hits */
-  MaskMode m_maskMode;
   /** Number of planes in the device */
   size_t m_numPlanes;
+  /** Strategy for dealing with masked hits */
+  MaskMode m_maskMode;
   /** Number of events */
   Long64_t m_numEvents;
   /** Vector of NoiseMask objects for each plane. The objects are realtively
@@ -160,9 +160,6 @@ protected:
 
   void clearVariables();
 
-  // Default argument for plane mask vector
-  static const std::vector<bool> s_dummyMask;
-
   /** Cached make new track only for friend Event class */
   Track& newTrack();
   /** Cached make new cluster only for friend Event class */
@@ -174,6 +171,7 @@ public:
   StorageIO(
       const std::string& filePath,
       FileMode fileMode,
+      size_t numPlanes=1,
       int treeMask=NONE);
   virtual ~StorageIO();
 

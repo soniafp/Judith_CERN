@@ -23,11 +23,12 @@ namespace Storage {
 StorageIO::StorageIO(
     const std::string& filePath,
     FileMode fileMode,
+    size_t numPlanes,
     int treeMask) :
     m_file(0),
     m_fileMode(fileMode),
+    m_numPlanes(numPlanes),
     m_maskMode(REMOVE),
-    m_numPlanes(0),
     m_numEvents(0),
     m_event(0),
     m_tracksTree(0),

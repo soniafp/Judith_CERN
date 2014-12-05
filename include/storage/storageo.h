@@ -16,10 +16,9 @@ private:
 
 public:
   StorageO(
-      size_t numPlanes,
       const std::string& filePath,
-      int treeMask = NONE,
-      const std::vector<bool>& planeMask=s_dummyMask);
+      size_t numPlanes,
+      int treeMask = NONE);
   virtual ~StorageO() {}
 
   /** Write the `Event` object to the file */
