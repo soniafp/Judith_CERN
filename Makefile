@@ -1,6 +1,6 @@
 CC := g++
 CFLAGS := `root-config --cflags` -g -O3 -Wall
-LIB := -Llib -ljudstorage `root-config --ldflags --glibs` -O1
+LIB := -Llib -ljudconfig -ljudstorage `root-config --ldflags --glibs` -O1
 INC := -Iinclude
 
 # Run these commands before entering targets
@@ -10,11 +10,19 @@ $(shell mkdir -p bin)
 
 ### Executable ###
 
-bin/judith: build/judith.o lib/libjudstorage.a
+bin/judith: build/judith.o lib/libjudconfig.a lib/libjudstorage.a
 	$(CC) build/judith.o $(LIB) -o bin/judith
 
 build/judith.o: src/judith.cxx
 	$(CC) $(CFLAGS) $(INC) -c src/judith.cxx -o build/judith.o
+
+### Configuration library ###
+
+lib/libjudconfig.a: build/options.o
+	ar ru lib/libjudconfig.a build/options.o
+
+build/options.o: src/configuration/options.cxx include/configuration/options.h
+	$(CC) $(CFLAGS) $(INC) -c src/configuration/options.cxx -o build/options.o
 
 ### Storage library ###
 
