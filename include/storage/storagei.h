@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 
 #include "storage/storageio.h"
 
@@ -14,13 +15,16 @@ private:
   StorageI(const StorageI&);
   StorageI& operator=(const StorageI&);
 
-  const int m_contentMask;
-
 public:
   StorageI(
       const std::string& filePath,
-      int contentMask=NONE,
-      const std::vector<bool>* planeMask=0);
+      int treeMask=NONE,
+      const std::vector<bool>* planeMask=0,
+      // List of branch names to turn off in the each tree
+      const std::set<std::string>* hitsBranchesOff=0,
+      const std::set<std::string>* clustersBranchesOff=0,
+      const std::set<std::string>* tracksBranchesOff=0,
+      const std::set<std::string>* eventInfoBranchesOff=0);
   virtual ~StorageI() {}
 
   /** Generate the `Event` object filled from entry `n` */

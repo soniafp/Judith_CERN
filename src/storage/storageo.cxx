@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include <set>
 
 #include <TFile.h>
 #include <TDirectory.h>
@@ -27,13 +28,21 @@ namespace Storage {
 StorageO::StorageO(
     const std::string& filePath,
     size_t numPlanes,
-    int contentMask) :
+    int treeMask,
+    const std::set<std::string>* hitsBranchesOff,
+    const std::set<std::string>* clustersBranchesOff,
+    const std::set<std::string>* tracksBranchesOff,
+    const std::set<std::string>* eventInfoBranchesOff) :
     StorageIO(filePath, OUTPUT, numPlanes) {
 
-  // NOTE: check storagei.cxx for information about the contentMask effects
+  // Copy any/all given branch masks
+  if (hitsBranchesOff) m_hitsBranchesOff = *hitsBranchesOff;
+  if (clustersBranchesOff) m_clustersBranchesOff = *clustersBranchesOff;
+  if (tracksBranchesOff) m_tracksBranchesOff = *tracksBranchesOff;
+  if (eventInfoBranchesOff) m_eventInfoBranchesOff = *eventInfoBranchesOff;
 
   // Avoid always checking !
-  contentMask = ~contentMask;
+  treeMask = ~treeMask;
 
   // Make hit and clusters trees for all the planes
   for (size_t nplane = 0; nplane < m_numPlanes; nplane++) {
@@ -45,80 +54,108 @@ StorageO::StorageO(
     TDirectory* dir = m_file->mkdir(ss.str().c_str());
     dir->cd();
 
-    if (contentMask & HITS) {
-      TTree* hits = new TTree("Hits", "Hits");
-      m_hitsTrees.push_back(hits);
-      hits->Branch("NHits", &numHits, "NHits/I");
-      hits->Branch("PixX", hitPixX, "HitPixX[NHits]/I");
-      hits->Branch("PixY", hitPixY, "HitPixY[NHits]/I");
-      if (contentMask & POS) {
-        hits->Branch("PosX", hitPosX, "HitPosX[NHits]/D");
-        hits->Branch("PosY", hitPosY, "HitPosY[NHits]/D");
-        hits->Branch("PosZ", hitPosZ, "HitPosZ[NHits]/D");
-      }
-      if (contentMask & VALUE)
-        hits->Branch("Value", hitValue, "HitValue[NHits]/D");
-      if (contentMask & TIMING)
-        hits->Branch("Timing", hitTiming, "HitTiming[NHits]/D");
-      if (contentMask & CLUSTERS)
-        hits->Branch("InCluster", hitInCluster, "HitInCluster[NHits]/I");
+    // Check if the hits tree is masked alltogether
+    if (treeMask & HITS) {
+      // Make a tree to store hits for this plane
+      TTree* hitsTreePl = new TTree("Hits", "Hits");
+      // Keep a pointer to the tree object
+      m_hitsTrees.push_back(hitsTreePl);
+      // Add a branch to track the number of hits per event
+      hitsTreePl->Branch("NHits", &numHits, "NHits/i");
+      // Check if the `PixX` branch has been turned off, and make the branch otherwise
+      if (!isHitsBranchOff("PixX"))
+        hitsTreePl->Branch("PixX", hitPixX, "HitPixX[NHits]/I");
+      if (!isHitsBranchOff("PixY"))
+        hitsTreePl->Branch("PixY", hitPixY, "HitPixY[NHits]/I");
+      if (!isHitsBranchOff("PosX"))
+        hitsTreePl->Branch("PosX", hitPosX, "HitPosX[NHits]/D");
+      if (!isHitsBranchOff("PosY"))
+        hitsTreePl->Branch("PosY", hitPosY, "HitPosY[NHits]/D");
+      if (!isHitsBranchOff("PosZ"))
+        hitsTreePl->Branch("PosZ", hitPosZ, "HitPosZ[NHits]/D");
+      if (!isHitsBranchOff("Value"))
+        hitsTreePl->Branch("Value", hitValue, "HitValue[NHits]/D");
+      if (!isHitsBranchOff("Timing"))
+        hitsTreePl->Branch("Timing", hitTiming, "HitTiming[NHits]/D");
+      if (treeMask & CLUSTERS)
+        hitsTreePl->Branch("InCluster", hitInCluster, "HitInCluster[NHits]/i");
     }
 
-    if (contentMask & CLUSTERS) {
-      TTree* clusters = new TTree("Clusters", "Clusters");
-      m_clustersTrees.push_back(clusters);
-      clusters->Branch("NClusters", &numClusters, "NClusters/I");
-      if (contentMask & CLUSTERFIT) {
-        clusters->Branch("PixX", clusterPixX, "ClusterPixX[NClusters]/D");
-        clusters->Branch("PixY", clusterPixY, "ClusterPixY[NClusters]/D");
-        clusters->Branch("PixErrX", clusterPixErrX, "ClusterPixErrX[NClusters]/D");
-        clusters->Branch("PixErrY", clusterPixErrY, "ClusterPixErrY[NClusters]/D");
-        if (contentMask & POS) {
-          clusters->Branch("PosX", clusterPosX, "ClusterPosX[NClusters]/D");
-          clusters->Branch("PosY", clusterPosY, "ClusterPosY[NClusters]/D");
-          clusters->Branch("PosZ", clusterPosZ, "ClusterPosZ[NClusters]/D");
-          clusters->Branch("PosErrX", clusterPosErrX, "ClusterPosErrX[NClusters]/D");
-          clusters->Branch("PosErrY", clusterPosErrY, "ClusterPosErrY[NClusters]/D");
-          clusters->Branch("PosErrZ", clusterPosErrZ, "ClusterPosErrZ[NClusters]/D");
-        }
-        if (contentMask & VALUE)
-          clusters->Branch("Value", clusterValue, "ClusterValue[NClusters]/D");
-        if (contentMask & TIMING)
-          clusters->Branch("Timing", clusterTiming, "ClusterTiming[NClusters]/D");
-      }
-      if (contentMask & TRACKS)
-        clusters->Branch("InTrack", clusterInTrack, "ClusterInTrack[NClusters]/I");
+    if (treeMask & CLUSTERS) {
+      TTree* clustersTreePl = new TTree("Clusters", "Clusters");
+      m_clustersTrees.push_back(clustersTreePl);
+      clustersTreePl->Branch("NClusters", &numClusters, "NClusters/i");
+      if (!isClustersBranchOff("PixX"))
+        clustersTreePl->Branch("PixX", clusterPixX, "ClusterPixX[NClusters]/D");
+      if (!isClustersBranchOff("PixY"))
+        clustersTreePl->Branch("PixY", clusterPixY, "ClusterPixY[NClusters]/D");
+      if (!isClustersBranchOff("PixErrX"))
+        clustersTreePl->Branch("PixErrX", clusterPixErrX, "ClusterPixErrX[NClusters]/D");
+      if (!isClustersBranchOff("PixErrY"))
+        clustersTreePl->Branch("PixErrY", clusterPixErrY, "ClusterPixErrY[NClusters]/D");
+      if (!isClustersBranchOff("PosX"))
+        clustersTreePl->Branch("PosX", clusterPosX, "ClusterPosX[NClusters]/D");
+      if (!isClustersBranchOff("PosY"))
+        clustersTreePl->Branch("PosY", clusterPosY, "ClusterPosY[NClusters]/D");
+      if (!isClustersBranchOff("PosZ"))
+        clustersTreePl->Branch("PosZ", clusterPosZ, "ClusterPosZ[NClusters]/D");
+      if (!isClustersBranchOff("PosErrX"))
+        clustersTreePl->Branch("PosErrX", clusterPosErrX, "ClusterPosErrX[NClusters]/D");
+      if (!isClustersBranchOff("PosErrY"))
+        clustersTreePl->Branch("PosErrY", clusterPosErrY, "ClusterPosErrY[NClusters]/D");
+      if (!isClustersBranchOff("PosErrZ"))
+        clustersTreePl->Branch("PosErrZ", clusterPosErrZ, "ClusterPosErrZ[NClusters]/D");
+      if (!isClustersBranchOff("Value"))
+        clustersTreePl->Branch("Value", clusterValue, "ClusterValue[NClusters]/D");
+      if (!isClustersBranchOff("Timing"))
+        clustersTreePl->Branch("Timing", clusterTiming, "ClusterTiming[NClusters]/D");
+      if (treeMask & TRACKS)
+        clustersTreePl->Branch("InTrack", clusterInTrack, "ClusterInTrack[NClusters]/i");
     }
   }  // Loop over planes
 
   // Make the event and track trees in the root directory
   m_file->cd();
 
-  if (contentMask & EVENTINFO) {
+  if (treeMask & EVENTINFO) {
     m_eventInfoTree = new TTree("Event", "Event information");
-    m_eventInfoTree->Branch("TimeStamp", &timeStamp, "TimeStamp/l");
-    m_eventInfoTree->Branch("FrameNumber", &frameNumber, "FrameNumber/l");
-    m_eventInfoTree->Branch("TriggerOffset", &triggerOffset, "TriggerOffset/I");
-    m_eventInfoTree->Branch("TriggerInfo", &triggerInfo, "TriggerInfo/I");
-    m_eventInfoTree->Branch("Invalid", &invalid, "Invalid/O");
+    if (!isEventInfoBranchOff("TimeStamp"))
+      m_eventInfoTree->Branch("TimeStamp", &timeStamp, "TimeStamp/l");
+    if (!isEventInfoBranchOff("FrameNumber"))
+      m_eventInfoTree->Branch("FrameNumber", &frameNumber, "FrameNumber/l");
+    if (!isEventInfoBranchOff("TriggerOffset"))
+      m_eventInfoTree->Branch("TriggerOffset", &triggerOffset, "TriggerOffset/I");
+    if (!isEventInfoBranchOff("TriggerInfo"))
+      m_eventInfoTree->Branch("TriggerInfo", &triggerInfo, "TriggerInfo/I");
+    if (!isEventInfoBranchOff("Invalid"))
+      m_eventInfoTree->Branch("Invalid", &invalid, "Invalid/O");
   }
 
-  if (contentMask & TRACKS) {
+  if (treeMask & TRACKS) {
     m_tracksTree = new TTree("Tracks", "Track parameters");
-    m_tracksTree->Branch("NTracks", &numTracks, "NTracks/I");
-    if (contentMask & TRACKFIT) {
+    m_tracksTree->Branch("NTracks", &numTracks, "NTracks/i");
+    if (!isTracksBranchOff("SlopeX"))
       m_tracksTree->Branch("SlopeX", trackSlopeX, "TrackSlopeX[NTracks]/D");
+    if (!isTracksBranchOff("SlopeY"))
       m_tracksTree->Branch("SlopeY", trackSlopeY, "TrackSlopeY[NTracks]/D");
+    if (!isTracksBranchOff("SlopeErrX"))
       m_tracksTree->Branch("SlopeErrX", trackSlopeErrX, "TrackSlopeErrX[NTracks]/D");
+    if (!isTracksBranchOff("SlopeErrY"))
       m_tracksTree->Branch("SlopeErrY", trackSlopeErrY, "TrackSlopeErrY[NTracks]/D");
+    if (!isTracksBranchOff("OriginX"))
       m_tracksTree->Branch("OriginX", trackOriginX, "TrackOriginX[NTracks]/D");
+    if (!isTracksBranchOff("OriginY"))
       m_tracksTree->Branch("OriginY", trackOriginY, "TrackOriginY[NTracks]/D");
+    if (!isTracksBranchOff("OriginErrX"))
       m_tracksTree->Branch("OriginErrX", trackOriginErrX, "TrackOriginErrX[NTracks]/D");
+    if (!isTracksBranchOff("OriginErrY"))
       m_tracksTree->Branch("OriginErrY", trackOriginErrY, "TrackOriginErrY[NTracks]/D");
+    if (!isTracksBranchOff("CovarianceX"))
       m_tracksTree->Branch("CovarianceX", trackCovarianceX, "TrackCovarianceX[NTracks]/D");
+    if (!isTracksBranchOff("CovarianceY"))
       m_tracksTree->Branch("CovarianceY", trackCovarianceY, "TrackCovarianceY[NTracks]/D");
+    if (!isTracksBranchOff("Chi2"))
       m_tracksTree->Branch("Chi2", trackChi2, "TrackChi2[NTracks]/D");
-    }
   }
 }
 
@@ -127,8 +164,6 @@ StorageO::~StorageO() {
 }
 
 void StorageO::writeEvent(Event& event) {
-  clearVariables();  // clear any lingering values
-
   m_file->cd();  // Ensure writing to the output file
 
   // Set the event information in local memory to be read into the file
@@ -145,7 +180,7 @@ void StorageO::writeEvent(Event& event) {
         "StorageIO: event exceeds MAX_TRACKS");
 
   // Set the object track values into the arrays for writing to the root file
-  for (int ntrack = 0; ntrack < numTracks; ntrack++) {
+  for (UInt_t ntrack = 0; ntrack < numTracks; ntrack++) {
     Track& track = event.getTrack(ntrack);
     trackOriginX[ntrack] = track.getOriginX();
     trackOriginY[ntrack] = track.getOriginY();
@@ -161,7 +196,7 @@ void StorageO::writeEvent(Event& event) {
   }
 
   // Fill the hits and clusters trees one plane at a time
-  for (unsigned int nplane = 0; nplane < m_numPlanes; nplane++) {
+  for (size_t nplane = 0; nplane < m_numPlanes; nplane++) {
     Plane& plane = event.getPlane(nplane);
 
     // There might not be any hit trees or cluster trees, so check first before
@@ -177,7 +212,7 @@ void StorageO::writeEvent(Event& event) {
           "StorageO::writeEvent: event exceeds MAX_CLUSTERS");
 
     // Set the object cluster values into the arrays for writig into the root file
-    for (int ncluster = 0; ncluster < numClusters; ncluster++) {
+    for (UInt_t ncluster = 0; ncluster < numClusters; ncluster++) {
       Cluster& cluster = plane.getCluster(ncluster);
       clusterPixX[ncluster] = cluster.getPixX();
       clusterPixY[ncluster] = cluster.getPixY();
@@ -191,7 +226,7 @@ void StorageO::writeEvent(Event& event) {
       clusterPosErrZ[ncluster] = cluster.getPosErrZ();
       clusterTiming[ncluster] = cluster.getTiming();
       clusterValue[ncluster] = cluster.getValue();
-      clusterInTrack[ncluster] = cluster.fetchTrack() ? cluster.fetchTrack()->getIndex() : -1;
+      clusterInTrack[ncluster] = cluster.fetchTrack() ? cluster.fetchTrack()->getIndex()+1 : 0;
     }
 
     numHits = plane.getNumHits();
@@ -199,7 +234,7 @@ void StorageO::writeEvent(Event& event) {
       throw std::runtime_error(
           "StorageO::writeEvent: event exceeds MAX_HITS");
 
-    for (int nhit = 0; nhit < numHits; nhit++) {
+    for (UInt_t nhit = 0; nhit < numHits; nhit++) {
       Hit& hit = plane.getHit(nhit);
       hitPixX[nhit] = hit.getPixX();
       hitPixY[nhit] = hit.getPixY();
@@ -208,7 +243,7 @@ void StorageO::writeEvent(Event& event) {
       hitPosZ[nhit] = hit.getPosZ();
       hitValue[nhit] = hit.getValue();
       hitTiming[nhit] = hit.getTiming();
-      hitInCluster[nhit] = hit.fetchCluster() ? hit.fetchCluster()->getIndex() : -1;
+      hitInCluster[nhit] = hit.fetchCluster() ? hit.fetchCluster()->getIndex()+1 : 0;
     }
 
     if (!m_hitsTrees.empty())

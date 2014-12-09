@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <cmath>
+#include <set>
 
 #include <TSystem.h>
 
@@ -381,44 +382,95 @@ int test_storageioReadMasking() {
   }
 
   {  // Position, value and timing masking
+    std::set<std::string> hitsBranchMask;
+    hitsBranchMask.insert("PixX");
+    hitsBranchMask.insert("PixY");
+    hitsBranchMask.insert("PosX");
+    hitsBranchMask.insert("PosY");
+    hitsBranchMask.insert("PosZ");
+    hitsBranchMask.insert("Value");
+    hitsBranchMask.insert("Timing");
+
+    std::set<std::string> clustersBranchMask;
+    clustersBranchMask.insert("PixX");
+    clustersBranchMask.insert("PixY");
+    clustersBranchMask.insert("PixErrX");
+    clustersBranchMask.insert("PixErrY");
+    clustersBranchMask.insert("PosX");
+    clustersBranchMask.insert("PosY");
+    clustersBranchMask.insert("PosZ");
+    clustersBranchMask.insert("PosErrX");
+    clustersBranchMask.insert("PosErrY");
+    clustersBranchMask.insert("PosErrZ");
+    clustersBranchMask.insert("Value");
+    clustersBranchMask.insert("Timing");
+
+    std::set<std::string> tracksBranchMask;
+    tracksBranchMask.insert("SlopeX");
+    tracksBranchMask.insert("SlopeY");
+    tracksBranchMask.insert("SlopeErrX");
+    tracksBranchMask.insert("SlopeErrY");
+    tracksBranchMask.insert("OriginX");
+    tracksBranchMask.insert("OriginY");
+    tracksBranchMask.insert("OriginErrX");
+    tracksBranchMask.insert("OriginErrY");
+    tracksBranchMask.insert("CovarianceX");
+    tracksBranchMask.insert("CovarianceY");
+    tracksBranchMask.insert("Chi2");
+
+    std::set<std::string> eventInfoBranchMask;
+    eventInfoBranchMask.insert("TimeStamp");
+    eventInfoBranchMask.insert("FrameNumber");
+    eventInfoBranchMask.insert("TriggerOffset");
+    eventInfoBranchMask.insert("TriggerInfo");
+    eventInfoBranchMask.insert("Invalid");
+
     Storage::StorageI store(
         "tmp.root",
-        Storage::StorageIO::POS |
-        Storage::StorageIO::VALUE |
-        Storage::StorageIO::TIMING);
+        Storage::StorageIO::NONE, // No tree mask
+        0, // No plane mask
+        &hitsBranchMask,
+        &clustersBranchMask,
+        &tracksBranchMask,
+        &eventInfoBranchMask);
 
     for (Int_t n = 0; n < store.getNumEvents(); n++) {
       Storage::Event& event = store.readEvent(n);
       Storage::Hit& hit = event.getHit(0);
       Storage::Cluster& cluster = event.getCluster(0);
-      if (hit.getPosX() != 0 ||
+      Storage::Track& track = event.getTrack(0);
+      if (hit.getPixX() != 0 ||
+          hit.getPixY() != 0 ||
+          hit.getPosX() != 0 ||
           hit.getPosY() != 0 ||
           hit.getPosZ() != 0 ||
           hit.getValue() != 0 ||
           hit.getTiming() != 0 ||
+          cluster.getPixX() != 0 ||
+          cluster.getPixY() != 0 ||
+          cluster.getPixErrX() != 0 ||
+          cluster.getPixErrY() != 0 ||
           cluster.getPosX() != 0 ||
           cluster.getPosY() != 0 ||
           cluster.getPosZ() != 0 ||
           cluster.getValue() != 0 ||
-          cluster.getTiming() != 0) {
-        std::cerr << "Storage::StorageI: pos, value, timing  mask failed" << std::endl;
-        return -1;
-      }
-    }
-  }
-
-  {  // Fit masking
-    Storage::StorageI store(
-        "tmp.root",
-        Storage::StorageIO::TRACKFIT | Storage::StorageIO::CLUSTERFIT);
-
-    for (Int_t n = 0; n < store.getNumEvents(); n++) {
-      Storage::Event& event = store.readEvent(n);
-      Storage::Cluster& cluster = event.getCluster(0);
-      Storage::Track& track = event.getTrack(0);
-      if (cluster.getPixX() != 0 ||  // only checking two values
-          track.getSlopeX() != 0) {
-        std::cerr << "Storage::StorageI: fit mask failed" << std::endl;
+          cluster.getTiming() != 0 ||
+          track.getSlopeX() != 0 ||
+          track.getSlopeY() != 0 ||
+          track.getSlopeErrX() != 0 ||
+          track.getSlopeErrY() != 0 ||
+          track.getOriginX() != 0 ||
+          track.getOriginY() != 0 ||
+          track.getOriginErrX() != 0 ||
+          track.getOriginErrY() != 0 ||
+          track.getCovarianceX() != 0 ||
+          track.getCovarianceY() != 0 ||
+          event.getTimeStamp() != 0 ||
+          event.getFrameNumber() != 0 ||
+          event.getTriggerOffset() != 0 ||
+          event.getTriggerInfo() != 0 ||
+          event.getInvalid() != false) {
+        std::cerr << "Storage::StorageI: branch mask failed" << std::endl;
         return -1;
       }
     }
@@ -426,6 +478,8 @@ int test_storageioReadMasking() {
 
   return 0;
 }
+
+// TODO test masking on write
 
 int main() {
   int retval = 0;

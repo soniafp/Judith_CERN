@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <set>
 
 #include <Rtypes.h>
 #include <TFile.h>
@@ -57,11 +58,6 @@ public:
     CLUSTERS = 1<<1,
     TRACKS = 1<<2,
     EVENTINFO = 1<<3,
-    POS = 1<<4,
-    VALUE = 1<<5,
-    TIMING = 1<<6,
-    CLUSTERFIT = 1<<7,
-    TRACKFIT = 1<<8,
   };
 
   enum FileMode {
@@ -119,9 +115,18 @@ protected:
   TTree* m_tracksTree;
   TTree* m_eventInfoTree;
 
+  // Keep track of disabled branches in each tree
+  std::set<std::string> m_hitsBranchesOff;
+  std::set<std::string> m_clustersBranchesOff;
+  std::set<std::string> m_tracksBranchesOff;
+  std::set<std::string> m_eventInfoBranchesOff;
+
   // Variables in which the storage is output on an event-by-event basis
 
-  Int_t    numHits;
+  // NOTE: don't change the order of these declarations since they are used to
+  // do one big memset to zero everything
+
+  UInt_t   numHits;
   Int_t    hitPixX[MAX_HITS];
   Int_t    hitPixY[MAX_HITS];
   Double_t hitPosX[MAX_HITS];
@@ -129,9 +134,9 @@ protected:
   Double_t hitPosZ[MAX_HITS];
   Double_t hitValue[MAX_HITS];
   Double_t hitTiming[MAX_HITS];
-  Int_t    hitInCluster[MAX_HITS];
+  UInt_t   hitInCluster[MAX_HITS];
 
-  Int_t    numClusters;
+  UInt_t   numClusters;
   Double_t clusterPixX[MAX_CLUSTERS];
   Double_t clusterPixY[MAX_CLUSTERS];
   Double_t clusterPixErrX[MAX_CLUSTERS];
@@ -144,7 +149,7 @@ protected:
   Double_t clusterPosErrZ[MAX_CLUSTERS];
   Double_t clusterValue[MAX_CLUSTERS];
   Double_t clusterTiming[MAX_CLUSTERS];
-  Int_t    clusterInTrack[MAX_CLUSTERS];
+  UInt_t   clusterInTrack[MAX_CLUSTERS];
 
   ULong64_t timeStamp;
   ULong64_t frameNumber;
@@ -152,7 +157,7 @@ protected:
   Int_t     triggerInfo;
   Bool_t    invalid;
 
-  Int_t    numTracks;
+  UInt_t   numTracks;
   Double_t trackSlopeX[MAX_TRACKS];
   Double_t trackSlopeY[MAX_TRACKS];
   Double_t trackSlopeErrX[MAX_TRACKS];
@@ -164,8 +169,6 @@ protected:
   Double_t trackCovarianceX[MAX_TRACKS];
   Double_t trackCovarianceY[MAX_TRACKS];
   Double_t trackChi2[MAX_TRACKS];
-
-  void clearVariables();
 
   /** Cached make new track only for friend Event class */
   Track& newTrack();
@@ -184,6 +187,16 @@ public:
   /** Provides the `Event` object cleared to be filled. NOTE: this event is
     * overwritten whenever this method is called. */
   Event& newEvent();
+
+  bool isHitsBranchOff(const std::string& name) const;
+  bool isClustersBranchOff(const std::string& name) const;
+  bool isTracksBranchOff(const std::string& name) const;
+  bool isEventInfoBranchOff(const std::string& name) const;
+
+  const std::set<std::string>& getHitsBranchesOff() const { return m_hitsBranchesOff; }
+  const std::set<std::string>& getClustersBranchesOff() const { return m_clustersBranchesOff; }
+  const std::set<std::string>& getTracksBranchesOff() const { return m_tracksBranchesOff; }
+  const std::set<std::string>& getEventInfoBranchesOff() const { return m_eventInfoBranchesOff; }
 
   Long64_t getNumEvents() const { return m_numEvents; }
   size_t getNumPlanes() const { return m_numPlanes; }

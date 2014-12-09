@@ -4,6 +4,8 @@
 #include <stack>
 #include <string>
 #include <stdexcept>
+#include <set>
+#include <cstring>
 
 #include <TTree.h>
 
@@ -41,7 +43,14 @@ StorageIO::StorageIO(
     throw std::runtime_error(
         "StorageIO::StorageIO: file didn't initialize");
 
-  clearVariables();
+  // Zero all the buffer memory at once. C++ guarantees continuous memory for
+  // members declared sequentially not split by an access specifier, so this
+  // works.
+
+  // Total size from numHits to the end of the last track array
+  size_t size = (size_t)(&trackChi2) - (size_t)(&numHits);
+  size += sizeof(Double_t)*MAX_TRACKS;
+  std::memset(&numHits, 0, size);
 }
 
 StorageIO::~StorageIO() {
@@ -77,17 +86,6 @@ StorageIO::~StorageIO() {
     m_file->Close();
     delete m_file;
   }
-}
-
-void StorageIO::clearVariables() {
-  timeStamp = 0;
-  frameNumber = 0;
-  triggerOffset = 0;
-  triggerInfo = 0;
-  invalid = false;
-  numHits = 0;
-  numClusters = 0;
-  numTracks = 0;
 }
 
 Event& StorageIO::newEvent() {
@@ -152,6 +150,22 @@ Hit& StorageIO::newHit() {
     hit->clear();
   }
   return *hit;
+}
+
+bool StorageIO::isHitsBranchOff(const std::string& name) const {
+  return m_hitsBranchesOff.find(name) != m_hitsBranchesOff.end();
+}
+
+bool StorageIO::isClustersBranchOff(const std::string& name) const {
+  return m_clustersBranchesOff.find(name) != m_clustersBranchesOff.end();
+}
+
+bool StorageIO::isTracksBranchOff(const std::string& name) const {
+  return m_tracksBranchesOff.find(name) != m_tracksBranchesOff.end();
+}
+
+bool StorageIO::isEventInfoBranchOff(const std::string& name) const {
+  return m_eventInfoBranchesOff.find(name) != m_eventInfoBranchesOff.end();
 }
 
 }
