@@ -1,5 +1,5 @@
 #include <iostream>
-#include <stdio>
+#include <stdio.h>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -22,7 +22,7 @@ void printHelp() {
   std::cout << std::endl;
 }
 
-int main(int argc, char** argv) {
+int main(int argc, const char** argv) {
   std::cout << "\nStarting Judith\n" << std::endl;
 
   TApplication app("App", 0, 0);
@@ -39,14 +39,14 @@ int main(int argc, char** argv) {
     // First command line options
     options.parseArgs(argc, argv);
     // Check if help is requested and stop execution if so
-    if (config.hasArg("help")) {
+    if (options.hasArg("help")) {
       printHelp();
       return 0;
     }
     // Default settings path (overwritten if provided in command line arguments)
     options.addPair("settings", "configs/settings.txt");
     // Parse settings file
-    options.parseFile(options.getValue("settings");
+    options.parseFile(options.getValue("settings"));
   }
   catch (std::exception& e) {
     std::cerr << "ERROR: " << e.what() << std::endl;
