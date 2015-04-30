@@ -202,8 +202,8 @@ int test_storageioWrite() {
     // Scale the values by the event
     hit.setPix(1*n+1, 2*n+1);
     hit.setPos(.1*n+1, .2*n+1, .3*n+1);
-    hit.setTiming(.1*n+1);
-    hit.setValue(.2*n+1);
+    hit.setTiming(1*n+1);
+    hit.setValue(2*n+1);
     hit.setMasked(true);
 
     Storage::Cluster& cluster = event.newCluster(n%NPLANES);
@@ -310,8 +310,8 @@ int test_storageioRead() {
         !approxEqual(hit.getPosX(), .1*n+1) ||
         !approxEqual(hit.getPosY(), .2*n+1) ||
         !approxEqual(hit.getPosZ(), .3*n+1) ||
-        !approxEqual(hit.getTiming(), .1*n+1) ||
-        !approxEqual(hit.getValue(), .2*n+1)) {
+        hit.getTiming() != 1*n+1 ||
+        hit.getValue() != 2*n+1) {
       std::cerr << "Storage::StorageI: hit read back incorrect" << std::endl;
       return -1;
     }

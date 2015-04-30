@@ -357,7 +357,7 @@ Event& StorageI::readEvent(Long64_t n) {
   event.setInvalid(invalid);
 
   // Generate a list of track objects based on tracks from the tracks tree
-  for (UInt_t ntrack = 0; ntrack < numTracks; ntrack++) {
+  for (Int_t ntrack = 0; ntrack < numTracks; ntrack++) {
     // Ask the event to prepare a new track (comes from this objects' cache)
     Track& track = event.newTrack();
     track.setOrigin(trackOriginX[ntrack], trackOriginY[ntrack]);
@@ -380,7 +380,7 @@ Event& StorageI::readEvent(Long64_t n) {
           "StorageIO::readEvent: error reading clusters tree");
 
     // Generate the cluster objects
-    for (UInt_t ncluster = 0; ncluster < numClusters; ncluster++) {
+    for (Int_t ncluster = 0; ncluster < numClusters; ncluster++) {
       Cluster& cluster = event.newCluster(nplane);
       cluster.setPix(clusterPixX[ncluster], clusterPixY[ncluster]);
       cluster.setPixErr(clusterPixErrX[ncluster], clusterPixErrY[ncluster]);
@@ -403,15 +403,18 @@ Event& StorageI::readEvent(Long64_t n) {
     }
 
     // Generate a list of all hit objects
-    for (UInt_t nhit = 0; nhit < numHits; nhit++) {
+    for (Int_t nhit = 0; nhit < numHits; nhit++) {
       const bool isMasked = 
           !m_noiseMasks.empty() &&
           m_noiseMasks[nplane].at(hitPixX[nhit], hitPixY[nhit]);
 
+      // Don't make a hit object for masked hits if they are to be removed.
+      // This will also prevent it being written out.
       if (isMasked && m_maskMode == REMOVE) {
-        if (hitInCluster[nhit] >= 0)
-          throw std::runtime_error(
-              "StorageIO::readEvent: tried to remove a clustered hit");
+        // If the hit was clustered, the cluster will be broken (it will try to
+        // use a non-existent hit)
+        if (hitInCluster[nhit] >= 0) throw std::runtime_error(
+              "StorageIO::readEvent: masking tried to remove a clustered hit");
         continue;
       }
 
@@ -420,7 +423,7 @@ Event& StorageI::readEvent(Long64_t n) {
       hit.setPos(hitPosX[nhit], hitPosY[nhit], hitPosZ[nhit]);
       hit.setValue(hitValue[nhit]);
       hit.setTiming(hitTiming[nhit]);
-      hit.setMasked(isMasked);
+      hit.setMasked(isMasked);  // Possible the hit is masked but not to be removed
 
       // If this hit is in a cluster, mark this (and the clusters tree is active)
       if (!m_clustersTrees.empty() && hitInCluster[nhit] > 0) {

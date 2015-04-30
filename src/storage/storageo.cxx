@@ -61,7 +61,7 @@ StorageO::StorageO(
       // Keep a pointer to the tree object
       m_hitsTrees.push_back(hitsTreePl);
       // Add a branch to track the number of hits per event
-      hitsTreePl->Branch("NHits", &numHits, "NHits/i");
+      hitsTreePl->Branch("NHits", &numHits, "NHits/I");
       // Check if the `PixX` branch has been turned off, and make the branch otherwise
       if (!isHitsBranchOff("PixX"))
         hitsTreePl->Branch("PixX", hitPixX, "HitPixX[NHits]/I");
@@ -74,17 +74,17 @@ StorageO::StorageO(
       if (!isHitsBranchOff("PosZ"))
         hitsTreePl->Branch("PosZ", hitPosZ, "HitPosZ[NHits]/D");
       if (!isHitsBranchOff("Value"))
-        hitsTreePl->Branch("Value", hitValue, "HitValue[NHits]/D");
+        hitsTreePl->Branch("Value", hitValue, "HitValue[NHits]/I");
       if (!isHitsBranchOff("Timing"))
-        hitsTreePl->Branch("Timing", hitTiming, "HitTiming[NHits]/D");
+        hitsTreePl->Branch("Timing", hitTiming, "HitTiming[NHits]/I");
       if (treeMask & CLUSTERS)
-        hitsTreePl->Branch("InCluster", hitInCluster, "HitInCluster[NHits]/i");
+        hitsTreePl->Branch("InCluster", hitInCluster, "HitInCluster[NHits]/I");
     }
 
     if (treeMask & CLUSTERS) {
       TTree* clustersTreePl = new TTree("Clusters", "Clusters");
       m_clustersTrees.push_back(clustersTreePl);
-      clustersTreePl->Branch("NClusters", &numClusters, "NClusters/i");
+      clustersTreePl->Branch("NClusters", &numClusters, "NClusters/I");
       if (!isClustersBranchOff("PixX"))
         clustersTreePl->Branch("PixX", clusterPixX, "ClusterPixX[NClusters]/D");
       if (!isClustersBranchOff("PixY"))
@@ -110,7 +110,7 @@ StorageO::StorageO(
       if (!isClustersBranchOff("Timing"))
         clustersTreePl->Branch("Timing", clusterTiming, "ClusterTiming[NClusters]/D");
       if (treeMask & TRACKS)
-        clustersTreePl->Branch("InTrack", clusterInTrack, "ClusterInTrack[NClusters]/i");
+        clustersTreePl->Branch("InTrack", clusterInTrack, "ClusterInTrack[NClusters]/I");
     }
   }  // Loop over planes
 
@@ -133,7 +133,7 @@ StorageO::StorageO(
 
   if (treeMask & TRACKS) {
     m_tracksTree = new TTree("Tracks", "Track parameters");
-    m_tracksTree->Branch("NTracks", &numTracks, "NTracks/i");
+    m_tracksTree->Branch("NTracks", &numTracks, "NTracks/I");
     if (!isTracksBranchOff("SlopeX"))
       m_tracksTree->Branch("SlopeX", trackSlopeX, "TrackSlopeX[NTracks]/D");
     if (!isTracksBranchOff("SlopeY"))
@@ -180,7 +180,7 @@ void StorageO::writeEvent(Event& event) {
         "StorageIO: event exceeds MAX_TRACKS");
 
   // Set the object track values into the arrays for writing to the root file
-  for (UInt_t ntrack = 0; ntrack < numTracks; ntrack++) {
+  for (Int_t ntrack = 0; ntrack < numTracks; ntrack++) {
     Track& track = event.getTrack(ntrack);
     trackOriginX[ntrack] = track.getOriginX();
     trackOriginY[ntrack] = track.getOriginY();
@@ -212,7 +212,7 @@ void StorageO::writeEvent(Event& event) {
           "StorageO::writeEvent: event exceeds MAX_CLUSTERS");
 
     // Set the object cluster values into the arrays for writig into the root file
-    for (UInt_t ncluster = 0; ncluster < numClusters; ncluster++) {
+    for (Int_t ncluster = 0; ncluster < numClusters; ncluster++) {
       Cluster& cluster = plane.getCluster(ncluster);
       clusterPixX[ncluster] = cluster.getPixX();
       clusterPixY[ncluster] = cluster.getPixY();
@@ -234,7 +234,7 @@ void StorageO::writeEvent(Event& event) {
       throw std::runtime_error(
           "StorageO::writeEvent: event exceeds MAX_HITS");
 
-    for (UInt_t nhit = 0; nhit < numHits; nhit++) {
+    for (Int_t nhit = 0; nhit < numHits; nhit++) {
       Hit& hit = plane.getHit(nhit);
       hitPixX[nhit] = hit.getPixX();
       hitPixY[nhit] = hit.getPixY();

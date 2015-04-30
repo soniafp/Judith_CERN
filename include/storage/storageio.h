@@ -126,17 +126,17 @@ protected:
   // NOTE: don't change the order of these declarations since they are used to
   // do one big memset to zero everything
 
-  UInt_t   numHits;
+  Int_t    numHits;
   Int_t    hitPixX[MAX_HITS];
   Int_t    hitPixY[MAX_HITS];
   Double_t hitPosX[MAX_HITS];
   Double_t hitPosY[MAX_HITS];
   Double_t hitPosZ[MAX_HITS];
-  Double_t hitValue[MAX_HITS];
-  Double_t hitTiming[MAX_HITS];
-  UInt_t   hitInCluster[MAX_HITS];
+  Int_t    hitValue[MAX_HITS];
+  Int_t    hitTiming[MAX_HITS];
+  Int_t    hitInCluster[MAX_HITS];
 
-  UInt_t   numClusters;
+  Int_t    numClusters;
   Double_t clusterPixX[MAX_CLUSTERS];
   Double_t clusterPixY[MAX_CLUSTERS];
   Double_t clusterPixErrX[MAX_CLUSTERS];
@@ -149,7 +149,7 @@ protected:
   Double_t clusterPosErrZ[MAX_CLUSTERS];
   Double_t clusterValue[MAX_CLUSTERS];
   Double_t clusterTiming[MAX_CLUSTERS];
-  UInt_t   clusterInTrack[MAX_CLUSTERS];
+  Int_t    clusterInTrack[MAX_CLUSTERS];
 
   ULong64_t timeStamp;
   ULong64_t frameNumber;
@@ -157,7 +157,7 @@ protected:
   Int_t     triggerInfo;
   Bool_t    invalid;
 
-  UInt_t   numTracks;
+  Int_t    numTracks;
   Double_t trackSlopeX[MAX_TRACKS];
   Double_t trackSlopeY[MAX_TRACKS];
   Double_t trackSlopeErrX[MAX_TRACKS];
