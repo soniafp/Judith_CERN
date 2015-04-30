@@ -189,15 +189,53 @@ This class is used to navigate the event data and doesn't serve any other explic
 
 The \Verb`Event` class manages all information and objects representing the information for a single triggered event. It provides structured access to the event information through the hierarchy shown in figure \ref{fig:modules_storage_objects}.
 
-The \Verb`Event` class owns its constituent objects (\Verb`Hit`, \Verb`Cluster`, \Verb`Plane`, \Verb`Track`) if it is constructed ``stand-alone''. It can also be constructed by a \Verb`StorageIO` object (i.e. during read-back from a file), in which case that object owns its \Verb`Hit`, \Verb`Cluster` and \Verb`Track` objects. More on this in the next section.
+The \Verb`Event` class owns its constituent objects (\Verb`Hit`, \Verb`Cluster`, \Verb`Plane`, \Verb`Track`) if it is constructed ``stand-alone''. It can also be constructed by a \Verb`StorageIO` object (i.e. during read-back from a file), in which case that \Verb`StorageIO` object owns the \Verb`Event`'s \Verb`Hit`, \Verb`Cluster` and \Verb`Track` objects. More on this in the next section.
 
 \subsection{StorageIO}
 
-The \Verb`StorageIO` class deals with storing and reading back \Judith event information to and from disk. It serves as a base class to the \Verb`StorageI` and \Verb`StorageO` classes, which simply instantiate a \Verb`StorageIO` class in the correct state for either input or output respectively.
+The \Verb`StorageIO` class deals with storing and reading back \Judith event information to and from disk. It serves as a base class to the \Verb`StorageI` and \Verb`StorageO` classes. These derived classes instantiate a \Verb`StorageIO` class in the correct state for either input or output respectively, and provide additional input/output specific functionality.
 
-The class reads/writes from/to \ROOT \Verb`TTree`s. It allocates memory which is used to buffer the data from/to the \Verb`TTree`s. When writing output, the buffers are filled from an \Verb`Event` object. When reading input, an \Verb`Event` object is generated from the buffered values.
+The \Verb`StorageIO` class has three responsibilities:
+
+\begin{itemize}
+  \item Provide memory buffers from/to which the \ROOT \Verb`TTree`s can read/write their values.
+  \item Provide configuration for the purpose of masking spurious information (trees, branches, planes and noisy pixels).
+  \item Provide a memory cache for the \Verb`Event` object.
+\end{itemize}
 
 \subsubsection{StorageI}
+
+\Verb`StorageI` is derived from \Verb`StorageIO` and provides a constructor and a \Verb`readEvent` method.
+
+The object is constructed from the name of a file to open and read from, and with the following optional parameters:
+
+\begin{itemize}
+  \item A tree mask (implemented as a bit mask), which can disable the storage trees: \Verb`Hits`, \Verb`Clusters`, \Verb`Tracks` and \Verb`EventInfo`. The bits are defined in \Verb`StorageIO::ContentFlags`.
+  \item A plane mask which can disable reading information from specified planes. The mask is a vector of booleans, one for each plane. Those planes which evaluate to \Verb`true` will be masked.
+  \item Branch masks which disable specific tree branches. One mask can be provided for each tree. The masks are of the type \Verb`std::set<std::string>`. Each string is the name of a branch whose contents will not be read.
+\end{itemize}
+
+Note that branches which are present in the file, but disabled in the configuration, will not be read, improving the event reading speed. However, branches which are not disabled in the configuration, but which are missing from the file, will prompt \ROOT warnings.
+
+The \Verb`readEvent` method reads the event from the file at the specified index, and returns an \Verb`Event` object built from the read values.
+
+\subsubsection{StorageO}
+
+\Verb`StorageO` is derived from \Verb`StorageIO` and provides a constructor and a \Verb`writeEvent` method.
+
+The constructor is similar to that of \Verb`StorageI`, but requires a number of planes to be specified. It will then generate the file of the given name, and generate the \Verb`TTree`s to write to.
+
+The \Verb`writeEvent` fills an entry in the \Verb`TTree`s based on the information in the provided \Verb`Event` object.
+
+\subsubsection{Caching}
+
+\Verb`StorageIO` keeps track of only one \Verb`Event` object, which gets cleared and returned by the \Verb`newEvent` method. When \Verb`StorageIO` clears the \Verb`Event` object, that object's constituents are moved to the \Verb`StorageIO` cache. For example, the \Verb`Event`'s \Verb`Hit` object vector is cleared, and the \Verb`Hit` object pointers are stored in the \Verb`StorageIO` cache.
+
+The \Verb`Event`'s planes are an exception. They do not change between events, so they are allowed to remain in the \Verb`Event` object after it is cleared. However, the \Verb`Event`'s \Verb`clear` method will clear their constituents (i.e. their \Verb`Hit` and \Verb`Cluster` vectors).
+
+The \Verb`Event` object generates its \Verb`Plane` objects upon initialization (it is initialized with a specified number of planes, either in the constructor or through the \Verb`StorageIO` object). The \Verb`Event` object is then responsible for generating the \Verb`Hit`, \Verb`Cluster` and \Verb`Track` objects as they are needed. It stores pointers to the generated objects and deletes them upon destruction.
+
+If the \Verb`Event` object is constructed by a \Verb`StrageIO` object, instead of constructing new \Verb`Hit`, \Verb`Cluster` and \Verb`Track` objects, it will ask the \Verb`StorageIO` object to provide them. \Verb`StorageIO` will then either construct a new object, or relinquish one from its cache.
 
 \chapter{Supported data}
 
