@@ -9,7 +9,7 @@ bin/*
 # Ignore documentation build directory
 doc/build
 # Ignore the built PDF
-ignore doc/*.pdf
+doc/*.pdf
 # Ignore tests bin directory
 tests/bin*
 
