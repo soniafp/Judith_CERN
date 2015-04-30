@@ -29,11 +29,9 @@
 \chapter{Introduction}
 \label{ch:introduction}
 
-Do read this chapter, it will probably save you some time down the road. This introduction is meant to explain where you can find what you are seeking in this document, and where you can find information you weren't looking for but probably need.
-
 This document isn't an exhaustive reference, it is instead only a guide describing the organization and general features of \Judith. The exhaustive reference is the source code which is well commented and meant to be very readable (in that way it is self-documenting).
 
-If you aren't an experienced C++ programmer (i.e. you read C++ code, and you write algorithms, but maybe you've never sat down to read a book on it) you should head to appendix \ref{ch:cppprimer}. Even if you are an experience C++ programmer, you might find some useful information there. It will take only 10 minutes of your time and save you hours of head and heart aches. The introduction will be waiting for you to come back, its not going anywhere.
+If you aren't an experienced C++ programmer (i.e. you read C++ code, and you write algorithms, but maybe you've never sat down to read a book on it) you should head to appendix \ref{ch:cppprimer}. Even if you are an experience C++ programmer, you might find some useful information there.
 
 The typical user is expected to have some level of familiarity with C++ and Unix, but may not be well versed in either topic. Some basic information about both subjects will be included in this document to put all readers on equal footing.
 
@@ -52,9 +50,9 @@ The typical user is expected to have some level of familiarity with C++ and Unix
 Following are limitations of \Judith arising from \Judith's focus on testbeam analysis:
 
 \begin{itemize}
-	\item No tracking in magnetic fields.
-	\item Poor performance for densely occupied sensors. The number of occupied channels on a sensor should be on the order of $1\times10^1$, not $1\times10^2$.
-	\item Poor performance for large MIP multiplicity in the DUT. The DUT should detect on the order of 1 MIP per trigger, not $1\times10^1$.
+	\item No tracking in magnetic fields. \Judith's tracks can not handle helix trajectories.
+	\item Poor performance for densely occupied sensors. The clustering and tracking algorithms are not optimized to handle hundreds of hits per sensor.
+	\item Poor performance for very complex detector geometries. The alignment algorithms are not optimized to handle hundreds of sensors.
 \end{itemize}
 
 \section{Finding information}
@@ -101,7 +99,7 @@ Following is a list of goals driving \Judith's development:
 \begin{itemize}
 	\item \textbf{Transparent}: the main goal is for the program to be transparent to users. It is important for the user to be able to understand the algorithms to know: how they apply to their analysis, what are their limitations, how they can be extended. The program should be easily understood and extended by non-expert-programmers (i.e. physicists).
 	\item \textbf{Fast}: this program is expected to be used in testbeam type situations where time is constrained and very valuable. Testbeam users will need to quickly see results so they can react to them in real-time. The time scale for performing tasks should be minutes at most, and preferably seconds.
-	\item \textbf{Simple}: this follows from the two previous points. The program should implement simple algorithms which are efficient, easily understood, and easily extended.
+	\item \textbf{Simple}: this follows from the two previous points. The program should implement simple algorithms which are efficient, easily understood, and easily extended. This does mean that efficiency is sometimes sacrificed for simplicity.
 	\item \textbf{Portable} (except for Windows): the program should be deployable in a variety of contexts. E.g. on a user's laptop which can be carried into different laboratories, on a DAQ desktop controlling some testbeam hardware, on a work computer for analysis. The targeted deployment systems are Linux and Mac.
 \end{itemize}
 
@@ -171,7 +169,7 @@ The center of gravity (COG) and size of the cluster are stored in the \Verb`pix`
 
 The \Verb`timing` and \Verb`value` members are meant to be aggregate properties of the cluster's constituent hits.
 
-It is up to the algorithm generating the clusters to fill the cluster's properties based on its constituent hits.
+It is up to the algorithm generating the clusters to fill the cluster's properties based on its constituent hits. Different algorithms might have different interpretations the members. For example, one algorithm could take a weighted average of hits, and compute the size of the cluster using charge sharing information. Another might take a simple average and standard deviation approach.
 
 \subsection{Track}
 
@@ -190,12 +188,16 @@ This class is used to navigate the event data and doesn't serve any other explic
 \subsection{Event}
 
 The \Verb`Event` class manages all information and objects representing the information for a single triggered event. It provides structured access to the event information through the hierarchy shown in figure \ref{fig:modules_storage_objects}.
- 
-The \Verb`Event` class owns its constituent objects (\Verb`Hit`, \Verb`Cluster`, \Verb`Plane`, \Verb`Track`). However, the \Verb`StorageIO` class can take ownership of some of its constituents for caching (all but the planes which do not change event-by-event).
 
-The event serves as a centralized repository from where all event information can be obtained, regardless of whether or not that information is accessible in another class (e.g. \Verb`Hit`s and \Verb`Cluster`s are also accessible from the \Verb`Plane` class).
+The \Verb`Event` class owns its constituent objects (\Verb`Hit`, \Verb`Cluster`, \Verb`Plane`, \Verb`Track`) if it is constructed ``stand-alone''. It can also be constructed by a \Verb`StorageIO` object (i.e. during read-back from a file), in which case that object owns its \Verb`Hit`, \Verb`Cluster` and \Verb`Track` objects. More on this in the next section.
 
 \subsection{StorageIO}
+
+The \Verb`StorageIO` class deals with storing and reading back \Judith event information to and from disk. It serves as a base class to the \Verb`StorageI` and \Verb`StorageO` classes, which simply instantiate a \Verb`StorageIO` class in the correct state for either input or output respectively.
+
+The class reads/writes from/to \ROOT \Verb`TTree`s. It allocates memory which is used to buffer the data from/to the \Verb`TTree`s. When writing output, the buffers are filled from an \Verb`Event` object. When reading input, an \Verb`Event` object is generated from the buffered values.
+
+\subsubsection{StorageI}
 
 \chapter{Supported data}
 
