@@ -124,6 +124,13 @@ void Options::parseFile(const std::string& filePath) {
 
     appendValues(arg, fields);
   }
+
+  // Look for linked setting files. This is recursive but won't be circular due
+  // to `m_parsedPaths`
+  const Values& links = getValues("LINK");
+  for (Values::const_iterator it = links.begin(); it != links.end(); ++it)  {
+    parseFile(*it);
+  }
 }
 
 /** Fill a vector with key values from `map` */

@@ -9,6 +9,37 @@
 
 namespace Configuration {
 
+/** Fills the variable `val` with the contents of the string `str` */
+template <class T>
+inline void strToVal(const std::string& str, T& val) {
+  std::stringstream ss(str);
+  ss >> val;
+}
+
+/** Returns a double value representation of `str` */
+inline double strToFloat(const std::string& str) {
+  double val = 0;
+  strToVal(str, val);
+  return val;
+}
+
+/** Returns an integer value representation of `str` */
+inline int strToInt(const std::string& str) {
+  int val = 0;
+  strToVal(str, val);
+  return val;
+}
+
+/** Returns true if the string is true, on, 1 or if it is empty as is the
+  * case when no value is provided for an argument. */
+inline bool strToBool(const std::string& str) {
+  if (str == "true") return true;
+  if (str == "on") return true;
+  if (str == "1") return true;
+  if (str.empty()) return true;
+  return false;
+}
+
 /**
   * Parses command line and setting file data into argument / values pairs.
   * Provides methods to access values for a given argument.
@@ -101,37 +132,6 @@ public:
 
   /** Map a command line short argument to its full name */
   void defineShort(char c, const std::string& arg);
-
-  /** Fills the variable `val` with the contents of the string `str` */
-  template <class T>
-  static inline void strToVal(const std::string& str, T& val) {
-    std::stringstream ss(str);
-    ss >> val;
-  }
-
-  /** Returns a double value representation of `str` */
-  inline double strToFloat(const std::string& str) {
-    double val = 0;
-    strToVal(str, val);
-    return val;
-  }
-
-  /** Returns an integer value representation of `str` */
-  inline int strToInt(const std::string& str) {
-    int val = 0;
-    strToVal(str, val);
-    return val;
-  }
-
-  /** Returns true if the string is true, on, 1 or if it is empty as is the
-    * case when no value is provided for an argument. */
-  static inline bool strToBool(const std::string& str) {
-    if (str == "true") return true;
-    if (str == "on") return true;
-    if (str == "1") return true;
-    if (str.empty()) return true;
-    return false;
-  }
 };
 
 }
