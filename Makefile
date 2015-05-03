@@ -1,6 +1,6 @@
 CC := g++
 CFLAGS := `root-config --cflags` -g -O3 -Wall
-LIB := -Llib -ljudconfig -ljudstorage `root-config --ldflags --glibs` -O1
+LIB := -Llib -ljudstorage -ljudmechanics `root-config --ldflags --glibs` -O1
 INC := -Iinclude
 
 # Run these commands before entering targets
@@ -10,16 +10,13 @@ $(shell mkdir -p bin)
 
 ### Executable ###
 
-bin/judith: build/judith.o lib/libjudconfig.a lib/libjudstorage.a
-	$(CC) build/judith.o $(LIB) -o bin/judith
+bin/judith: build/judith.o build/options.o lib/libjudstorage.a lib/libjudmechanics.a
+	$(CC) build/options.o build/judith.o $(LIB) -o bin/judith
 
 build/judith.o: src/judith.cxx
 	$(CC) $(CFLAGS) $(INC) -c src/judith.cxx -o build/judith.o
 
-### Configuration library ###
-
-lib/libjudconfig.a: build/options.o
-	ar ru lib/libjudconfig.a build/options.o
+### Configuration ###
 
 build/options.o: src/configuration/options.cxx include/configuration/options.h
 	$(CC) $(CFLAGS) $(INC) -c src/configuration/options.cxx -o build/options.o
@@ -52,6 +49,20 @@ build/storagei.o: src/storage/storagei.cxx include/storage/storagei.h
 
 build/storageo.o: src/storage/storageo.cxx include/storage/storageo.h
 	$(CC) $(CFLAGS) $(INC) -c src/storage/storageo.cxx -o build/storageo.o
+
+### Mechanics library ###
+
+lib/libjudmechanics.a: build/alignment.o build/sensor.o build/device.o
+	ar ru lib/libjudmechanics.a build/alignment.o build/sensor.o build/device.o
+
+build/alignment.o: src/mechanics/alignment.cxx include/mechanics/alignment.h
+	$(CC) $(CFLAGS) $(INC) -c src/mechanics/alignment.cxx -o build/alignment.o
+
+build/sensor.o: src/mechanics/sensor.cxx include/mechanics/sensor.h
+	$(CC) $(CFLAGS) $(INC) -c src/mechanics/sensor.cxx -o build/sensor.o
+
+build/device.o: src/mechanics/device.cxx include/mechanics/device.h
+	$(CC) $(CFLAGS) $(INC) -c src/mechanics/device.cxx -o build/device.o
 
 clean:
 	rm -rf build/ lib/* bin/*
