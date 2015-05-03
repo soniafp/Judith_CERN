@@ -23,9 +23,11 @@ Device::Device(size_t numSensors) :
     m_timeUnit(),
     m_timeStart(0),
     m_timeEnd(0) {
+  // Generate the required number of sensors
   for (std::vector<Sensor*>::iterator it = m_sensors.begin();
       it != m_sensors.end(); ++it) {
     *it = new Sensor();
+    // Associate those sensors to this device
     (*it)->m_device = this;
   }
 }
@@ -64,6 +66,8 @@ void Device::pixelToSpace(
     double& x,
     double& y,
     double& z) const {
+  // pixelToSpace of the sensor will automatically call this device's transform
+  // to go to global coodrinates, so just call that method.
   m_sensors[nsensor]->pixelToSpace(col, row, x, y, z);
 }
 
