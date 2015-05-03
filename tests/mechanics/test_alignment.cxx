@@ -86,12 +86,12 @@ int test_setGet() {
 
 int test_transform() {
   const double rx = 0.1;
-  const double ry = 0.2;
-  const double rz = 0.3;
+  const double ry = -0.2;
+  const double rz = 4.3;
   const double ox = 1.1;
-  const double oy = 2.2;
+  const double oy = -2.2;
   const double oz = 3.3;
-  const double x0 = 0.4;
+  const double x0 = -0.4;
   const double y0 = 0.5;
   const double z0 = 0.6;
 

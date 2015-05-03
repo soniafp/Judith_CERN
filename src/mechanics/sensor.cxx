@@ -34,14 +34,17 @@ void Sensor::print() const {
 }
 
 void Sensor::pixelToSpace(
-    double row,
     double col,
+    double row,
     double& x,
     double& y,
     double& z) const {
+  // Find the global unit coordinate of the pixel center, with the center of
+  // the plane as the origin.
   x = (col+0.5)*m_colPitch - m_ncols*m_colPitch/2.;
   y = (row+0.5)*m_rowPitch - m_nrows*m_rowPitch/2.;
   z = 0;
+  // Then transform it into the global space
   transform(x, y, z);
 }
 
@@ -49,9 +52,12 @@ void Sensor::spaceToPixel(
     double x,
     double y,
     double z,
-    double& row,
-    double& col) const {
+    double& col,
+    double& row) const {
+  // Inverse transformation of the global coordinates puts it into the sensor's
+  // local coodrinates (with center as origin)
   transform(x, y, z, true);
+  // Now get the corresponding pixel unit coordinate
   col = x/m_colPitch + m_ncols/2. - 0.5;
   row = y/m_rowPitch + m_nrows/2. - 0.5;
 }

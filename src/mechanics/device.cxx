@@ -56,9 +56,9 @@ double Device::tsToTime(ULong64_t timeStamp) const {
 }
 
 void Device::pixelToSpace(
-    unsigned nsensor,
-    unsigned row,
     unsigned col,
+    unsigned row,
+    unsigned nsensor,
     double& x,
     double& y,
     double& z) const {
