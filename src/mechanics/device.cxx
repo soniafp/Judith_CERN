@@ -24,8 +24,11 @@ Device::Device(size_t numSensors) :
     m_timeStart(0),
     m_timeEnd(0) {
   for (std::vector<Sensor*>::iterator it = m_sensors.begin();
-      it != m_sensors.end(); ++it)
-    *it = new Mechanics::Sensor();
+      it != m_sensors.end(); ++it) {
+    Sensor* sensor = *it;
+    sensor = new Sensor();
+    sensor->m_device = this;
+  }
 }
 
 Device::~Device() {
