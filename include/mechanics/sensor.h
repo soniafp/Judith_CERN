@@ -18,6 +18,10 @@ class Device;
   * @author Garrin McGoldrick (garrin.mcgoldrick@cern.ch)
   */
 class Sensor : public Alignment {
+protected:  // accessed by Device
+  /** Pointer to the device to which this sensor belongs (optional) */
+  Device* m_device;
+
 public:
   /** Name propagates to plots and infomration about this sensor */
   std::string m_name;
@@ -31,9 +35,6 @@ public:
   double m_colPitch;
   /** The accumulated number of radiation lengths from the beam origin */
   double m_xox0;
-
-  /** Pointer to the device to which this sensor belongs (optional) */
-  Device* m_device;
 
   /** Vector of noisy hit rate for each pixel. Pixel order is given by 
     * `getPixelIndex` */
@@ -65,6 +66,9 @@ public:
       double z,
       double& col,
       double& row) const;
+
+  /** Get the pointer to the parent device, or 0 if none exists */
+  Device* getDevice() const { return m_device; }
   
   /** Transform a row and column number to a flattened index */
   inline unsigned getPixelIndex(unsigned row, unsigned col) const;
@@ -74,6 +78,9 @@ public:
   /** Return the noise rate of a pixel. throws and exception if no mask has
     * been provided */
   bool getPixelNoise(unsigned row, unsigned col) const;
+
+  // Allow Device objects to access the `m_device` member
+  friend Device;
 };
 
 }

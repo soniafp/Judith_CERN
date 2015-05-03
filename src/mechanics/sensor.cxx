@@ -8,13 +8,13 @@
 namespace Mechanics {
 
 Sensor::Sensor() :
+    m_device(0),
     m_name(),
     m_nrows(0),
     m_ncols(0),
     m_rowPitch(0),
     m_colPitch(0),
-    m_xox0(0),
-    m_device(0) {}
+    m_xox0(0) {}
 
 void Sensor::print() const {
   std::printf(
@@ -39,13 +39,16 @@ void Sensor::pixelToSpace(
     double& x,
     double& y,
     double& z) const {
-  // Find the global unit coordinate of the pixel center, with the center of
-  // the plane as the origin.
+  // Transform pixel space to sensor global space (in units of pitch). Location
+  // of the pixel center, relative to the sensor center
   x = (col+0.5)*m_colPitch - m_ncols*m_colPitch/2.;
   y = (row+0.5)*m_rowPitch - m_nrows*m_rowPitch/2.;
   z = 0;
-  // Then transform it into the global space
+  // Then transform it into the device space (transformation of this plane
+  // relative to the device). If no device exists, this is just global space.
   transform(x, y, z);
+  // Then transform it into global space, if it belongs to a device.
+  if (m_device) m_device->transform(x, y, z);
 }
 
 void Sensor::spaceToPixel(
@@ -54,8 +57,9 @@ void Sensor::spaceToPixel(
     double z,
     double& col,
     double& row) const {
-  // Inverse transformation of the global coordinates puts it into the sensor's
-  // local coodrinates (with center as origin)
+  // Remove the device transformations if appicable
+  if (m_device) m_device->transform(x, y, z, true);
+  // Remove sensor transformations relative to the device
   transform(x, y, z, true);
   // Now get the corresponding pixel unit coordinate
   col = x/m_colPitch + m_ncols/2. - 0.5;
