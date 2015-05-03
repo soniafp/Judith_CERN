@@ -6,16 +6,20 @@
 namespace Mechanics {
 
 Alignment::Alignment() :
+    // By default, the alignment applies offsets and rotations
     m_disableOff(false),
     m_disableRot(false) {
+  // Initialize the alignment values to 0
   for (unsigned i = 0; i < 6; i++)
     m_alignment[i] = 0;
+  // Initialize the rotation matrix to a diagonal one
   for (unsigned i = 0; i < 3; i++)
     for (unsigned j = 0; j < 3; j++)
-      m_matrix[i][j] = 0;
+      m_matrix[i][j] = (i==j) ? 1 : 0;
 }
 
 void Alignment::calculate() {
+  // Shorter names make it clearer
   const double rx = m_alignment[ROTX];
   const double ry = m_alignment[ROTY];
   const double rz = m_alignment[ROTZ];
@@ -33,8 +37,11 @@ void Alignment::calculate() {
 }
 
 void Alignment::transform(double& x, double& y, double& z, bool inverse) const {
+  // The transform is implemented in the overloaded version which takes an
+  // an array, so set the values in an array
   double values[3] = { x, y, z };
   transform(values, inverse);
+  // Read the array back into the provided variables
   x = values[0];
   y = values[1];
   z = values[2];
@@ -94,6 +101,9 @@ void Alignment::transform(double* values, bool inverse) const {
     }
   }
 }
+
+// NOTE: all these methods need to call the `calculate` method to update the
+// rotation matrix
 
 void Alignment::setAlignment(double* values) {
   for (unsigned i = 0; i < 6; i++)
