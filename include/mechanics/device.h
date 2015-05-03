@@ -42,8 +42,9 @@ public:
       double& z) const;
 
   inline size_t getNumSensors() const { return m_numSensors; } 
-  inline Sensor& getSensor(size_t n) const { return *m_sensors[n]; }
-  inline Sensor& operator[](size_t n) const { return *m_sensors[n]; }
+  inline Sensor& getSensor(size_t n) { return *m_sensors[n]; }
+  inline const Sensor& getSensorConst(size_t n) const { return *m_sensors[n]; }
+  inline const Sensor& operator[](size_t n) const { return *m_sensors[n]; }
 };
 
 }

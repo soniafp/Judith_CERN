@@ -25,9 +25,8 @@ Device::Device(size_t numSensors) :
     m_timeEnd(0) {
   for (std::vector<Sensor*>::iterator it = m_sensors.begin();
       it != m_sensors.end(); ++it) {
-    Sensor* sensor = *it;
-    sensor = new Sensor();
-    sensor->m_device = this;
+    *it = new Sensor();
+    (*it)->m_device = this;
   }
 }
 
@@ -49,7 +48,7 @@ void Device::print() const {
       m_numSensors);
 
   for (size_t i = 0; i < getNumSensors(); i++)
-    getSensor(i).print();
+    m_sensors[i]->print();
 
   std::cout << std::flush;
 }
@@ -65,7 +64,7 @@ void Device::pixelToSpace(
     double& x,
     double& y,
     double& z) const {
-  getSensor(nsensor).pixelToSpace(col, row, x, y, z);
+  m_sensors[nsensor]->pixelToSpace(col, row, x, y, z);
 }
 
 }
