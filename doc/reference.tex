@@ -235,7 +235,7 @@ The \Verb`Event`'s planes are an exception. They do not change between events, s
 
 The \Verb`Event` object generates its \Verb`Plane` objects upon initialization (it is initialized with a specified number of planes, either in the constructor or through the \Verb`StorageIO` object). The \Verb`Event` object is then responsible for generating the \Verb`Hit`, \Verb`Cluster` and \Verb`Track` objects as they are needed. It stores pointers to the generated objects and deletes them upon destruction.
 
-If the \Verb`Event` object is constructed by a \Verb`StrageIO` object, instead of constructing new \Verb`Hit`, \Verb`Cluster` and \Verb`Track` objects, it will ask the \Verb`StorageIO` object to provide them. \Verb`StorageIO` will then either construct a new object, or relinquish one from its cache.
+If the \Verb`Event` object is constructed by a \Verb`StrageIO` object, instead of constructing new \Verb`Hit`, \Verb`Cluster` and \Verb`Track` objects, it will ask the \Verb`StorageIO` object to provide them. \Verb`StorageIO` will then either construct a new object, or relinquish one from its cache. Once the object has been relinquished, it is owned by the \Verb`Event`. And once the \Verb`Event` has been cleared, its constituents will be owned by \Verb`StorageIO`.
 
 \chapter{Supported data}
 
