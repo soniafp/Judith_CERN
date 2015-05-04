@@ -23,8 +23,6 @@ protected:  // accessed by Device
   Device* m_device;
 
 public:
-  // TODO: copy constructor shouldn't copy device
-
   /** Name propagates to plots and infomration about this sensor */
   std::string m_name;
   /** The number of channel rows (number of pixels along y) */
@@ -45,6 +43,8 @@ public:
     * is given by `getPixelIndex`. */
   std::vector<bool> m_noiseMask;
   
+  // TODO: copy constructor shouldn't copy device
+
   Sensor();
   ~Sensor() {}
 

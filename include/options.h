@@ -7,8 +7,6 @@
 #include <vector>
 #include <sstream>
 
-namespace Configuration {
-
 /** Fills the variable `val` with the contents of the string `str` */
 template <class T>
 inline void strToVal(const std::string& str, T& val) {
@@ -134,6 +132,5 @@ public:
   void defineShort(char c, const std::string& arg);
 };
 
-}
-
 #endif  // OPTIONS_H
+

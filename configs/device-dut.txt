@@ -1,0 +1,24 @@
+name dut
+time-unit \mus
+space-unit \mum
+clock 40
+window 16
+
+sensor:
+name Diamond
+chip fei4
+off-z 0
+
+sensor:
+name Silicon
+chip fei4
+off-z 20000
+rot-x 3.14159
+
+chip:
+name fei4
+rows 336
+cols 80
+row-pitch 50
+col-pitch 250
+

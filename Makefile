@@ -16,10 +16,8 @@ bin/judith: build/judith.o build/options.o lib/libjudstorage.a lib/libjudmechani
 build/judith.o: src/judith.cxx
 	$(CC) $(CFLAGS) $(INC) -c src/judith.cxx -o build/judith.o
 
-### Configuration ###
-
-build/options.o: src/configuration/options.cxx include/configuration/options.h
-	$(CC) $(CFLAGS) $(INC) -c src/configuration/options.cxx -o build/options.o
+build/options.o: src/options.cxx include/options.h
+	$(CC) $(CFLAGS) $(INC) -c src/options.cxx -o build/options.o
 
 ### Storage library ###
 
@@ -52,8 +50,8 @@ build/storageo.o: src/storage/storageo.cxx include/storage/storageo.h
 
 ### Mechanics library ###
 
-lib/libjudmechanics.a: build/alignment.o build/sensor.o build/device.o
-	ar ru lib/libjudmechanics.a build/alignment.o build/sensor.o build/device.o
+lib/libjudmechanics.a: build/alignment.o build/sensor.o build/device.o build/parsedevice.o
+	ar ru lib/libjudmechanics.a build/alignment.o build/sensor.o build/device.o build/parsedevice.o
 
 build/alignment.o: src/mechanics/alignment.cxx include/mechanics/alignment.h
 	$(CC) $(CFLAGS) $(INC) -c src/mechanics/alignment.cxx -o build/alignment.o
@@ -63,6 +61,9 @@ build/sensor.o: src/mechanics/sensor.cxx include/mechanics/sensor.h
 
 build/device.o: src/mechanics/device.cxx include/mechanics/device.h
 	$(CC) $(CFLAGS) $(INC) -c src/mechanics/device.cxx -o build/device.o
+
+build/parsedevice.o: src/mechanics/parsedevice.cxx include/mechanics/parsedevice.h
+	$(CC) $(CFLAGS) $(INC) -c src/mechanics/parsedevice.cxx -o build/parsedevice.o
 
 clean:
 	rm -rf build/ lib/* bin/*

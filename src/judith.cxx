@@ -7,7 +7,7 @@
 
 #include <TApplication.h>
 
-#include "configuration/options.h"
+#include "options.h"
 #include "storage/storagei.h"
 #include "storage/storageo.h"
 
@@ -27,7 +27,7 @@ void printHelp() {
 }
 
 void fillBranchMasks(
-    const Configuration::Options& options,
+    const Options& options,
     std::set<std::string> hitBranchesOff,
     std::set<std::string> clusterBranchesOff,
     std::set<std::string> trackBranchesOff,
@@ -59,24 +59,24 @@ void fillBranchMasks(
     }
 
     // Get the branch names to be turned off for the given key
-    const Configuration::Options::Values& values = options.getValues(key);
-    for (Configuration::Options::Values::const_iterator it = values.begin();
+    const Options::Values& values = options.getValues(key);
+    for (Options::Values::const_iterator it = values.begin();
         it != values.end(); it++)
       if (options.evalBoolArg(*it)) branches->insert(*it);
   }
 }
 
 void generatePlanesMask(
-    const Configuration::Options& options,
+    const Options& options,
     std::vector<bool>& mask) {
   if (!options.hasArg("mask-planes")) return;
   // The first value is the number of planes
-  const int nplanes = Configuration::strToInt(options.getValue("mask-planes"));
+  const int nplanes = strToInt(options.getValue("mask-planes"));
   mask.assign(nplanes, false);
   // The remaining values are indices of planes to mask
-  const Configuration::Options::Values& values = options.getValues("mask-planes");
+  const Options::Values& values = options.getValues("mask-planes");
   for (size_t ival = 1; ival < values.size(); ival++) {
-    const int iplane = Configuration::strToInt(values[ival]);
+    const int iplane = strToInt(values[ival]);
     mask[iplane] = true;
   }
 }
@@ -86,12 +86,11 @@ int main(int argc, const char** argv) {
 
   TApplication app("App", 0, 0);
 
-  Configuration::Options options;
+  Options options;
   options.defineShort('i', "input");
   options.defineShort('o', "output");
   options.defineShort('s', "settings");
   options.defineShort('r', "results");
-  options.defineShort('p', "process");
 
   // Parse options
   try {

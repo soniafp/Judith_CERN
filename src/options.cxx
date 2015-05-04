@@ -7,9 +7,7 @@
 #include <vector>
 #include <cctype>
 
-#include "configuration/options.h"
-
-namespace Configuration {
+#include "options.h"
 
 void Options::appendValues(const std::string& arg, const Values& vals) {
   // Find this setting in the map of settings
@@ -124,13 +122,6 @@ void Options::parseFile(const std::string& filePath) {
 
     appendValues(arg, fields);
   }
-
-  // Look for linked setting files. This is recursive but won't be circular due
-  // to `m_parsedPaths`
-  const Values& links = getValues("LINK");
-  for (Values::const_iterator it = links.begin(); it != links.end(); ++it)  {
-    parseFile(*it);
-  }
 }
 
 /** Fill a vector with key values from `map` */
@@ -192,7 +183,5 @@ void Options::defineShort(char c, const std::string& arg) {
     throw "Options::defineShort: duplicate short argument";
   // Map this short argument to a full argument name
   m_mapShort[c] = arg;
-}
-
 }
 
