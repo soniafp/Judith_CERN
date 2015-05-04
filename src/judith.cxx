@@ -4,12 +4,15 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <map>
 
 #include <TApplication.h>
 
 #include "options.h"
 #include "storage/storagei.h"
 #include "storage/storageo.h"
+#include "mechanics/device.h"
+#include "mechanics/parsedevice.h"
 
 void printHelp() {
   printf("usage: judith <command> [<args>]\n");
@@ -66,18 +69,47 @@ void fillBranchMasks(
   }
 }
 
-void generatePlanesMask(
-    const Options& options,
-    std::vector<bool>& mask) {
-  if (!options.hasArg("mask-planes")) return;
-  // The first value is the number of planes
-  const int nplanes = strToInt(options.getValue("mask-planes"));
-  mask.assign(nplanes, false);
-  // The remaining values are indices of planes to mask
-  const Options::Values& values = options.getValues("mask-planes");
-  for (size_t ival = 1; ival < values.size(); ival++) {
-    const int iplane = strToInt(values[ival]);
-    mask[iplane] = true;
+class Devices {
+private:
+  std::vector<Mechanics::Device*> devices;
+  std::map<std::string, Mechanics::Device*> map;
+
+public:
+  Devices() {}
+  ~Devices() { 
+    for (std::vector<Mechanics::Device*>::iterator it = devices.begin();
+        it != devices.end(); ++it)
+      if (*it) delete *it;
+  }
+  void addDevice(Mechanics::Device* device) {
+    devices.push_back(device);
+    if (device->m_name.size() == 0)
+      throw std::runtime_error("Devices must be nammed");
+    if (map.find(device->m_name) != map.end())
+      throw std::runtime_error("Duplicate device name found");
+    map[device->m_name] = device;
+  }
+  Mechanics::Device& operator[](size_t n) { return *devices[n]; }
+  Mechanics::Device& operator[](const std::string& name) { return *map[name]; }
+  size_t getNumDevices() const { return devices.size(); }
+};
+
+void generateDevices(const Options& options, Devices& devices) {
+  // The values are paths to files that can be parsed into devices
+  const Options::Values& values = options.getValues("device");
+  for (Options::Values::const_iterator it = values.begin();
+      it != values.end(); ++it)
+    devices.addDevice(Mechanics::parseDevice(*it));
+}
+
+void maskPlanes(const Options& options, Devices& devices) {
+  const Options::Values& values = options.getValues("mask-plane");
+  // Iterate two at a time, the first value is the device name, second is the
+  // plane index
+  for (size_t ival = 0; ival < values.size(); ival += 2) {
+    const std::string& deviceName = values[ival];
+    const int nplane = strToInt(values[ival+1]);
+    devices[deviceName].maskSensor(nplane);
   }
 }
 
@@ -91,6 +123,7 @@ int main(int argc, const char** argv) {
   options.defineShort('o', "output");
   options.defineShort('s', "settings");
   options.defineShort('r', "results");
+  options.defineShort('d', "device");
 
   // Parse options
   try {
@@ -131,9 +164,12 @@ int main(int argc, const char** argv) {
       trackBranchesOff,
       eventInfoBranchesOff);
 
-  // Get the list of masked planes
-  std::vector<bool> planeMask;
-  generatePlanesMask(options, planeMask);
+  // Build the device(s) from the given files
+  Devices devices;
+  generateDevices(options, devices);
+
+  // Remove masked planes from the devices
+  maskPlanes(options, devices);
 
   const std::string command = argv[1];
 
@@ -147,6 +183,11 @@ int main(int argc, const char** argv) {
       return -1;
     }
 
+    if (devices.getNumDevices() != 1) {
+      std::cerr << "ERROR: only one device accepted when processing" << std::endl;
+      return -1;
+    }
+
     // List of TTree branches to turn off on read back
     std::set<std::string> inHitsOff;
     inHitsOff.insert("hitPosX");
@@ -157,8 +198,8 @@ int main(int argc, const char** argv) {
         options.getValue("input"),
         // Don't read back clusters and tracks since they are not used
         Storage::StorageIO::CLUSTERS | Storage::StorageIO::TRACKS,
-        // Planes to mask: either a null pointer or the vector if filled
-        planeMask.empty() ? 0 : &planeMask,
+        // Turn off reading masked sensors
+        &devices[0].getSensorMask(),
         // Don't read hit global positions since they will be re-generated
         &inHitsOff);
 
@@ -171,12 +212,18 @@ int main(int argc, const char** argv) {
 
     Storage::StorageO output(
         options.getValue("output"),
-        input.getNumPlanes(),
+        devices[0].getNumSensors(),
         outTreeMask,
         &hitBranchesOff,
         &clusterBranchesOff,
         &trackBranchesOff,
         &eventInfoBranchesOff);
+
+    // Parse a cluster maker
+
+    // Configure a looper with the cluster maker, input and output
+
+    // Run the looper
   }
 
   else {
@@ -184,13 +231,6 @@ int main(int argc, const char** argv) {
     printHelp();
     return -1;
   }
-
-  // Possible requests
-  // mask : only hits
-  // cluster : only hits
-  // track : hits and clusters
-  // align : hits and clusters
-  // sync : everything
 
   std::cout << "\nEnding Judith\n" << std::endl;
 

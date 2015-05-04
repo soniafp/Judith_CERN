@@ -8,6 +8,7 @@
 namespace Mechanics {
 
 Sensor::Sensor() :
+    Alignment(),
     m_device(0),
     m_name(),
     m_nrows(0),
@@ -15,6 +16,16 @@ Sensor::Sensor() :
     m_rowPitch(0),
     m_colPitch(0),
     m_xox0(0) {}
+
+Sensor::Sensor(const Sensor& copy) :
+    Alignment(copy),
+    m_device(0),  // don't copy device ownership
+    m_name(copy.m_name),
+    m_nrows(copy.m_nrows),
+    m_ncols(copy.m_ncols),
+    m_rowPitch(copy.m_rowPitch),
+    m_colPitch(copy.m_colPitch),
+    m_xox0(copy.m_xox0) {}
 
 void Sensor::print() const {
   std::printf(

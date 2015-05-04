@@ -86,12 +86,67 @@ int test_pixelToSpace() {
   return 0;
 }
 
+int test_copy() {
+  Mechanics::Device device(2);
+  Mechanics::Device copy(device);
+
+  if (copy.getNumSensors() != 2) {
+    std::cerr << "Copy sensor allocation failed" << std::endl;
+    return -1;
+  }
+
+  if (&copy[0] == 0 || &copy[1] == 0 ||
+      &copy[0] == &device[0] || &copy[1] == &device[1]) {
+    std::cerr << "Copy sensor access/allocation failed" << std::endl;
+    return -1;
+  }
+
+  if (copy[0].getDevice() != &copy || copy[1].getDevice() != &copy) {
+    std::cerr << "Copy sensor association failed" << std::endl;
+    return -1;
+  }
+
+  return 0;
+}
+
+int test_masking() {
+  Mechanics::Device device(2);
+  device.getSensor(0).m_name = "Sensor0";
+  device.getSensor(1).m_name = "Sensor1";
+
+  device.maskSensor(0);
+
+  if (device.getNumSensors() != 1 || device[0].m_name != "Sensor1") {
+    std::cerr << "Sensor masking failed" << std::endl;
+    return -1;
+  }
+
+  device.maskSensor(0, false);
+
+  if (device.getNumSensors() != 2 ||
+      device[0].m_name != "Sensor0" || device[1].m_name != "Sensor1") {
+    std::cerr << "Sensor un-masking failed" << std::endl;
+    return -1;
+  }
+
+  device.maskSensor(1);
+
+  if (device.getNumSensors() != 1 || device[0].m_name != "Sensor0") {
+    std::cerr << "Sensor re-masking failed" << std::endl;
+    return -1;
+  }
+
+  return 0;
+}
+
 int main() {
   int retval = 0;
 
   try {
     if ((retval = test_sensors()) != 0) return retval;
     if ((retval = test_pixelToSpace()) != 0) return retval;
+    if ((retval = test_copy()) != 0) return retval;
+    if ((retval = test_masking()) != 0) return retval;
   }
   
   catch (std::exception& e) {

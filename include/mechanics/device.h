@@ -7,10 +7,9 @@
 #include <Rtypes.h>
 
 #include "mechanics/alignment.h"
+#include "mechanics/sensor.h"
 
 namespace Mechanics {
-
-class Sensor;
 
 /**
   * Defines a device comprised of multiple sensors. The device has some 
@@ -20,10 +19,17 @@ class Sensor;
   */
 class Device : public Alignment {
 private:
-  /** Number of sensors in this device, never changes */
-  const size_t m_numSensors;
-  /** The list of pointers to the device sensors */
+  /** The list of all sensors in this device (including masked) */
+  std::vector<Sensor> m_sensorsFull;
+  /** The list of pointers to the active sensors */
   std::vector<Sensor*> m_sensors;
+  /** Remember which sensors were masked */
+  std::vector<bool> m_sensorMask;
+
+  /** No assignment */
+  Device& operator=(const Device&);
+  /** Update the list of active sensors from the mask */
+  void updateSensors();
 
 public:
   /** Name of this device, propagates to plots and results */
@@ -42,10 +48,9 @@ public:
   /** Clock tick of last event in read out */
   ULong64_t m_timeEnd;
 
-  // TODO: copy constructor and sensors
-
   Device(size_t numSensors);
-  ~Device();
+  Device(const Device& copy);
+  ~Device() {}
 
   /** Print information about the device and sensors to cout */
   void print() const;
@@ -61,8 +66,12 @@ public:
       double& y,
       double& z) const;
 
+  /** Mask the sensor at index `n`, from the list of all sensors */
+  void maskSensor(size_t n, bool mask=true);
+  /** Get the mask applied to the full list of sensors */
+  const std::vector<bool>& getSensorMask() const { return m_sensorMask; }
   /** Get the number of sensors in the device */
-  inline size_t getNumSensors() const { return m_numSensors; } 
+  inline size_t getNumSensors() const { return m_sensors.size(); } 
   /** Get a reference to the sensor `n` */
   inline Sensor& getSensor(size_t n) { return *m_sensors[n]; }
   /** Get a constant reference to the sensor `n`, so that constant devices

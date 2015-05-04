@@ -21,6 +21,8 @@ class Sensor : public Alignment {
 protected:  // accessed by Device
   /** Pointer to the device to which this sensor belongs (optional) */
   Device* m_device;
+  /** No assignment */
+  Sensor& operator=(const Sensor&);
 
 public:
   /** Name propagates to plots and infomration about this sensor */
@@ -43,9 +45,8 @@ public:
     * is given by `getPixelIndex`. */
   std::vector<bool> m_noiseMask;
   
-  // TODO: copy constructor shouldn't copy device
-
   Sensor();
+  Sensor(const Sensor& copy);
   ~Sensor() {}
 
   /** Print sensor information to cout */
