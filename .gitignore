@@ -12,6 +12,8 @@ doc/build
 doc/*.pdf
 # Ignore tests bin directory
 tests/bin*
+# Ignore device configurations
+configs/*.txt
 
 ### c++ and system-wide ignores ###
 
