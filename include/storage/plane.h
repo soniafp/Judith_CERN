@@ -39,6 +39,9 @@ public:
   Hit& getHit(size_t n) const;
   Cluster& getCluster(size_t n) const;
 
+  const std::vector<Hit*>& getHits() const { return m_hits; }
+  const std::vector<Cluster*>& getClusters() const { return m_clusters; }
+
   inline size_t getPlaneNum() const { return m_planeNum; }
   inline size_t getNumHits() const { return m_hits.size(); }
   inline size_t getNumClusters() const { return m_clusters.size(); }

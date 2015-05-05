@@ -16,7 +16,7 @@ sources=`find . -type f -name 'test_*.cxx'`
 
 cc="g++"
 cflags="`root-config --cflags` -g -O3 -Wall"
-lib="-L../lib -ljudstorage -ljudmechanics `root-config --ldflags --glibs` -O1"
+lib="-L../lib -ljudstorage -ljudmechanics -ljudproc `root-config --ldflags --glibs` -O1"
 inc="-I../include"
 
 rm -rf bin/

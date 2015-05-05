@@ -63,6 +63,8 @@ public:
 
   /** Add a hit to this cluster. Does bi-directional linking. */
   void addHit(Hit& hit);
+  /** Reserve some space for adding hits to make the process faster */
+  void reserveHits(size_t n) { m_hits.reserve(n); }
   /** Compute the properties of the cluster from the provided hits */
   void compute();
 

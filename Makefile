@@ -10,7 +10,7 @@ $(shell mkdir -p bin)
 
 ### Executable ###
 
-bin/judith: build/judith.o build/options.o lib/libjudstorage.a lib/libjudmechanics.a
+bin/judith: build/judith.o build/options.o lib/libjudstorage.a lib/libjudmechanics.a  lib/libjudproc.a
 	$(CC) build/options.o build/judith.o $(LIB) -o bin/judith
 
 build/judith.o: src/judith.cxx
@@ -64,6 +64,14 @@ build/device.o: src/mechanics/device.cxx include/mechanics/device.h
 
 build/parsedevice.o: src/mechanics/parsedevice.cxx include/mechanics/parsedevice.h
 	$(CC) $(CFLAGS) $(INC) -c src/mechanics/parsedevice.cxx -o build/parsedevice.o
+
+### Processors library ###
+
+lib/libjudproc.a: build/clustering.o
+	ar ru lib/libjudproc.a build/clustering.o
+
+build/clustering.o: src/processors/clustering.cxx include/processors/clustering.h
+	$(CC) $(CFLAGS) $(INC) -c src/processors/clustering.cxx -o build/clustering.o
 
 clean:
 	rm -rf build/ lib/* bin/*
