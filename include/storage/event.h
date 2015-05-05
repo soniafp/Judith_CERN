@@ -82,6 +82,11 @@ public:
   Plane& getPlane(size_t n) const;
   Track& getTrack(size_t n) const;
 
+  const std::vector<Hit*>& getHits() const { return m_hits; }
+  const std::vector<Cluster*>& getClusters() const { return m_clusters; }
+  const std::vector<Plane*>& getPlanes() const { return m_planes; }
+  const std::vector<Track*>& getTracks() const { return m_tracks; }
+
   inline void setInvalid(bool value) { m_invalid = value; }
   inline void setTimeStamp(ULong64_t timeStamp) { m_timeStamp = timeStamp; }
   inline void setFrameNumber(ULong64_t frameNumber) { m_frameNumber = frameNumber; }
