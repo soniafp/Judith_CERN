@@ -21,8 +21,8 @@ protected:
   /** Cluster containing this hit */
   Cluster* m_cluster;
   /** X index of hit pixel (pixel space coordinate) */
-  unsigned int m_pixX;
-  unsigned int m_pixY;
+  int m_pixX;
+  int m_pixY;
   /** X position in global coordinates of hit pixel */
   double m_posX;
   double m_posY;
@@ -46,8 +46,8 @@ public:
   /** Print hit information to standard output */
   void print();
 
-  inline unsigned int getPixX() const { return m_pixX; }
-  inline unsigned int getPixY() const { return m_pixY; }
+  inline int getPixX() const { return m_pixX; }
+  inline int getPixY() const { return m_pixY; }
   inline double getPosX() const { return m_posX; }
   inline double getPosY() const { return m_posY; }
   inline double getPosZ() const { return m_posZ; }
@@ -58,7 +58,7 @@ public:
   inline Plane* fetchPlane() const { return m_plane; }
 
   void setCluster(Cluster& cluster);
-  inline void setPix(unsigned int x, unsigned int y) { m_pixX = x; m_pixY = y; }
+  inline void setPix(int x, int y) { m_pixX = x; m_pixY = y; }
   inline void setPos(double x, double y, double z) { m_posX = x; m_posY = y; m_posZ = z; }
   inline void setValue(double value) { m_value = value; }
   inline void setTiming(double timing) { m_timing = timing; }
