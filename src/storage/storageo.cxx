@@ -226,7 +226,7 @@ void StorageO::writeEvent(Event& event) {
       clusterPosErrZ[ncluster] = cluster.getPosErrZ();
       clusterTiming[ncluster] = cluster.getTiming();
       clusterValue[ncluster] = cluster.getValue();
-      clusterInTrack[ncluster] = cluster.fetchTrack() ? cluster.fetchTrack()->getIndex() : -1;
+      clusterInTrack[ncluster] = cluster.fetchTrack() ? cluster.fetchTrack()->getIndex() : 0;
     }
 
     numHits = plane.getNumHits();
@@ -243,7 +243,7 @@ void StorageO::writeEvent(Event& event) {
       hitPosZ[nhit] = hit.getPosZ();
       hitValue[nhit] = hit.getValue();
       hitTiming[nhit] = hit.getTiming();
-      hitInCluster[nhit] = hit.fetchCluster() ? hit.fetchCluster()->getIndex(): -1;
+      hitInCluster[nhit] = hit.fetchCluster() ? hit.fetchCluster()->getIndex(): 0;
     }
 
     if (!m_hitsTrees.empty())

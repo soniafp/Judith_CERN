@@ -397,7 +397,7 @@ Event& StorageI::readEvent(Long64_t n) {
 
       // If this cluster is in a track, mark this (and the tracks tree is active)
       if (m_tracksTree && clusterInTrack[ncluster] > 0) {
-        Track& track = event.getTrack(clusterInTrack[ncluster]);
+        Track& track = event.getTrack(clusterInTrack[ncluster]-1);
         track.addCluster(cluster);  // Bidirectional linking
       }
     }
@@ -413,7 +413,7 @@ Event& StorageI::readEvent(Long64_t n) {
       if (isMasked && m_maskMode == REMOVE) {
         // If the hit was clustered, the cluster will be broken (it will try to
         // use a non-existent hit)
-        if (hitInCluster[nhit] >= 0) throw std::runtime_error(
+        if (hitInCluster[nhit] > 0) throw std::runtime_error(
               "StorageIO::readEvent: masking tried to remove a clustered hit");
         continue;
       }
@@ -427,7 +427,7 @@ Event& StorageI::readEvent(Long64_t n) {
 
       // If this hit is in a cluster, mark this (and the clusters tree is active)
       if (!m_clustersTrees.empty() && hitInCluster[nhit] > 0) {
-        Cluster& cluster = event.getCluster(hitInCluster[nhit]);
+        Cluster& cluster = event.getCluster(hitInCluster[nhit]-1);
         cluster.addHit(hit);  // Bidirectional linking
       }
     }
