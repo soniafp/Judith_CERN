@@ -26,7 +26,7 @@ StorageIO::StorageIO(
     const std::string& filePath,
     FileMode fileMode,
     size_t numPlanes) :
-    m_file(0),
+    m_file(filePath.c_str(), (fileMode==INPUT) ? "READ" : "RECREATE"),
     m_fileMode(fileMode),
     m_numPlanes(numPlanes),
     m_maskMode(REMOVE),
@@ -34,13 +34,7 @@ StorageIO::StorageIO(
     m_event(0),
     m_tracksTree(0),
     m_eventInfoTree(0) {
-  if (fileMode == INPUT)
-    m_file = new TFile(filePath.c_str(), "READ");
-  else if (fileMode == OUTPUT)
-    m_file = new TFile(filePath.c_str(), "RECREATE");
-
-  if (!m_file)
-    throw std::runtime_error(
+  if (!m_file.IsOpen()) throw std::runtime_error(
         "StorageIO::StorageIO: file didn't initialize");
 
   // Zero all the buffer memory at once. C++ guarantees continuous memory for
@@ -81,11 +75,7 @@ StorageIO::~StorageIO() {
   if (m_tracksTree) delete m_tracksTree;
   if (m_eventInfoTree) delete m_eventInfoTree;
 
-  // Write, close and delete the file as approrpriate
-  if (m_file) {
-    m_file->Close();
-    delete m_file;
-  }
+  m_file.Close();
 }
 
 Event& StorageIO::newEvent() {

@@ -85,7 +85,7 @@ public:
 
 protected:
   /** File to read or write */
-  TFile* m_file;
+  TFile m_file;
   /** Remember if the file is being read or written */
   const FileMode m_fileMode;
   /** Number of planes in the device */

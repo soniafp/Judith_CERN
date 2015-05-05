@@ -51,7 +51,7 @@ StorageO::StorageO(
     ss << "Plane" << nplane;  // Directories are named PlaneX
 
     // Make the hits and clusters trees in the corresponding plane directory
-    TDirectory* dir = m_file->mkdir(ss.str().c_str());
+    TDirectory* dir = m_file.mkdir(ss.str().c_str());
     dir->cd();
 
     // Check if the hits tree is masked alltogether
@@ -115,7 +115,7 @@ StorageO::StorageO(
   }  // Loop over planes
 
   // Make the event and track trees in the root directory
-  m_file->cd();
+  m_file.cd();
 
   if (treeMask & EVENTINFO) {
     m_eventInfoTree = new TTree("Event", "Event information");
@@ -160,11 +160,11 @@ StorageO::StorageO(
 }
 
 StorageO::~StorageO() {
-  if (m_file) m_file->Write();
+  m_file.Write();
 }
 
 void StorageO::writeEvent(Event& event) {
-  m_file->cd();  // Ensure writing to the output file
+  m_file.cd();  // Ensure writing to the output file
 
   // Set the event information in local memory to be read into the file
   timeStamp = event.getTimeStamp();

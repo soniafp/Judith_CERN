@@ -55,7 +55,7 @@ StorageI::StorageI(
     std::stringstream ss;
     ss << "Plane" << planeCount;  // Directories are named PlaneX
     TDirectory* dir = 0;
-    m_file->GetObject(ss.str().c_str(), dir);
+    m_file.GetObject(ss.str().c_str(), dir);
 
     // When no more plane directories are found, stop
     if (!dir) break;
@@ -75,7 +75,7 @@ StorageI::StorageI(
     TTree* hits = 0;
     // Try to load the tree if hits are enabled
     if (treeMask & HITS)
-      m_file->GetObject((ss.str()+"/Hits").c_str(), hits);
+      m_file.GetObject((ss.str()+"/Hits").c_str(), hits);
     // Check that a hits tree was loaded
     if (hits) {
       // Add this tree to the current plane
@@ -123,7 +123,7 @@ StorageI::StorageI(
 
     TTree* clusters = 0;
     if (treeMask & CLUSTERS)
-      m_file->GetObject((ss.str()+"/Clusters").c_str(), clusters);
+      m_file.GetObject((ss.str()+"/Clusters").c_str(), clusters);
     if (clusters) {
       m_clustersTrees.push_back(clusters);
       clusters->SetBranchAddress("NClusters", &numClusters);
@@ -207,7 +207,7 @@ StorageI::StorageI(
         "StorageI::StorageI: clusters are provided without hit associations");
 
   if (treeMask & EVENTINFO)
-    m_file->GetObject("Event", m_eventInfoTree);
+    m_file.GetObject("Event", m_eventInfoTree);
   if (m_eventInfoTree) {
     if (!isEventInfoBranchOff("TimeStamp")) {
       if (!m_eventInfoTree->GetBranch("TimeStamp")) m_eventInfoBranchesOff.insert("TimeStamp");
@@ -232,7 +232,7 @@ StorageI::StorageI(
   }
 
   if (treeMask & TRACKS)
-    m_file->GetObject("Tracks", m_tracksTree);
+    m_file.GetObject("Tracks", m_tracksTree);
   if (m_tracksTree) {
     m_tracksTree->SetBranchAddress("NTracks", &numTracks);
     if (!isTracksBranchOff("SlopeX")) {
