@@ -18,11 +18,6 @@ namespace Processors {
   */
 class Clustering {
 private:
-  /** Maximal number of rows to move over to cluster two hits */
-  unsigned m_maxRows;
-  /** Maximal number of cols to move over to cluster two hits */
-  unsigned m_maxCols;
-
   /** Algorithm builds a list of hits belonging to the same cluster as the
     * provided seed. It is called from `process` and can be extended to
     * implement a different clustering algorithm */
@@ -38,15 +33,19 @@ private:
       std::list<Storage::Hit*>& clustered);
 
 public:
+  /** Maximal number of rows between two hits to cluster */
+  unsigned m_maxRows;
+  /** Maximal number of columns between two hits to cluster */
+  unsigned m_maxCols;
+  /** Weight the cluster center and RMS by its hit values */
+  bool m_weighted;
+
   Clustering();
   virtual ~Clustering() {}
 
   /** Loop over the planes in an event, and keep providing seeds to the
     * clustering algorithm until all hits are exhausted. */
   virtual void process(Storage::Event& event);
-
-  /** Specify the maximal pixels to move over when clustering */
-  virtual void setMaxPixels(unsigned cols, unsigned rows);
 };
 
 }

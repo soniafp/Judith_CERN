@@ -16,7 +16,8 @@ namespace Processors {
 Clustering::Clustering() :
     // Default to clusters that contain neighbouring hits
     m_maxRows(1),
-    m_maxCols(1) {}
+    m_maxCols(1),
+    m_weighted(false) {}
 
 void Clustering::clusterSeed(
     Storage::Hit& seed,
@@ -39,8 +40,8 @@ void Clustering::clusterSeed(
         it != hits.end(); ++it) {
       Storage::Hit* hit = *it;  // candidate neighbour
       // If this hit isn't close enough to the target, move on
-      if (std::abs((int)hit->getPixX()-(int)target->getPixX()) > m_maxRows ||
-          std::abs((int)hit->getPixY()-(int)target->getPixY()) > m_maxCols)
+      if (std::abs(hit->getPixX()-target->getPixX()) > m_maxRows ||
+          std::abs(hit->getPixY()-target->getPixY()) > m_maxCols)
         continue;
       clustered.push_back(hit);
       // Erease from the list of unclustered list. This returns the next
@@ -72,9 +73,8 @@ void Clustering::buildCluster(
     Storage::Hit& hit = **it;
     cluster.addHit(hit);
 
-    // Weight the hits by their value, if they have values (value of 0 should
-    // not be an allowed value)
-    const double weight = (hit.getValue()>0) ? hit.getValue() : 1;
+    // Weight the hits by their value if that mode is turned on
+    const double weight = m_weighted ? hit.getValue() : 1;
     const double tmp = weight + sumw;
 
     // Single pass mean and variance computation
@@ -134,11 +134,6 @@ void Clustering::process(Storage::Event& event) {
       // next pass will pick the next hit which wasn't clustered in this one
     }
   }
-}
-
-void Clustering::setMaxPixels(unsigned cols, unsigned rows) {
-  m_maxCols = cols;
-  m_maxRows = rows;
 }
 
 }
