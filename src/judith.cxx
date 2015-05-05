@@ -13,6 +13,8 @@
 #include "storage/storageo.h"
 #include "mechanics/device.h"
 #include "mechanics/parsedevice.h"
+#include "processors/clustering.h"
+#include "loopers/loopprocess.h"
 
 void printHelp() {
   printf("usage: judith <command> [<args>]\n");
@@ -23,9 +25,16 @@ void printHelp() {
   printf("  %2s %-15s %s\n", "-o", "--output", "Path to input file");
   printf("  %2s %-15s %s\n", "-s", "--settings", "Path to settings file (default: configs/settings.cfg)");
   printf("  %2s %-15s %s\n", "-r", "--results", "Path to results file");
+  printf("  %2s %-15s %s\n", "-f", "--first", "Number of first event to process");
+  printf("  %2s %-15s %s\n", "-n", "--events", "Process up to this many events past first");
+  printf("  %2s %-15s %s\n", "-k", "--skip", "Skip this many events at each loop iteration");
+  printf("  %2s %-15s %s\n", "", "--progress", "Display progress at this interval (0 is off)");
 
   printf("\nCommands:\n");
   printf("  %-15s %s\n", "process", "Generate clusters and tracks from the given input");
+  printf("  %-15s %s\n", "align-corr", "Align the sensors by plane correlations");
+  printf("  %-15s %s\n", "align-chi2", "Align the sensors by tracklet chi^2");
+  printf("  %-15s %s\n", "align-tracks", "Align the sensors using track residuals");
   std::cout << std::endl;
 }
 
@@ -44,7 +53,9 @@ void fillBranchMasks(
     std::set<std::string>* branches;  // pointer to the set to fill
     switch (tree) {
     case HIT:
+      // Look for options with this key
       key = "hit-branch-off";
+      // And fill this set with what is found
       branches = &hitBranchesOff;
       break;
     case CLUSTER:
@@ -65,22 +76,30 @@ void fillBranchMasks(
     const Options::Values& values = options.getValues(key);
     for (Options::Values::const_iterator it = values.begin();
         it != values.end(); it++)
-      if (options.evalBoolArg(*it)) branches->insert(*it);
+      // Add all values for this key to the set of branches to turn off
+      branches->insert(*it);
   }
 }
 
+// Container for the devices parsed from the options
 class Devices {
-private:
+private: 
+  // List of devices parsed
   std::vector<Mechanics::Device*> devices;
+  // Map of device name to its object
   std::map<std::string, Mechanics::Device*> map;
 
 public:
   Devices() {}
+  // Destructor so that the devices are cleared from memory when this object
+  // goes out of scope
   ~Devices() { 
     for (std::vector<Mechanics::Device*>::iterator it = devices.begin();
         it != devices.end(); ++it)
       if (*it) delete *it;
   }
+  // The device parser gives pointers to the created device. This will add it
+  // to this object, and then manage its memory.
   void addDevice(Mechanics::Device* device) {
     devices.push_back(device);
     if (device->m_name.size() == 0)
@@ -89,7 +108,9 @@ public:
       throw std::runtime_error("Duplicate device name found");
     map[device->m_name] = device;
   }
+  // Access device by index using the [] operator
   Mechanics::Device& operator[](size_t n) { return *devices[n]; }
+  // Access device by name using the [] operator
   Mechanics::Device& operator[](const std::string& name) { return *map[name]; }
   size_t getNumDevices() const { return devices.size(); }
 };
@@ -99,6 +120,8 @@ void generateDevices(const Options& options, Devices& devices) {
   const Options::Values& values = options.getValues("device");
   for (Options::Values::const_iterator it = values.begin();
       it != values.end(); ++it)
+    // Parse the file path at the given value, and add the resulting device
+    // to thd `devices` object which manages its memory
     devices.addDevice(Mechanics::parseDevice(*it));
 }
 
@@ -113,6 +136,18 @@ void maskPlanes(const Options& options, Devices& devices) {
   }
 }
 
+void configureLooper(const Options& options, Loopers::Looper& looper) {
+  // Configure a base `Looper` object from standard options
+  if (options.hasArg("first"))
+    looper.m_start = strToInt(options.getValue("first"));
+  if (options.hasArg("events"))
+    looper.m_nprocess = strToInt(options.getValue("events"));
+  if (options.hasArg("skip"))
+    looper.m_nstep = strToInt(options.getValue("skip"));
+  if (options.hasArg("progress"))
+    looper.m_printInterval = strToInt(options.getValue("progress"));
+}
+
 int main(int argc, const char** argv) {
   std::cout << "\nStarting Judith\n" << std::endl;
 
@@ -124,25 +159,21 @@ int main(int argc, const char** argv) {
   options.defineShort('s', "settings");
   options.defineShort('r', "results");
   options.defineShort('d', "device");
+  options.defineShort('f', "first");
+  options.defineShort('n', "events");
+  options.defineShort('k', "skip");
 
-  // Parse options
-  try {
-    // First command line options
-    options.parseArgs(argc, argv);
-    // Check if help is requested and stop execution if so
-    if (options.hasArg("help")) {
-      printHelp();
-      return 0;
-    }
-    // Default settings path (overwritten if provided in command line arguments)
-    options.addPair("settings", "configs/settings.cfg");
-    // Parse settings file
-    options.parseFile(options.getValue("settings"));
+  // First command line options
+  options.parseArgs(argc, argv);
+  // Check if help is requested and stop execution if so
+  if (options.hasArg("help")) {
+    printHelp();
+    return 0;
   }
-  catch (std::exception& e) {
-    std::cerr << "ERROR: " << e.what() << std::endl;
-    return -1;
-  }
+  // Default settings path (overwritten if provided in command line arguments)
+  options.addPair("settings", "configs/settings.cfg");
+  // Parse settings file
+  options.parseFile(options.getValue("settings"));
   
   // If no additional arguments are given, or the first is an argument, then
   // no command was provided
@@ -212,18 +243,40 @@ int main(int argc, const char** argv) {
 
     Storage::StorageO output(
         options.getValue("output"),
-        devices[0].getNumSensors(),
+        input.getNumPlanes(),
         outTreeMask,
         &hitBranchesOff,
         &clusterBranchesOff,
         &trackBranchesOff,
         &eventInfoBranchesOff);
 
-    // Parse a cluster maker
+    // Parse a clustering object
+    Processors::Clustering clustering;
+    if (options.hasArg("process-clusters-nrows"))
+      clustering.m_maxRows = strToInt(options.getValue("process-clusters-nrows"));
+    if (options.hasArg("process-clusters-ncols"))
+      clustering.m_maxRows = strToInt(options.getValue("process-clusters-ncols"));
 
     // Configure a looper with the cluster maker, input and output
+    Loopers::LoopProcess looper(output);
+    looper.addInput(input);
+
+    if (options.evalBoolArg("process-clusters"))
+      looper.m_clustering = &clustering;
+    if (options.evalBoolArg("process-tracks"))
+      {}//looper.m_tracking = &tracking;
+
+    configureLooper(options, looper);
 
     // Run the looper
+    looper.loop();
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Chi^2 alignment
+
+  else if (command == "align-chi2") {
+
   }
 
   else {

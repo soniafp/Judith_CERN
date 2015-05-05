@@ -1,6 +1,6 @@
 CC := g++
 CFLAGS := `root-config --cflags` -g -O3 -Wall
-LIB := -Llib -ljudstorage -ljudmechanics `root-config --ldflags --glibs` -O1
+LIB := -Llib -ljudstorage -ljudmechanics -ljudproc -ljudloop `root-config --ldflags --glibs` -O1
 INC := -Iinclude
 
 # Run these commands before entering targets
@@ -10,7 +10,7 @@ $(shell mkdir -p bin)
 
 ### Executable ###
 
-bin/judith: build/judith.o build/options.o lib/libjudstorage.a lib/libjudmechanics.a  lib/libjudproc.a
+bin/judith: build/judith.o build/options.o lib/libjudstorage.a lib/libjudmechanics.a lib/libjudproc.a lib/libjudloop.a
 	$(CC) build/options.o build/judith.o $(LIB) -o bin/judith
 
 build/judith.o: src/judith.cxx
@@ -72,6 +72,17 @@ lib/libjudproc.a: build/clustering.o
 
 build/clustering.o: src/processors/clustering.cxx include/processors/clustering.h
 	$(CC) $(CFLAGS) $(INC) -c src/processors/clustering.cxx -o build/clustering.o
+
+### Loopers library ###
+
+lib/libjudloop.a: build/looper.o build/loopprocess.o
+	ar ru lib/libjudloop.a build/looper.o build/loopprocess.o
+
+build/looper.o: src/loopers/looper.cxx include/loopers/looper.h
+	$(CC) $(CFLAGS) $(INC) -c src/loopers/looper.cxx -o build/looper.o
+
+build/loopprocess.o: src/loopers/loopprocess.cxx include/loopers/loopprocess.h
+	$(CC) $(CFLAGS) $(INC) -c src/loopers/loopprocess.cxx -o build/loopprocess.o
 
 clean:
 	rm -rf build/ lib/* bin/*
