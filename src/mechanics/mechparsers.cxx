@@ -315,6 +315,7 @@ void parseAlignment(Device& device) {
   file.close();
 }
 
+// Write the alignment of a given alignment object to an out stream
 void writeAlignment(const Alignment& object, std::ofstream& out) {
   out << "off-x " << object.getOffX() << "\n"
       << "off-y " << object.getOffY() << "\n"
@@ -325,16 +326,20 @@ void writeAlignment(const Alignment& object, std::ofstream& out) {
 }
 
 void writeAlignment(Device& device) {
+  // Open the devices' alignment fi;e
   std::ofstream file(device.m_alignmentFile.c_str());
   if (!file) throw "Mechanics: writeAlignment: unable to open file";
 
+  // Ensure the values are written with an appropriate precision
   file << std::scientific;
   file.precision(6);
 
+  // Write the device alignment
   file << "device: " << device.m_name << std::endl;
   writeAlignment(device, file);
   file << std::endl;
 
+  // Write each sensor alignment
   for (size_t i = 0; i < device.getNumSensors(); i++) {
     file << "sensor: " << device[i].m_name << std::endl;
     writeAlignment(device[i], file);

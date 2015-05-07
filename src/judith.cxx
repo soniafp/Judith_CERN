@@ -237,18 +237,21 @@ int main(int argc, const char** argv) {
     // Build an alignment object from the device
     Processors::Aligning aligning(devices[0]);
 
-    // Configure a looper with the cluster maker, input and output
+    // Prepare a processing looper to loop the input and write to the output
     Loopers::LoopProcess looper(output);
     looper.addInput(input);
 
-    // Give it the aligning object
+    // Give it the aligning object to compute and store global positions
     looper.m_aligning = &aligning;
 
+    // If a clustering is requested, give it a clustering processor
     if (options.evalBoolArg("process-clusters"))
       looper.m_clustering = &clustering;
+    // Likewise for tracking
     if (options.evalBoolArg("process-tracks"))
       {}//looper.m_tracking = &tracking;
 
+    // Apply generic looping options to the looper
     configureLooper(options, looper);
 
     // Run the looper
