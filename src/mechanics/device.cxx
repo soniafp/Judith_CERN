@@ -22,6 +22,7 @@ Device::Device(size_t numSensors) :
     m_readOutWindow(0),
     m_spaceUnit(),
     m_timeUnit(),
+    m_alignmentFile(),
     m_timeStart(0),
     m_timeEnd(0) {
   updateSensors();
@@ -72,8 +73,8 @@ double Device::tsToTime(ULong64_t timeStamp) const {
 }
 
 void Device::pixelToSpace(
-    unsigned col,
-    unsigned row,
+    double col,
+    double row,
     unsigned nsensor,
     double& x,
     double& y,

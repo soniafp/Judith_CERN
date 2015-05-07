@@ -1,0 +1,27 @@
+#ifndef ALIGN_H
+#define ALIGN_H
+
+namespace Storage { class Event; }
+namespace Mechanics { class Device; }
+
+namespace Processors {
+
+/**
+  * Applies the alignment from a device to the objects in the events.
+  *
+  * @author Garrin McGoldrick (garrin.mcgoldrick@cern.ch)
+  */
+class Aligning {
+protected:
+  const Mechanics::Device& m_device;
+
+public:
+  Aligning(const Mechanics::Device& device);
+  virtual ~Aligning() {}
+
+  virtual void process(Storage::Event& event);
+};
+
+}
+
+#endif  // ALIGN_H

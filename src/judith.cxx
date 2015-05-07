@@ -12,8 +12,9 @@
 #include "storage/storagei.h"
 #include "storage/storageo.h"
 #include "mechanics/device.h"
-#include "mechanics/parsedevice.h"
+#include "mechanics/mechparsers.h"
 #include "processors/clustering.h"
+#include "processors/aligning.h"
 #include "loopers/loopprocess.h"
 
 void printHelp() {
@@ -81,41 +82,7 @@ void fillBranchMasks(
   }
 }
 
-// Container for the devices parsed from the options
-class Devices {
-private: 
-  // List of devices parsed
-  std::vector<Mechanics::Device*> devices;
-  // Map of device name to its object
-  std::map<std::string, Mechanics::Device*> map;
-
-public:
-  Devices() {}
-  // Destructor so that the devices are cleared from memory when this object
-  // goes out of scope
-  ~Devices() { 
-    for (std::vector<Mechanics::Device*>::iterator it = devices.begin();
-        it != devices.end(); ++it)
-      if (*it) delete *it;
-  }
-  // The device parser gives pointers to the created device. This will add it
-  // to this object, and then manage its memory.
-  void addDevice(Mechanics::Device* device) {
-    devices.push_back(device);
-    if (device->m_name.size() == 0)
-      throw std::runtime_error("Devices must be nammed");
-    if (map.find(device->m_name) != map.end())
-      throw std::runtime_error("Duplicate device name found");
-    map[device->m_name] = device;
-  }
-  // Access device by index using the [] operator
-  Mechanics::Device& operator[](size_t n) { return *devices[n]; }
-  // Access device by name using the [] operator
-  Mechanics::Device& operator[](const std::string& name) { return *map[name]; }
-  size_t getNumDevices() const { return devices.size(); }
-};
-
-void generateDevices(const Options& options, Devices& devices) {
+void generateDevices(const Options& options, Mechanics::Devices& devices) {
   // The values are paths to files that can be parsed into devices
   const Options::Values& values = options.getValues("device");
   for (Options::Values::const_iterator it = values.begin();
@@ -125,7 +92,7 @@ void generateDevices(const Options& options, Devices& devices) {
     devices.addDevice(Mechanics::parseDevice(*it));
 }
 
-void maskPlanes(const Options& options, Devices& devices) {
+void maskPlanes(const Options& options, Mechanics::Devices& devices) {
   const Options::Values& values = options.getValues("mask-plane");
   // Iterate two at a time, the first value is the device name, second is the
   // plane index
@@ -196,7 +163,7 @@ int main(int argc, const char** argv) {
       eventInfoBranchesOff);
 
   // Build the device(s) from the given files
-  Devices devices;
+  Mechanics::Devices devices;
   generateDevices(options, devices);
 
   // Remove masked planes from the devices
@@ -221,9 +188,9 @@ int main(int argc, const char** argv) {
 
     // List of TTree branches to turn off on read back
     std::set<std::string> inHitsOff;
-    inHitsOff.insert("hitPosX");
-    inHitsOff.insert("hitPosY");
-    inHitsOff.insert("hitPosZ");
+    inHitsOff.insert("PosX");
+    inHitsOff.insert("PosY");
+    inHitsOff.insert("PosZ");
 
     Storage::StorageI input(
         options.getValue("input"),
@@ -241,6 +208,16 @@ int main(int argc, const char** argv) {
     if (!options.evalBoolArg("process-tracks"))
       outTreeMask |= Storage::StorageIO::TRACKS;
 
+    // Match the active branches from the input to those in the output
+    if (input.isHitsBranchOff("Value")) {
+      hitBranchesOff.insert("Value");
+      clusterBranchesOff.insert("Value");
+    }
+    if (input.isHitsBranchOff("Timing")) {
+      hitBranchesOff.insert("Timing");
+      clusterBranchesOff.insert("Timing");
+    }
+
     Storage::StorageO output(
         options.getValue("output"),
         input.getNumPlanes(),
@@ -250,16 +227,22 @@ int main(int argc, const char** argv) {
         &trackBranchesOff,
         &eventInfoBranchesOff);
 
-    // Parse a clustering object
+    // Build a clustering object from the options
     Processors::Clustering clustering;
     if (options.hasArg("process-clusters-nrows"))
       clustering.m_maxRows = strToInt(options.getValue("process-clusters-nrows"));
     if (options.hasArg("process-clusters-ncols"))
       clustering.m_maxRows = strToInt(options.getValue("process-clusters-ncols"));
 
+    // Build an alignment object from the device
+    Processors::Aligning aligning(devices[0]);
+
     // Configure a looper with the cluster maker, input and output
     Loopers::LoopProcess looper(output);
     looper.addInput(input);
+
+    // Give it the aligning object
+    looper.m_aligning = &aligning;
 
     if (options.evalBoolArg("process-clusters"))
       looper.m_clustering = &clustering;

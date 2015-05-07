@@ -50,8 +50,8 @@ build/storageo.o: src/storage/storageo.cxx include/storage/storageo.h
 
 ### Mechanics library ###
 
-lib/libjudmechanics.a: build/alignment.o build/sensor.o build/device.o build/parsedevice.o
-	ar ru lib/libjudmechanics.a build/alignment.o build/sensor.o build/device.o build/parsedevice.o
+lib/libjudmechanics.a: build/alignment.o build/sensor.o build/device.o build/mechparsers.o
+	ar ru lib/libjudmechanics.a build/alignment.o build/sensor.o build/device.o build/mechparsers.o
 
 build/alignment.o: src/mechanics/alignment.cxx include/mechanics/alignment.h
 	$(CC) $(CFLAGS) $(INC) -c src/mechanics/alignment.cxx -o build/alignment.o
@@ -62,16 +62,19 @@ build/sensor.o: src/mechanics/sensor.cxx include/mechanics/sensor.h
 build/device.o: src/mechanics/device.cxx include/mechanics/device.h
 	$(CC) $(CFLAGS) $(INC) -c src/mechanics/device.cxx -o build/device.o
 
-build/parsedevice.o: src/mechanics/parsedevice.cxx include/mechanics/parsedevice.h
-	$(CC) $(CFLAGS) $(INC) -c src/mechanics/parsedevice.cxx -o build/parsedevice.o
+build/mechparsers.o: src/mechanics/mechparsers.cxx include/mechanics/mechparsers.h
+	$(CC) $(CFLAGS) $(INC) -c src/mechanics/mechparsers.cxx -o build/mechparsers.o
 
 ### Processors library ###
 
-lib/libjudproc.a: build/clustering.o
-	ar ru lib/libjudproc.a build/clustering.o
+lib/libjudproc.a: build/clustering.o build/aligning.o
+	ar ru lib/libjudproc.a build/clustering.o build/aligning.o
 
 build/clustering.o: src/processors/clustering.cxx include/processors/clustering.h
 	$(CC) $(CFLAGS) $(INC) -c src/processors/clustering.cxx -o build/clustering.o
+
+build/aligning.o: src/processors/aligning.cxx include/processors/aligning.h
+	$(CC) $(CFLAGS) $(INC) -c src/processors/aligning.cxx -o build/aligning.o
 
 ### Loopers library ###
 

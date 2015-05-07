@@ -42,6 +42,8 @@ public:
   std::string m_spaceUnit;
   /** Name of the temporal units, propagates to plots */
   std::string m_timeUnit;
+  /** Path of file where this device can store alignment information */
+  std::string m_alignmentFile;
 
   /** Clock tick of first event in read out */
   ULong64_t m_timeStart;
@@ -59,8 +61,8 @@ public:
 
   /** Convert the pixel location of a sensor to global coodriates */
   void pixelToSpace(
-      unsigned col,
-      unsigned row,
+      double col,
+      double row,
       unsigned nsensor,
       double& x,
       double& y,

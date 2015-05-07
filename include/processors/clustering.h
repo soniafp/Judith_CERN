@@ -17,7 +17,7 @@ namespace Processors {
   * @author Garrin McGoldrick (garrin.mcgoldrick@cern.ch)
   */
 class Clustering {
-private:
+protected:
   /** Algorithm builds a list of hits belonging to the same cluster as the
     * provided seed. It is called from `process` and can be extended to
     * implement a different clustering algorithm */
