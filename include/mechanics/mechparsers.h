@@ -41,6 +41,8 @@ public:
   /** Access device by name using the [] operator */
   inline Mechanics::Device& operator[](const std::string& name) { return *map[name]; }
   inline size_t getNumDevices() const { return devices.size(); }
+  /** Reference to the device vector */
+  inline const std::vector<Mechanics::Device*>& getDevices() const { return devices; }
 };
 
 }
