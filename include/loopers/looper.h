@@ -21,7 +21,7 @@ namespace Loopers {
 class Looper {
 protected:
   /** List of inputs from which to read events */
-  std::vector<Storage::StorageI*> m_inputs;
+  const std::vector<Storage::StorageI*> m_inputs;
   /** List of events (in the same order as the inputs) read an iteration */
   std::vector<Storage::Event*> m_events;
   /** The largets event index from the inputs */
@@ -47,11 +47,10 @@ public:
   /** Print the progress bar at this interval of events (0 is off */
   unsigned m_printInterval;
 
-  Looper();
+  Looper(const std::vector<Storage::StorageI*>& inputs);
+  /** Convenience constructor for single input loopers */
+  Looper(Storage::StorageI& input);
   virtual ~Looper() {}
-
-  /** Add and input from which to read an event at each iteration */
-  void addInput(Storage::StorageI& input);
   
   /** Loop over the largest common set of events in the inputs */
   virtual void loop();

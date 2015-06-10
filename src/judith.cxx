@@ -163,7 +163,8 @@ int main(int argc, const char** argv) {
       trackBranchesOff,
       eventInfoBranchesOff);
 
-  // Build the device(s) from the given files
+  // Build the device(s) from the given files. Note: devices is a wrapper for
+  // a vector of devices, with name mapping.
   Mechanics::Devices devices;
   generateDevices(options, devices);
 
@@ -183,7 +184,7 @@ int main(int argc, const char** argv) {
     }
 
     if (devices.getNumDevices() != 1) {
-      std::cerr << "ERROR: only one device accepted when processing" << std::endl;
+      std::cerr << "ERROR: exactly one device accepted when processing" << std::endl;
       return -1;
     }
 
@@ -239,8 +240,7 @@ int main(int argc, const char** argv) {
     Processors::Aligning aligning(devices[0]);
 
     // Prepare a processing looper to loop the input and write to the output
-    Loopers::LoopProcess looper(output);
-    looper.addInput(input);
+    Loopers::LoopProcess looper(input, output);
 
     // Give it the aligning object to compute and store global positions
     looper.m_aligning = &aligning;
@@ -270,21 +270,18 @@ int main(int argc, const char** argv) {
       return -1;
     }
 
-    // Prepare a processing looper with the devices which it will align
-    Loopers::LoopAlignCorr looper(devices.getDevices());
-
-    // List of inputs for memeory management
+    // Build the input storages for the devices to align
     std::vector<Storage::StorageI*> inputs;
-
     for (size_t i = 0; i < inputNames.size(); i++) {
       Storage::StorageI* input = new Storage::StorageI(
           inputNames[i],  // ith input file
           Storage::StorageIO::TRACKS,  // no tracks for corr. align
           &devices[i].getSensorMask());
       inputs.push_back(input);
-      looper.addInput(*input);
     }
 
+    // Prepare a processing looper with the devices which it will align
+    Loopers::LoopAlignCorr looper(inputs, devices.getVector());
     // Apply generic looping options to the looper
     configureLooper(options, looper);
     // Run the looper

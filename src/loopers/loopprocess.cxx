@@ -9,8 +9,10 @@
 
 namespace Loopers {
 
-LoopProcess::LoopProcess(Storage::StorageO& output) :
-    Looper(),
+LoopProcess::LoopProcess(
+    Storage::StorageI& input,
+    Storage::StorageO& output) :
+    Looper(input),
     m_output(output),
     // No clustering algorithm by default, must be set explicitely
     m_clustering(0),

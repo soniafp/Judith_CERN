@@ -3,6 +3,7 @@
 
 #include "loopers/looper.h"
 
+namespace Storage { class StorageI; }
 namespace Storage { class StorageO; }
 namespace Processors { class Clustering; }
 namespace Processors { class Aligning; }
@@ -29,7 +30,7 @@ public:
   Processors::Aligning* m_aligning;
 
   /** Object must be constructed with an output */
-  LoopProcess(Storage::StorageO& output);
+  LoopProcess(Storage::StorageI& input, Storage::StorageO& output);
   ~LoopProcess() {}
 
   /** Redefined loop checks that a single input is given */

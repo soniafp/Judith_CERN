@@ -10,22 +10,34 @@
 
 namespace Loopers {
 
-Looper::Looper() :
-    m_inputs(),
-    m_events(),
+Looper::Looper(const std::vector<Storage::StorageI*>& inputs) :
+    m_inputs(inputs),
+    m_events(m_inputs.size()),  // reserve event vector size
     m_maxEvents(0),
     m_minEvents(-1),  // largest unsigned integer
     m_start(0),
     m_nprocess(-1),  // causes iteration over entire range
     m_nstep(1),
-    m_printInterval(1E4) {}
+    m_printInterval(1E4) {
+  // Keep track of the smallest and largest event indices at end of inputs
+  for (size_t i = 0; i < m_inputs.size(); i++) {
+    const Storage::StorageI& input = *m_inputs[i];
+    m_minEvents = std::min(m_minEvents, (ULong64_t)input.getNumEvents());
+    m_maxEvents = std::max(m_maxEvents, (ULong64_t)input.getNumEvents());
+  }
+}
 
-void Looper::addInput(Storage::StorageI& input) {
-  m_inputs.push_back(&input);
-  m_events.push_back(0);  // one for each input
-  // Keep track of the available event range
-  m_minEvents = std::min(m_minEvents, (ULong64_t)input.getNumEvents());
-  m_maxEvents = std::max(m_maxEvents, (ULong64_t)input.getNumEvents());
+Looper::Looper(Storage::StorageI& input) :
+    m_inputs(1, &input),  // size 1 vector with input address as value
+    m_events(m_inputs.size()),
+    m_maxEvents(0),
+    m_minEvents(-1),  // largest unsigned integer
+    m_start(0),
+    m_nprocess(-1),  // causes iteration over entire range
+    m_nstep(1),
+    m_printInterval(1E4) {
+  m_minEvents = (ULong64_t)input.getNumEvents();
+  m_maxEvents = (ULong64_t)input.getNumEvents();
 }
 
 void Looper::printProgress() {

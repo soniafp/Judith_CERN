@@ -5,6 +5,7 @@
 
 #include "loopers/looper.h"
 
+namespace Storage { class StorageI; }
 namespace Mechanics { class Device; }
 
 namespace Loopers {
@@ -25,7 +26,9 @@ private:
 
 public:
   /** Object must be constructed with an output */
-  LoopAlignCorr(const std::vector<Mechanics::Device*>& devices);
+  LoopAlignCorr(
+    const std::vector<Storage::StorageI*>& inputs,
+    const std::vector<Mechanics::Device*>& devices);
   ~LoopAlignCorr() {}
 
   /** Redefined loop checks that a single input is given */

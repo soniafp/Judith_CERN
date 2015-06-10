@@ -42,7 +42,7 @@ public:
   inline Mechanics::Device& operator[](const std::string& name) { return *map[name]; }
   inline size_t getNumDevices() const { return devices.size(); }
   /** Reference to the device vector */
-  inline const std::vector<Mechanics::Device*>& getDevices() const { return devices; }
+  inline const std::vector<Mechanics::Device*>& getVector() const { return devices; }
 };
 
 }
