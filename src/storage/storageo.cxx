@@ -33,7 +33,7 @@ StorageO::StorageO(
     const std::set<std::string>* clustersBranchesOff,
     const std::set<std::string>* tracksBranchesOff,
     const std::set<std::string>* eventInfoBranchesOff) :
-    StorageIO(filePath, OUTPUT, numPlanes) {
+    StorageIO(filePath, OUTPUT, numPlanes, treeMask) {
 
   // Copy any/all given branch masks
   if (hitsBranchesOff) m_hitsBranchesOff = *hitsBranchesOff;

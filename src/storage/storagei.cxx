@@ -34,7 +34,7 @@ StorageI::StorageI(
     const std::set<std::string>* tracksBranchesOff,
     const std::set<std::string>* eventInfoBranchesOff) :
     // Initialize base with 0 planes and count them as they are read in
-    StorageIO(filePath, INPUT, 0) {
+    StorageIO(filePath, INPUT, 0, treeMask) {
 
   // Invert the mask to not have to check !
   treeMask = ~treeMask;

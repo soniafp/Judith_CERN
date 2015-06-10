@@ -90,6 +90,8 @@ protected:
   const FileMode m_fileMode;
   /** Number of planes in the device */
   size_t m_numPlanes;
+  /** Bitmask of trees turned off */
+  const int m_treeMask;
   /** Strategy for dealing with masked hits */
   MaskMode m_maskMode;
   /** Number of events */
@@ -177,11 +179,14 @@ protected:
   /** Cached make new hit only for friend Event class */
   Hit& newHit();
 
-public:
+  /** Construction needs to be called by a derived class */
   StorageIO(
       const std::string& filePath,
       FileMode fileMode,
-      size_t numPlanes=1);
+      size_t numPlanes,
+      int treeMask);
+
+public:
   virtual ~StorageIO();
 
   /** Provides the `Event` object cleared to be filled. NOTE: this event is
