@@ -78,14 +78,17 @@ build/aligning.o: src/processors/aligning.cxx include/processors/aligning.h
 
 ### Loopers library ###
 
-lib/libjudloop.a: build/looper.o build/loopprocess.o
-	ar ru lib/libjudloop.a build/looper.o build/loopprocess.o
+lib/libjudloop.a: build/looper.o build/loopprocess.o build/loopaligncorr.o
+	ar ru lib/libjudloop.a build/looper.o build/loopprocess.o build/loopaligncorr.o
 
 build/looper.o: src/loopers/looper.cxx include/loopers/looper.h
 	$(CC) $(CFLAGS) $(INC) -c src/loopers/looper.cxx -o build/looper.o
 
 build/loopprocess.o: src/loopers/loopprocess.cxx include/loopers/loopprocess.h
 	$(CC) $(CFLAGS) $(INC) -c src/loopers/loopprocess.cxx -o build/loopprocess.o
+
+build/loopaligncorr.o: src/loopers/loopaligncorr.cxx include/loopers/loopaligncorr.h
+	$(CC) $(CFLAGS) $(INC) -c src/loopers/loopaligncorr.cxx -o build/loopaligncorr.o
 
 clean:
 	rm -rf build/ lib/* bin/*

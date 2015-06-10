@@ -16,6 +16,7 @@
 #include "processors/clustering.h"
 #include "processors/aligning.h"
 #include "loopers/loopprocess.h"
+#include "loopers/loopaligncorr.h"
 
 void printHelp() {
   printf("usage: judith <command> [<args>]\n");
@@ -256,6 +257,43 @@ int main(int argc, const char** argv) {
 
     // Run the looper
     looper.loop();
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Correlation alignment
+
+  else if (command == "align-corr") {
+    const Options::Values& inputNames = options.getValues("intput");
+    if (inputNames.size() < 1 || inputNames.size() != devices.getNumDevices()) {
+      std::cerr << "ERROR: need at least 1 input, and as many as devices"
+          << std::endl;
+      return -1;
+    }
+
+    // Prepare a processing looper with the devices which it will align
+    Loopers::LoopAlignCorr looper(devices.getDevices());
+
+    // List of inputs for memeory management
+    std::vector<Storage::StorageI*> inputs;
+
+    for (size_t i = 0; i < inputNames.size(); i++) {
+      Storage::StorageI* input = new Storage::StorageI(
+          inputNames[i],  // ith input file
+          Storage::StorageIO::TRACKS,  // no tracks for corr. align
+          &devices[i].getSensorMask());
+      inputs.push_back(input);
+      looper.addInput(*input);
+    }
+
+    // Apply generic looping options to the looper
+    configureLooper(options, looper);
+    // Run the looper
+    looper.loop();
+
+    // Clear the inputs from memory
+    for (std::vector<Storage::StorageI*>::iterator it = inputs.begin();
+        it != inputs.end(); ++it)
+      delete *it;
   }
 
   /////////////////////////////////////////////////////////////////////////////
