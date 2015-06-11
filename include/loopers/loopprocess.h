@@ -24,17 +24,10 @@ private:
   Storage::StorageO& m_output;
 
 public:
-  /** If a clustering algorithm is given, it will be applied */
-  Processors::Clustering* m_clustering; 
-  /** If an aligning algorithm is given, it will be applied */
-  Processors::Aligning* m_aligning;
-
-  /** Object must be constructed with an output */
   LoopProcess(Storage::StorageI& input, Storage::StorageO& output);
   ~LoopProcess() {}
 
-  /** Redefined loop checks that a single input is given */
-  void loop();
+  /** Execute writes to the output */
   void execute();
 };
 

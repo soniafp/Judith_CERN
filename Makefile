@@ -1,6 +1,6 @@
 CC := g++
 CFLAGS := `root-config --cflags` -g -O3 -Wall
-LIB := -Llib -ljudstorage -ljudmechanics -ljudproc -ljudloop `root-config --ldflags --glibs` -O1
+LIB := -Llib -ljudstorage -ljudmechanics -ljudproc -ljudana -ljudloop `root-config --ldflags --glibs` -O1
 INC := -Iinclude
 
 # Run these commands before entering targets
@@ -10,7 +10,7 @@ $(shell mkdir -p bin)
 
 ### Executable ###
 
-bin/judith: build/judith.o build/options.o lib/libjudstorage.a lib/libjudmechanics.a lib/libjudproc.a lib/libjudloop.a
+bin/judith: build/judith.o build/options.o lib/libjudstorage.a lib/libjudmechanics.a lib/libjudproc.a lib/libjudana.a lib/libjudloop.a
 	$(CC) build/options.o build/judith.o $(LIB) -o bin/judith
 
 build/judith.o: src/judith.cxx
@@ -67,14 +67,28 @@ build/mechparsers.o: src/mechanics/mechparsers.cxx include/mechanics/mechparsers
 
 ### Processors library ###
 
-lib/libjudproc.a: build/clustering.o build/aligning.o
-	ar ru lib/libjudproc.a build/clustering.o build/aligning.o
+lib/libjudproc.a: build/processor.o build/procclustering.o build/procaligning.o
+	ar ru lib/libjudproc.a build/processor.o build/procclustering.o build/procaligning.o
 
-build/clustering.o: src/processors/clustering.cxx include/processors/clustering.h
-	$(CC) $(CFLAGS) $(INC) -c src/processors/clustering.cxx -o build/clustering.o
+build/processor.o: src/processors/processor.cxx include/processors/processor.h
+	$(CC) $(CFLAGS) $(INC) -c src/processors/processor.cxx -o build/processor.o
 
-build/aligning.o: src/processors/aligning.cxx include/processors/aligning.h
-	$(CC) $(CFLAGS) $(INC) -c src/processors/aligning.cxx -o build/aligning.o
+build/procclustering.o: src/processors/clustering.cxx include/processors/clustering.h
+	$(CC) $(CFLAGS) $(INC) -c src/processors/clustering.cxx -o build/procclustering.o
+
+build/procaligning.o: src/processors/aligning.cxx include/processors/aligning.h
+	$(CC) $(CFLAGS) $(INC) -c src/processors/aligning.cxx -o build/procaligning.o
+	
+### Analyzers library ###
+
+lib/libjudana.a: build/analyzer.o build/anacorrelations.o
+	ar ru lib/libjudana.a build/analyzer.o build/anacorrelations.o
+
+build/analyzer.o: src/analyzers/analyzer.cxx include/analyzers/analyzer.h
+	$(CC) $(CFLAGS) $(INC) -c src/analyzers/analyzer.cxx -o build/analyzer.o
+
+build/anacorrelations.o: src/analyzers/correlations.cxx include/analyzers/correlations.h
+	$(CC) $(CFLAGS) $(INC) -c src/analyzers/correlations.cxx -o build/anacorrelations.o
 
 ### Loopers library ###
 

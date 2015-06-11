@@ -51,10 +51,10 @@ int test_aligning() {
   hit1.setPix(2,2);
 
   Processors::Clustering clustering;
-  clustering.process(event);
+  clustering.execute(event);
   
   Processors::Aligning aligning(device);
-  aligning.process(event);
+  aligning.execute(event);
 
   double x0, y0, z0, x1, y1, z1;
 

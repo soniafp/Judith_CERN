@@ -22,7 +22,7 @@ bool approxEqual(double v1, double v2, double tol=1E-10) {
 }
 
 int test_storageio() {
-  Storage::StorageIO store("tmp.root", Storage::StorageIO::OUTPUT);
+  Storage::StorageO store("tmp.root", 1);
 
   if (store.getNumEvents() != 0 ||
       store.getNumPlanes() != 1 ||

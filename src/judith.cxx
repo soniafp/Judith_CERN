@@ -23,10 +23,11 @@ void printHelp() {
 
   printf("\nArguments:\n");
   printf("  %2s %-15s %s\n", "-h", "--help", "Display this information");
-  printf("  %2s %-15s %s\n", "-i", "--input", "Path to input file");
-  printf("  %2s %-15s %s\n", "-o", "--output", "Path to input file");
+  printf("  %2s %-15s %s\n", "-i", "--input", "Path to input file(s)");
+  printf("  %2s %-15s %s\n", "-o", "--output", "Path to output file");
   printf("  %2s %-15s %s\n", "-s", "--settings", "Path to settings file (default: configs/settings.cfg)");
   printf("  %2s %-15s %s\n", "-r", "--results", "Path to results file");
+  printf("  %2s %-15s %s\n", "-d", "--device", "Path to device configuration(s)");
   printf("  %2s %-15s %s\n", "-f", "--first", "Number of first event to process");
   printf("  %2s %-15s %s\n", "-n", "--events", "Process up to this many events past first");
   printf("  %2s %-15s %s\n", "-k", "--skip", "Skip this many events at each loop iteration");
@@ -114,6 +115,7 @@ void configureLooper(const Options& options, Loopers::Looper& looper) {
     looper.m_nstep = strToInt(options.getValue("skip"));
   if (options.hasArg("progress"))
     looper.m_printInterval = strToInt(options.getValue("progress"));
+  looper.m_draw = options.evalBoolArg("draw");
 }
 
 int main(int argc, const char** argv) {
@@ -243,11 +245,11 @@ int main(int argc, const char** argv) {
     Loopers::LoopProcess looper(input, output);
 
     // Give it the aligning object to compute and store global positions
-    looper.m_aligning = &aligning;
+    looper.addProcessor(aligning);
 
     // If a clustering is requested, give it a clustering processor
     if (options.evalBoolArg("process-clusters"))
-      looper.m_clustering = &clustering;
+      looper.addProcessor(clustering);
     // Likewise for tracking
     if (options.evalBoolArg("process-tracks"))
       {}//looper.m_tracking = &tracking;
@@ -257,16 +259,20 @@ int main(int argc, const char** argv) {
 
     // Run the looper
     looper.loop();
+    looper.finalize();
   }
 
   /////////////////////////////////////////////////////////////////////////////
   // Correlation alignment
 
   else if (command == "align-corr") {
-    const Options::Values& inputNames = options.getValues("intput");
-    if (inputNames.size() < 1 || inputNames.size() != devices.getNumDevices()) {
-      std::cerr << "ERROR: need at least 1 input, and as many as devices"
-          << std::endl;
+    const Options::Values& inputNames = options.getValues("input");
+    if (inputNames.size() < 1) {
+      std::cerr << "ERROR: need at least 1 input" << std::endl;
+      return -1;
+    }
+    if (inputNames.size() != devices.getNumDevices()) {
+      std::cerr << "ERROR: need one device for each input" << std::endl;
       return -1;
     }
 
@@ -282,10 +288,29 @@ int main(int argc, const char** argv) {
 
     // Prepare a processing looper with the devices which it will align
     Loopers::LoopAlignCorr looper(inputs, devices.getVector());
+
+    // Alignment needs clusters
+    Processors::Clustering clustering;
+    if (options.hasArg("process-clusters-nrows"))
+      clustering.m_maxRows = strToInt(options.getValue("process-clusters-nrows"));
+    if (options.hasArg("process-clusters-ncols"))
+      clustering.m_maxRows = strToInt(options.getValue("process-clusters-ncols"));
+    looper.addProcessor(clustering);
+
+    // Alignment also needs to compute the spatial positions of the clusters
+    Processors::Aligning aligning(devices.getVector());
+    looper.addProcessor(aligning);
+
     // Apply generic looping options to the looper
     configureLooper(options, looper);
+
     // Run the looper
     looper.loop();
+    looper.finalize();
+
+    // Write out the alignment to file
+    for (size_t i = 0; i < devices.getNumDevices(); i++)
+      Mechanics::writeAlignment(devices[i]);
 
     // Clear the inputs from memory
     for (std::vector<Storage::StorageI*>::iterator it = inputs.begin();

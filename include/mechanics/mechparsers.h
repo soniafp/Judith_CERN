@@ -15,7 +15,7 @@ Device* parseDevice(const std::string& filePath);
 void parseAlignment(Device& device);
 
 /** Write out a device's alignment */
-void writeAlignment(Device& device);
+void writeAlignment(const Device& device);
 
 /**
   * Container of devices parsed. Useful when setting up a multi-device run.

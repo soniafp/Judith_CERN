@@ -228,6 +228,15 @@ Device* parseDevice(const std::string& filePath) {
   if (device.name.empty())
     throw std::runtime_error("Mechanics: parseDevice: no device name given");
 
+  // Units and names can contain special characters escaped with # in ROOT
+  size_t ipos = 0;
+  while ((ipos = device.spaceUnit.find('\\')) != std::string::npos) {
+    device.spaceUnit.replace(ipos, 1, "#");
+  }
+  while ((ipos = device.timeUnit.find('\\')) != std::string::npos) {
+    device.timeUnit.replace(ipos, 1, "#");
+  }
+
   // Build the device
   Device* deviceObj = new Device(sensors.size());
   deviceObj->m_name = device.name;
@@ -325,7 +334,7 @@ void writeAlignment(const Alignment& object, std::ofstream& out) {
       << "rot-z " << object.getRotZ() << std::endl;
 }
 
-void writeAlignment(Device& device) {
+void writeAlignment(const Device& device) {
   // Open the devices' alignment fi;e
   std::ofstream file(device.m_alignmentFile.c_str());
   if (!file) throw "Mechanics: writeAlignment: unable to open file";
@@ -364,6 +373,8 @@ void Devices::addDevice(Mechanics::Device* device) {
     throw std::runtime_error("Devices::addDevice: device must be nammed");
   if (map.find(device->m_name) != map.end())
     throw std::runtime_error("Devices::addDevice: duplicate device name");
+  if (!devices.empty() && devices[0]->m_spaceUnit != device->m_spaceUnit)
+    throw std::runtime_error("Devices::addDevice: inconsistent spatial units");
   map[device->m_name] = device;
 }
 

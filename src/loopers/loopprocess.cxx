@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdexcept>
+#include <cassert>
 
 #include "storage/event.h"
 #include "storage/storageo.h"
@@ -13,27 +14,13 @@ LoopProcess::LoopProcess(
     Storage::StorageI& input,
     Storage::StorageO& output) :
     Looper(input),
-    m_output(output),
-    // No clustering algorithm by default, must be set explicitely
-    m_clustering(0),
-    m_aligning(0) {}
-
-void LoopProcess::loop() {
-  // Looper is meant to process only 1 input, and generate 1 output
-  if (m_inputs.size() != 1)
-    throw std::runtime_error("LoopProcess::loop: can handle only 1 input");
-  // TODO: if tracking but no aligning, throw an error
-  // Continue with the base class loop
-  Looper::loop();
-}
+    m_output(output) {}
 
 void LoopProcess::execute() {
-  // Note: guaranteed to have 1 event from `loop` verification
-  Storage::Event& event = *m_events[0];
-  if (m_clustering) m_clustering->process(event);
-  if (m_aligning) m_aligning->process(event);
+  Looper::execute();  // run the processors
   // Store the processed event in the output
-  m_output.writeEvent(event);
+  assert(m_events.size() == 1 && "Can construct with 1 input only");
+  m_output.writeEvent(*m_events[0]);
 }
 
 }

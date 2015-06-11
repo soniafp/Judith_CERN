@@ -13,12 +13,6 @@
 
 namespace Processors {
 
-Clustering::Clustering() :
-    // Default to clusters that contain neighbouring hits
-    m_maxRows(1),
-    m_maxCols(1),
-    m_weighted(false) {}
-
 void Clustering::clusterSeed(
     Storage::Hit& seed,
     std::list<Storage::Hit*>& hits,
@@ -105,7 +99,7 @@ void Clustering::buildCluster(
         std::sqrt(m2Y/sumw * nhits/(double)(nhits-1)));
 }
 
-void Clustering::process(Storage::Event& event) {
+void Clustering::processEvent(Storage::Event& event) {
   // Don't add new clusters atop existing ones in an event
   if (event.getNumClusters())
     throw std::runtime_error("Clustering::process: event is already clustered");
@@ -134,6 +128,12 @@ void Clustering::process(Storage::Event& event) {
       // next pass will pick the next hit which wasn't clustered in this one
     }
   }
+}
+
+void Clustering::process() {
+  for (std::vector<Storage::Event*>::iterator it = m_events.begin();
+      it != m_events.end(); ++it)
+    processEvent(**it);
 }
 
 }

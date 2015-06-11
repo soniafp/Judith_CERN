@@ -57,7 +57,7 @@ int test_clustering() {
   const double rms2Y = 1./std::sqrt(12);
 
   Processors::Clustering clustering;
-  clustering.process(event);
+  clustering.execute(event);
 
   if (event.getNumClusters() != 3) {
     std::cerr << "Processors::Clustering: multiplicity failed" << std::endl;

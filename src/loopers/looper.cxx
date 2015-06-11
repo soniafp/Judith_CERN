@@ -6,6 +6,8 @@
 
 #include "storage/storagei.h"
 #include "storage/event.h"
+#include "processors/processor.h"
+#include "analyzers/analyzer.h"
 #include "loopers/looper.h"
 
 namespace Loopers {
@@ -18,7 +20,8 @@ Looper::Looper(const std::vector<Storage::StorageI*>& inputs) :
     m_start(0),
     m_nprocess(-1),  // causes iteration over entire range
     m_nstep(1),
-    m_printInterval(1E4) {
+    m_printInterval(1E4),
+    m_draw(false) {
   // Keep track of the smallest and largest event indices at end of inputs
   for (size_t i = 0; i < m_inputs.size(); i++) {
     const Storage::StorageI& input = *m_inputs[i];
@@ -28,14 +31,16 @@ Looper::Looper(const std::vector<Storage::StorageI*>& inputs) :
 }
 
 Looper::Looper(Storage::StorageI& input) :
-    m_inputs(1, &input),  // size 1 vector with input address as value
+    // Single input vector, filled with input address
+    m_inputs(1, &input),
     m_events(m_inputs.size()),
     m_maxEvents(0),
     m_minEvents(-1),  // largest unsigned integer
     m_start(0),
     m_nprocess(-1),  // causes iteration over entire range
     m_nstep(1),
-    m_printInterval(1E4) {
+    m_printInterval(1E4),
+    m_draw(false) {
   m_minEvents = (ULong64_t)input.getNumEvents();
   m_maxEvents = (ULong64_t)input.getNumEvents();
 }
@@ -84,6 +89,35 @@ void Looper::loop() {
   // Print the 100% progress and finish that line
   printProgress();
   std::cout << std::endl;
+}
+
+void Looper::execute() {
+  // Execute the processors first since they can modify the event
+  for (std::vector<Processors::Processor*>::iterator it = m_processors.begin();
+      it != m_processors.end(); ++it)
+    (*it)->execute(m_events);
+  // Then build up analysis from the event data
+  for (std::vector<Analyzers::Analyzer*>::iterator it = m_analyzers.begin();
+      it != m_analyzers.end(); ++it)
+    (*it)->execute(m_events);
+}
+
+void Looper::finalize() {
+  // Do post-processing as needed
+  for (std::vector<Processors::Processor*>::iterator it = m_processors.begin();
+      it != m_processors.end(); ++it)
+    (*it)->finalize();
+  for (std::vector<Analyzers::Analyzer*>::iterator it = m_analyzers.begin();
+      it != m_analyzers.end(); ++it)
+    (*it)->finalize();
+}
+
+void Looper::addProcessor(Processors::Processor& processor) {
+  m_processors.push_back(&processor);
+}
+
+void Looper::addAnalyzer(Analyzers::Analyzer& analyzer) {
+  m_analyzers.push_back(&analyzer);
 }
 
 }

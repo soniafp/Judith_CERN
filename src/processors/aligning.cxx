@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdexcept>
+#include <cassert>
 #include <cmath>
 
 #include "storage/hit.h"
@@ -11,12 +12,11 @@
 
 namespace Processors {
 
-Aligning::Aligning(const Mechanics::Device& device) :
-    m_device(device) {}
-
-void Aligning::process(Storage::Event& event) {
+void Aligning::processEvent(
+    Storage::Event& event,
+    const Mechanics::Device& device) {
   // Ensure the event has the same planes as the device
-  if (event.getNumPlanes() != m_device.getNumSensors())
+  if (event.getNumPlanes() != device.getNumSensors())
     throw std::runtime_error("Aligning::process: plane/sensor mismatch");
 
   // Get hits and clusters one plane at a time, and apply alignment
@@ -31,7 +31,7 @@ void Aligning::process(Storage::Event& event) {
       Storage::Hit& hit = **it;
       // Ask the device to apply first local, then global transformation to
       // the hit's pixel coordinates
-      m_device.pixelToSpace(
+      device.pixelToSpace(
           hit.getPixX(), hit.getPixY(), iplane, x, y, z);
       hit.setPos(x, y, z);
     }
@@ -42,18 +42,25 @@ void Aligning::process(Storage::Event& event) {
         it != clusters.end(); ++it) {
       double x, y, z;
       Storage::Cluster& cluster = **it;
-      m_device.pixelToSpace(
+      device.pixelToSpace(
           cluster.getPixX(), cluster.getPixY(), iplane, x, y, z);
       cluster.setPos(x, y, z);
       // Compute also the positions shifted by 1 sigma
       double ex, ey, ez;
-      m_device.pixelToSpace(
+      device.pixelToSpace(
           cluster.getPixX()+cluster.getPixErrX(),
           cluster.getPixY()+cluster.getPixErrY(),
           iplane, ex, ey, ez);
       // And then store the difference to their nominal values
       cluster.setPosErr(std::fabs(ex-x), std::fabs(ey-y), std::fabs(ez-z));
     }
+  }
+}
+
+void Aligning::process() {
+  assert(!m_devices.empty() && "Can't construct with no devices");
+  for (size_t i = 0; i < m_ndevices; i++) {
+    processEvent(*m_events[i], *m_devices[i]);
   }
 }
 

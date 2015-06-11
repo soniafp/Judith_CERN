@@ -1,5 +1,7 @@
-#ifndef ALIGN_H
-#define ALIGN_H
+#ifndef PROC_ALIGN_H
+#define PROC_ALIGN_H
+
+#include "processors/processor.h"
 
 namespace Storage { class Event; }
 namespace Mechanics { class Device; }
@@ -11,20 +13,26 @@ namespace Processors {
   *
   * @author Garrin McGoldrick (garrin.mcgoldrick@cern.ch)
   */
-class Aligning {
+class Aligning : public Processor {
 protected:
-  const Mechanics::Device& m_device;
+  /** Processing is done device-by-device, so make single device method */
+  void processEvent(
+      Storage::Event& event,
+      const Mechanics::Device& device);
+
+  /** Base virtual method called at each loop iteration */
+  virtual void process();
 
 public:
-  /** Aligning always applies alignment from a device to its events, so require
-    * the device at construction */
-  Aligning(const Mechanics::Device& device);
+  /** Enable multi-device initialization */
+  Aligning(const std::vector<Mechanics::Device*>& devices) :
+      Processor(devices) {}
+  /** Enable single-device initialization */
+  Aligning(Mechanics::Device& device) :
+      Processor(device) {}
   virtual ~Aligning() {}
-
-  /** Fill event position values with aligned ones */
-  virtual void process(Storage::Event& event);
 };
 
 }
 
-#endif  // ALIGN_H
+#endif  // PROC_ALIGN_H
