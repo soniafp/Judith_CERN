@@ -72,8 +72,8 @@ build/mechparsers.o: src/mechanics/mechparsers.cxx include/mechanics/mechparsers
 
 ### Processors library ###
 
-lib/libjudproc.a: build/utils.o build/processor.o build/procclustering.o build/procaligning.o
-	ar ru lib/libjudproc.a build/utils.o build/processor.o build/procclustering.o build/procaligning.o
+lib/libjudproc.a: build/utils.o build/processor.o build/procclustering.o build/procaligning.o build/proctracking.o
+	ar ru lib/libjudproc.a build/utils.o build/processor.o build/procclustering.o build/procaligning.o build/proctracking.o
 
 build/processor.o: src/processors/processor.cxx include/processors/processor.h
 	$(CC) $(CFLAGS) $(INC) -c src/processors/processor.cxx -o build/processor.o
@@ -83,6 +83,9 @@ build/procclustering.o: src/processors/clustering.cxx include/processors/cluster
 
 build/procaligning.o: src/processors/aligning.cxx include/processors/aligning.h
 	$(CC) $(CFLAGS) $(INC) -c src/processors/aligning.cxx -o build/procaligning.o
+
+build/proctracking.o: src/processors/tracking.cxx include/processors/tracking.h
+	$(CC) $(CFLAGS) $(INC) -c src/processors/tracking.cxx -o build/proctracking.o
 	
 ### Analyzers library ###
 
