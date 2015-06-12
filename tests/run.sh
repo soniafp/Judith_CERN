@@ -12,11 +12,15 @@ fi
 
 echo "Compiling tests..."
 
-sources=`find . -type f -name 'test_*.cxx'`
+if [[ ! -z $1 ]]; then
+    sources=`find . -type f -name 'test_'$1'.cxx'`
+else
+    sources=`find . -type f -name 'test_*.cxx'`
+fi
 
 cc="g++"
 cflags="`root-config --cflags` -g -O3 -Wall"
-lib="-L../lib -ljudstorage -ljudmechanics -ljudproc `root-config --ldflags --glibs` -O1"
+lib="-L../lib -ljudstorage -ljudmechanics -ljudproc -ljudana `root-config --ldflags --glibs` -O1"
 inc="-I../include"
 
 rm -rf bin/

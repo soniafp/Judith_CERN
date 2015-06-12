@@ -52,11 +52,13 @@ int test_parsing() {
     std::cerr << "Device name incorrect" << std::endl;
     return -1;
   }
-  if (device->m_timeUnit != "\\mus") {
+  if (device->m_timeUnit != "#mus") {
+    // Note the conversion of \ to #
     std::cerr << "Device time unit incorrect" << std::endl;
     return -1;
   }
-  if (device->m_spaceUnit != "\\mum") {
+  if (device->m_spaceUnit != "#mum") {
+    // Note the conversion of \ to #
     std::cerr << "Device space unit incorrect" << std::endl;
     return -1;
   }
