@@ -4,12 +4,10 @@
 #include <vector>
 #include <algorithm>
 
-#include <TF1.h>
 #include <TH1.h>
-#include <TFitResult.h>
-#include <TFitResultPtr.h>
 #include <TCanvas.h>
 
+#include "utils.h"
 #include "storage/storagei.h"
 #include "mechanics/device.h"
 #include "analyzers/correlations.h"
@@ -54,32 +52,6 @@ LoopAlignCorr::LoopAlignCorr(
   addAnalyzer(m_correlations);
 }
 
-void prefit(
-    TH1& hist,
-    double& scale,
-    double& mode,
-    double& hwhm,
-    double& bg) {
-  const Int_t nbins = hist.GetNbinsX();
-  const Int_t imax = hist.GetMaximumBin();
-  scale = hist.GetBinContent(imax);
-
-  Int_t width = 1;
-  while (imax+width <= nbins || imax-width >= 1) {
-    const Int_t up = std::min(imax+width, nbins);
-    const Int_t down = std::max(imax-width, 1);
-    if (hist.GetBinContent(up) <= scale/2.) break;
-    if (hist.GetBinContent(down) <= scale/2.) break;
-    width += 1;
-  }
-
-  mode = hist.GetBinCenter(imax);
-  hwhm = hist.GetBinWidth(imax)*width;
-  const Int_t up = std::min(imax+3*width, nbins);
-  const Int_t down = std::max(imax-3*width, 1);
-  bg = hist.GetBinContent(up)/2. + hist.GetBinContent(down)/2.;
-}
-
 void LoopAlignCorr::finalize() {
   Looper::finalize();
 
@@ -89,9 +61,6 @@ void LoopAlignCorr::finalize() {
   // The offsets computed for each sensor
   std::vector<double> offX(relative.size(), 0);
   std::vector<double> offY(relative.size(), 0);
-
-  // Gaussian distrubiton fitting function from -5 to +5 sigma
-  TF1 gaus("g1", "[0]+[1]*exp(-(x-[2])*(x-[2])/(2*[3]*[3]))", -5, 5);
 
   size_t iglobal = 0;
   for (size_t idevice = 0; idevice < m_devices.size(); idevice++) {
@@ -103,36 +72,27 @@ void LoopAlignCorr::finalize() {
             (TH1&)m_correlations.getResX(idevice, isens) :
             (TH1&)m_correlations.getResY(idevice, isens);
 
-        double scale, mode, hwhm, bg;
-        prefit(hist, scale, mode, hwhm, bg);
+        TCanvas* can = m_draw ? new TCanvas() : 0;
 
-        gaus.SetParameter(0, bg);
-        gaus.SetParameter(1, scale);
-        gaus.SetParameter(2, mode);
-        gaus.SetParameter(3, hwhm);
+        if (m_draw) hist.Draw();
 
-        TCanvas* can = 0;
-        if (m_draw) {
-          can = new TCanvas();
-          hist.Draw();
-        }
-
-        // N: no plotting
-        // Q: quiet
-        // S: store results
-        // L: likelihood (instead of chi^2)
-        TFitResultPtr fit = hist.Fit(
-            &gaus, m_draw?"QS":"NQS", "", mode-2*hwhm, mode+2*hwhm);
+        double mean = 0;
+        double sigma = 1;
+        double norm = 1;
+        double bg = 0;
+        Utils::fitGausBg(hist, mean, sigma, norm, bg, true, m_draw);
 
         assert(iglobal < relative.size() && "More correlations than sensors");
 
         if (axis==XAXIS)
-          offX[iglobal] = fit->Parameter(2);
+          offX[iglobal] = mean;
         else
-          offY[iglobal] = fit->Parameter(2);
+          offY[iglobal] = mean;
 
         if (m_draw) {
-          hist.GetXaxis()->SetRangeUser(mode-5*hwhm, mode+5*hwhm);
+          const double range = 5*sigma;
+          hist.GetXaxis()->SetRangeUser(mean-range, mean+range);
+          hist.GetYaxis()->SetRangeUser(0, hist.GetMaximum()*1.5);
           can->Modified();
           can->Update();
           can->WaitPrimitive();

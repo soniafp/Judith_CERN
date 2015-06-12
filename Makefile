@@ -19,6 +19,11 @@ build/judith.o: src/judith.cxx
 build/options.o: src/options.cxx include/options.h
 	$(CC) $(CFLAGS) $(INC) -c src/options.cxx -o build/options.o
 
+# Don't see the need for a separate library for utils which are relativly small
+# so just link into those libraries that need it
+build/utils.o: src/utils.cxx include/utils.h
+	$(CC) $(CFLAGS) $(INC) -c src/utils.cxx -o build/utils.o
+
 ### Storage library ###
 
 lib/libjudstorage.a: build/hit.o build/cluster.o build/plane.o build/track.o build/event.o build/storageio.o build/storagei.o build/storageo.o
@@ -67,8 +72,8 @@ build/mechparsers.o: src/mechanics/mechparsers.cxx include/mechanics/mechparsers
 
 ### Processors library ###
 
-lib/libjudproc.a: build/processor.o build/procclustering.o build/procaligning.o
-	ar ru lib/libjudproc.a build/processor.o build/procclustering.o build/procaligning.o
+lib/libjudproc.a: build/utils.o build/processor.o build/procclustering.o build/procaligning.o
+	ar ru lib/libjudproc.a build/utils.o build/processor.o build/procclustering.o build/procaligning.o
 
 build/processor.o: src/processors/processor.cxx include/processors/processor.h
 	$(CC) $(CFLAGS) $(INC) -c src/processors/processor.cxx -o build/processor.o
@@ -81,8 +86,8 @@ build/procaligning.o: src/processors/aligning.cxx include/processors/aligning.h
 	
 ### Analyzers library ###
 
-lib/libjudana.a: build/analyzer.o build/anacorrelations.o
-	ar ru lib/libjudana.a build/analyzer.o build/anacorrelations.o
+lib/libjudana.a: build/utils.o build/analyzer.o build/anacorrelations.o
+	ar ru lib/libjudana.a build/utils.o build/analyzer.o build/anacorrelations.o
 
 build/analyzer.o: src/analyzers/analyzer.cxx include/analyzers/analyzer.h
 	$(CC) $(CFLAGS) $(INC) -c src/analyzers/analyzer.cxx -o build/analyzer.o
@@ -92,8 +97,8 @@ build/anacorrelations.o: src/analyzers/correlations.cxx include/analyzers/correl
 
 ### Loopers library ###
 
-lib/libjudloop.a: build/looper.o build/loopprocess.o build/loopaligncorr.o
-	ar ru lib/libjudloop.a build/looper.o build/loopprocess.o build/loopaligncorr.o
+lib/libjudloop.a: build/utils.o build/looper.o build/loopprocess.o build/loopaligncorr.o
+	ar ru lib/libjudloop.a build/utils.o build/looper.o build/loopprocess.o build/loopaligncorr.o
 
 build/looper.o: src/loopers/looper.cxx include/loopers/looper.h
 	$(CC) $(CFLAGS) $(INC) -c src/loopers/looper.cxx -o build/looper.o
