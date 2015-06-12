@@ -90,5 +90,57 @@ void fitGausBg(
   bg = fit->Parameter(0);
 }
 
+void linearFit(
+    const unsigned n,
+    const double* x,
+    const double* y,
+    const double* ye,
+    double& a,
+    double& ae,
+    double& b,
+    double& be,
+    double& chi2,
+    double& cov) {
+  a = 0;
+  ae = 0;
+  b = 0;
+  be = 0;
+  chi2 = 0;
+  cov = 0;
+
+  // Regression variables
+  double ss = 0;
+  double sx = 0;
+  double sy = 0;
+  double sxoss = 0;
+  double st2 = 0;
+
+  for (unsigned int i = 0; i < n; i++) {
+    const double wt = 1. / (ye[i]*ye[i]);
+    ss += wt;
+    sx += x[i] * wt;
+    sy += y[i] * wt;
+  }
+
+  sxoss = sx / ss;
+
+  for (unsigned i = 0; i < n; i++) {
+    const double t = (x[i]-sxoss) / ye[i];
+    st2 += t*t;
+    a += t*y[i]/ye[i];
+  }
+
+  a /= st2;
+  b = (sy - sx*a) / ss;
+
+  ae = std::sqrt(1./st2);
+  be = sqrt((1. + sx*sx / (ss*st2)) / ss);
+
+  for (unsigned i = 0; i < n; i++)
+    chi2 += std::pow((y[i] - (a*x[i]+b) / ye[i]), 2);
+
+  cov = -sx / (ss * st2);
+}
+
 }
 

@@ -23,6 +23,18 @@ void fitGausBg(
     bool display=false,
     double fitRange=5);
 
+void linearFit(
+    const unsigned n,
+    const double* x,
+    const double* y,
+    const double* ye,
+    double& a,
+    double& ae,
+    double& b,
+    double& be,
+    double& chi2,
+    double& cov);
+
 }
 
 #endif  // UTILS_H
