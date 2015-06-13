@@ -89,14 +89,17 @@ build/proctracking.o: src/processors/tracking.cxx include/processors/tracking.h
 	
 ### Analyzers library ###
 
-lib/libjudana.a: build/utils.o build/analyzer.o build/anacorrelations.o
-	ar ru lib/libjudana.a build/utils.o build/analyzer.o build/anacorrelations.o
+lib/libjudana.a: build/utils.o build/analyzer.o build/anacorrelations.o build/anaclusterresiduals.o
+	ar ru lib/libjudana.a build/utils.o build/analyzer.o build/anacorrelations.o build/anaclusterresiduals.o
 
 build/analyzer.o: src/analyzers/analyzer.cxx include/analyzers/analyzer.h
 	$(CC) $(CFLAGS) $(INC) -c src/analyzers/analyzer.cxx -o build/analyzer.o
 
 build/anacorrelations.o: src/analyzers/correlations.cxx include/analyzers/correlations.h
 	$(CC) $(CFLAGS) $(INC) -c src/analyzers/correlations.cxx -o build/anacorrelations.o
+
+build/anaclusterresiduals.o: src/analyzers/clusterresiduals.cxx include/analyzers/clusterresiduals.h
+	$(CC) $(CFLAGS) $(INC) -c src/analyzers/clusterresiduals.cxx -o build/anaclusterresiduals.o
 
 ### Loopers library ###
 
