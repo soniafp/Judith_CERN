@@ -5,7 +5,6 @@
 #include <string>
 
 #include <TDirectory.h>
-#include <TH1D.h>
 #include <TH2D.h>
 
 #include "analyzers/analyzer.h"
@@ -35,8 +34,6 @@ private:
   // Keep track of each plane's histograms, one for each content type
   std::vector<TH2D*> m_hCorrelationsX;
   std::vector<TH2D*> m_hCorrelationsY;
-  std::vector<TH1D*> m_hResidualsX;
-  std::vector<TH1D*> m_hResidualsY;
 
   /** Find the global id of the sensor of a given device */
   size_t toGlobal(size_t idevice, size_t isensor) const;
@@ -63,12 +60,8 @@ public:
     Analyzer::setOutput(dir, name);
   }
 
-  const std::vector<size_t>& getRelative() const;
-
-  TH2D& getCorrX(size_t idevice, size_t isensor) const;
-  TH2D& getCorrY(size_t idevice, size_t isensor) const;
-  TH1D& getResX(size_t idevice, size_t isensor) const;
-  TH1D& getResY(size_t idevice, size_t isensor) const;
+  TH2D& getCorrelationX(size_t idevice, size_t isensor) const;
+  TH2D& getCorrelationY(size_t idevice, size_t isensor) const;
 };
 
 }

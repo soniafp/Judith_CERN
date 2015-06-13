@@ -17,17 +17,14 @@
 namespace Analyzers {
 
 void Correlations::initialize() {
-  // Sort all device planes by z-distance
   assert(!m_devices.empty());
 
+  // Total sensors in all devices
   size_t nsensors = 0;
   for (size_t i = 0; i < m_devices.size(); i++)
     nsensors += m_devices[i]->getNumSensors();
 
-  if (nsensors == 0)
-    throw std::runtime_error("LoopAlignCorr::loop: no planes to align");
-
-  // Each plane gets the index of another plane to which it aligns
+  // Each plane gets the index of another plane to which it will correlate
   m_irelative.assign(nsensors, 0);
   // Also keep a list of all sensors in their global order
   std::vector<const Mechanics::Sensor*> sensors(nsensors, 0);
@@ -56,8 +53,7 @@ void Correlations::initialize() {
       // Loop over reference device planes to find the nearest
       for (size_t iref = 0; iref < ref.getNumSensors(); iref++) {
         // Stop once the DUT plane has been surpassed in z (unless its the
-        // first reference plane, in which case use it since the DUT comes
-        // before the reference)
+        // first reference plane, in which case use that one
         if (ref[iref].getOffZ() > dut[idut].getOffZ() && iref > 0) break;
         // Keep moving the align-to index to the nearest ref sensor
         m_irelative[iglobal] = iref;
@@ -80,11 +76,6 @@ void Correlations::initialize() {
     assert(sensor.getDevice());
 
     const Mechanics::Device& device = *sensor.getDevice();
-    const std::string& unit = device.m_spaceUnit;
-    const double sensorSizeX = sensor.m_colPitch*sensor.m_ncols;
-    const double relativeSizeX = sensor.m_colPitch*sensor.m_ncols;
-    const double sensorSizeY = sensor.m_rowPitch*sensor.m_nrows;
-    const double relativeSizeY = sensor.m_rowPitch*sensor.m_nrows;
 
     m_hCorrelationsX.push_back(new TH2D(
         ("CorrX_" + device.m_name + "_" + sensor.m_name).c_str(),
@@ -96,6 +87,8 @@ void Correlations::initialize() {
     m_hCorrelationsX.back()->GetYaxis()->SetTitle(
         (relative.m_name+" col").c_str());
     m_hCorrelationsX.back()->GetZaxis()->SetTitle("Triggers");
+    // Error propagation for each bin
+    m_hCorrelationsX.back()->Sumw2();
     // No stats pannel for 2D histogram
     m_hCorrelationsX.back()->SetStats(false);
     // Base class keeps track of all histograms
@@ -111,28 +104,9 @@ void Correlations::initialize() {
     m_hCorrelationsY.back()->GetYaxis()->SetTitle(
         (relative.m_name+" row").c_str());
     m_hCorrelationsY.back()->GetZaxis()->SetTitle("Triggers");
+    m_hCorrelationsY.back()->Sumw2();
     m_hCorrelationsY.back()->SetStats(false);
     m_histograms.push_back(m_hCorrelationsY.back());
-
-    m_hResidualsX.push_back(new TH1D(
-        ("ResX_" + device.m_name + "_" + sensor.m_name).c_str(),
-        ("ResX_" + device.m_name + "_" + sensor.m_name).c_str(),
-        sensor.m_ncols+relative.m_ncols,
-        -(sensorSizeX+relativeSizeX), (sensorSizeX+relativeSizeY)));
-    m_hResidualsX.back()->GetXaxis()->SetTitle(
-        ("#Delta x ["+unit+"]").c_str());
-    m_hResidualsX.back()->GetZaxis()->SetTitle("Triggers");
-    m_histograms.push_back(m_hResidualsX.back());
-
-    m_hResidualsY.push_back(new TH1D(
-        ("ResY_" + device.m_name + "_" + sensor.m_name).c_str(),
-        ("ResY_" + device.m_name + "_" + sensor.m_name).c_str(),
-        sensor.m_nrows+relative.m_nrows,
-        -(sensorSizeY+relativeSizeY), (sensorSizeY+relativeSizeY)));
-    m_hResidualsY.back()->GetXaxis()->SetTitle(
-        ("#Delta y ["+unit+"]").c_str());
-    m_hResidualsY.back()->GetZaxis()->SetTitle("Triggers");
-    m_histograms.push_back(m_hResidualsY.back());
   }
 }
 
@@ -158,8 +132,6 @@ void Correlations::process() {
           const Storage::Cluster& refCluster = refPlane.getCluster(iref);
           m_hCorrelationsX[iglobal]->Fill(cluster.getPixX(), refCluster.getPixX());
           m_hCorrelationsY[iglobal]->Fill(cluster.getPixY(), refCluster.getPixY());
-          m_hResidualsX[iglobal]->Fill(cluster.getPosX() - refCluster.getPosX());
-          m_hResidualsY[iglobal]->Fill(cluster.getPosY() - refCluster.getPosY());
         }  // ref clusters
       }  // plane clusters
 
@@ -178,24 +150,12 @@ size_t Correlations::toGlobal(size_t idevice, size_t isensor) const {
   return iglobal;
 }
 
-const std::vector<size_t>& Correlations::getRelative() const {
-  return m_irelative;
-}
-
-TH2D& Correlations::getCorrX(size_t idevice, size_t isensor) const {
+TH2D& Correlations::getCorrelationX(size_t idevice, size_t isensor) const {
   return *m_hCorrelationsX[toGlobal(idevice, isensor)];
 }
 
-TH2D& Correlations::getCorrY(size_t idevice, size_t isensor) const {
+TH2D& Correlations::getCorrelationY(size_t idevice, size_t isensor) const {
   return *m_hCorrelationsY[toGlobal(idevice, isensor)];
-}
-
-TH1D& Correlations::getResX(size_t idevice, size_t isensor) const {
-  return *m_hResidualsX[toGlobal(idevice, isensor)];
-}
-
-TH1D& Correlations::getResY(size_t idevice, size_t isensor) const {
-  return *m_hResidualsY[toGlobal(idevice, isensor)];
 }
 
 }
