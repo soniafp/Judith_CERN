@@ -26,12 +26,6 @@ protected:
   std::vector<double> m_transitionsX;
   std::vector<double> m_transitionsY;
 
-  /** Algorithm builds the `Track` object, by performing a straight line
-    * fit to the clusters in the track */
-  virtual void buildTrack(
-      Storage::Track& track,
-      const std::list<Storage::Cluster*>& clusters);
-
   /** Base virtual method called at each loop iteration */
   virtual void process();
 
@@ -54,6 +48,12 @@ public:
 
   void setTransitionX(size_t from, size_t to, double scale);
   void setTransitionY(size_t from, size_t to, double scale);
+
+  /** Algorithm builds the `Track` object, by performing a straight line
+    * fit to the clusters in the track. */
+  static void buildTrack(
+      Storage::Track& track,
+      const std::list<Storage::Cluster*>& clusters);
 };
 
 }
