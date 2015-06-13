@@ -20,7 +20,7 @@ fi
 
 cc="g++"
 cflags="`root-config --cflags` -g -O3 -Wall"
-lib="-L../lib -ljudstorage -ljudmechanics -ljudproc -ljudana `root-config --ldflags --glibs` -O1"
+lib="-L../lib -ljudstorage -ljudmechanics -ljudproc -ljudana -ljudloop `root-config --ldflags --glibs` -O1"
 inc="-I../include"
 
 rm -rf bin/

@@ -246,28 +246,28 @@ int test_values() {
   double ye[3] = { .2, .3, .5 };
   double z[3] = { 0, 1, 2 };
 
-  double a, ae, b, be, chi2, cov;
+  double p0, p1, p0e, p1e, cov, chi2;
   double sumChi2 = 0;
 
-  Utils::linearFit(3, z, x, xe, a, ae, b, be, chi2, cov);
+  Utils::linearFit(3, z, x, xe, p0, p1, p0e, p1e, cov, chi2);
   sumChi2 += chi2;
 
-  if (!approxEqual(event.getTrack(0).getOriginX(), b) ||
-      !approxEqual(event.getTrack(0).getOriginErrX(), be),
-      !approxEqual(event.getTrack(0).getSlopeX(), a),
-      !approxEqual(event.getTrack(0).getSlopeErrX(), ae),
+  if (!approxEqual(event.getTrack(0).getOriginX(), p0) ||
+      !approxEqual(event.getTrack(0).getOriginErrX(), p0e),
+      !approxEqual(event.getTrack(0).getSlopeX(), p1),
+      !approxEqual(event.getTrack(0).getSlopeErrX(), p1e),
       !approxEqual(event.getTrack(0).getCovarianceX(), cov)) {
     std::cerr << "Processors::Tracking: track values in x don't match" << std::endl;
     return -1;
   }
 
-  Utils::linearFit(3, z, y, ye, a, ae, b, be, chi2, cov);
+  Utils::linearFit(3, z, y, ye, p0, p1, p0e, p1e, cov, chi2);
   sumChi2 += chi2;
 
-  if (!approxEqual(event.getTrack(0).getOriginY(), b) ||
-      !approxEqual(event.getTrack(0).getOriginErrY(), be),
-      !approxEqual(event.getTrack(0).getSlopeY(), a),
-      !approxEqual(event.getTrack(0).getSlopeErrY(), ae),
+  if (!approxEqual(event.getTrack(0).getOriginY(), p0) ||
+      !approxEqual(event.getTrack(0).getOriginErrY(), p0e),
+      !approxEqual(event.getTrack(0).getSlopeY(), p1),
+      !approxEqual(event.getTrack(0).getSlopeErrY(), p1e),
       !approxEqual(event.getTrack(0).getCovarianceY(), cov)) {
     std::cerr << "Processors::Tracking: track values in y don't match" << std::endl;
     return -1;
