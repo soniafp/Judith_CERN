@@ -20,31 +20,30 @@ void preFitGausBg(
   const Int_t nbins = hist.GetNbinsX();
   const Int_t imax = hist.GetMaximumBin();
 
-  // Get a guess at the normalization factor and mode
-  norm = hist.GetBinContent(imax);
+  // Get a guess at the scale factor and mode
+  const double scale = hist.GetBinContent(imax);
   mode = hist.GetBinCenter(imax);
 
   // Increase the width until half of maximum is reached
   Int_t width = 1;
-  while (imax+width <= nbins || imax-width >= 1) {
-    // Don't overshoot histogram bounds
-    const Int_t up = std::min(imax+width, nbins);
-    const Int_t down = std::max(imax-width, 1);
-    // Allow either side to reach half max
-    if (hist.GetBinContent(up) <= norm/2.) break;
-    if (hist.GetBinContent(down) <= norm/2.) break;
+  while (true) {
+    // Once both sides half reached half max or overshot, then keep that width
+    if ((imax+width > nbins || hist.GetBinContent(imax+width) <= scale/2.) &&
+        (imax-width < 1 || hist.GetBinContent(imax-width) <= scale/2.))
+        break;
     // Increment width for next iteration
     width += 1;
   }
-
-  // The width gives an estimate of sigma (half width half max)
-  hwhm = hist.GetBinWidth(imax)*width;
+  hwhm = width * hist.GetBinWidth(imax);
 
   // Also get an estimate of the background by going out to 5 sigma and looking
   // at the content
   const Int_t up = std::min(imax+5*width, nbins);
   const Int_t down = std::max(imax-5*width, 1);
   bg = hist.GetBinContent(up)/2. + hist.GetBinContent(down)/2.;
+
+  // Compute the normal distribution normalization from the scale
+  norm = scale * 2.50662827463 * hwhm;
 }
 
 void fitGausBg(
@@ -56,8 +55,11 @@ void fitGausBg(
     bool prefit,
     bool display,
     double fitRange) {
-  // Gaussian distrubiton fitting function from -5 to +5 sigma
-  TF1 gaus("g1", "[0]+[1]*exp(-(x-[2])*(x-[2])/(2*[3]*[3]))");
+  // Gaussian distrubiton fitting function
+  TF1 gaus(
+      "g1", 
+      "[0]+[1]/([3]*2.50662827463)*exp(-(x-[2])*(x-[2])/(2*[3]*[3]))",
+      -5, 5);
 
   // Guess at starting parameters if requested
   if (prefit) preFitGausBg(hist, mean, sigma, norm, bg);
@@ -68,12 +70,13 @@ void fitGausBg(
   gaus.SetParameter(2, mean);
   gaus.SetParameter(3, sigma);
 
-  const double xmin = hist.GetXaxis()->GetXmin();
-  const double xmax = hist.GetXaxis()->GetXmax();
-  gaus.SetParLimits(0, 0, norm);
+  // Bounds will be set just outside range
+  const double xmin = hist.GetXaxis()->GetXmin()*1.01;
+  const double xmax = hist.GetXaxis()->GetXmax()*1.01;
+  gaus.SetParLimits(0, 0, 2*norm);
   gaus.SetParLimits(1, 0, 2*norm);
   gaus.SetParLimits(2, xmin, xmax);
-  gaus.SetParLimits(3, 0, (xmax-xmin)/2.);
+  gaus.SetParLimits(3, 0, xmax-xmin);
 
   gaus.SetRange(mean-fitRange*sigma, mean+fitRange*sigma);
 
@@ -88,6 +91,10 @@ void fitGausBg(
   sigma = fit->Parameter(3);
   norm = fit->Parameter(1);
   bg = fit->Parameter(0);
+
+  // Normalize to bin width to get proper PDF values * number
+  norm /= hist.GetBinWidth(1);
+  bg /= hist.GetBinWidth(1);
 }
 
 void linearFit(
