@@ -36,7 +36,6 @@ void printHelp() {
   printf("\nCommands:\n");
   printf("  %-15s %s\n", "process", "Generate clusters and tracks from the given input");
   printf("  %-15s %s\n", "align-corr", "Align the sensors by plane correlations");
-  printf("  %-15s %s\n", "align-chi2", "Align the sensors by tracklet chi^2");
   printf("  %-15s %s\n", "align-tracks", "Align the sensors using track residuals");
   std::cout << std::endl;
 }
@@ -319,9 +318,9 @@ int main(int argc, const char** argv) {
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // Chi^2 alignment
+  // Tack alignment
 
-  else if (command == "align-chi2") {
+  else if (command == "align-tracks") {
 
   }
 

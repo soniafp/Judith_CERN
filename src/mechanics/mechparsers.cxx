@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <stdexcept>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -133,7 +134,8 @@ Device* parseDevice(const std::string& filePath) {
   Current current = NONE;
 
   std::ifstream file(filePath.c_str());
-  if (!file) throw "Mechanics: parseDevice: unable to open file";
+  if (!file) throw std::runtime_error(
+        "Mechanics: parseDevice: unable to open file");
 
   std::string line;
   // Read each line in the file
@@ -275,7 +277,8 @@ Device* parseDevice(const std::string& filePath) {
 
 void parseAlignment(Device& device) {
   std::ifstream file(device.m_alignmentFile.c_str());
-  if (!file) throw "Mechanics: parsealignment: unable to open file";
+  if (!file) throw std::runtime_error(
+        "Mechanics: parsealignment: unable to open file");
 
   // Map sensor names to their objects
   std::map<std::string, Sensor*> sensorMap;
@@ -337,7 +340,8 @@ void writeAlignment(const Alignment& object, std::ofstream& out) {
 void writeAlignment(const Device& device) {
   // Open the devices' alignment fi;e
   std::ofstream file(device.m_alignmentFile.c_str());
-  if (!file) throw "Mechanics: writeAlignment: unable to open file";
+  if (!file) throw std::runtime_error(
+        "Mechanics: writeAlignment: unable to open file");
 
   // Ensure the values are written with an appropriate precision
   file << std::scientific;

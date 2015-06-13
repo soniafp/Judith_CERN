@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <stdexcept>
 #include <cassert>
 #include <map>
 #include <set>
@@ -59,7 +60,8 @@ void Options::parseArgs(int argc, const char** argv) {
 
         // Ensure the option isn't already in the map
         if (m_pairs.find(arg) != m_pairs.end())
-          throw "Options::parseArgs: Duplicate argument detected";
+          throw std::runtime_error(
+              "Options::parseArgs: Duplicate argument detected");
 
         // Map values collected to this argument. Make a vector from the list.
         m_pairs[arg] = Values(valList.begin(), valList.end());
@@ -99,7 +101,7 @@ void Options::parseFile(const std::string& filePath) {
 
   std::ifstream file(filePath.c_str());
   if (!file.is_open())
-    throw "Options::praseFile: unable to open file";
+    throw std::runtime_error("Options::praseFile: unable to open file");
 
   std::string line;
 
@@ -180,7 +182,7 @@ void Options::addPair(const std::string& arg, const std::string& val) {
 void Options::defineShort(char c, const std::string& arg) {
   // Check if this short argument is alredy defined
   if (m_mapShort.find(c) != m_mapShort.end())
-    throw "Options::defineShort: duplicate short argument";
+    throw std::runtime_error("Options::defineShort: duplicate short argument");
   // Map this short argument to a full argument name
   m_mapShort[c] = arg;
 }
