@@ -28,12 +28,12 @@ void linearFit(
     const double* x,
     const double* y,
     const double* ye,
-    double& a,
-    double& ae,
-    double& b,
-    double& be,
-    double& chi2,
-    double& cov);
+    double& p0,
+    double& p1,
+    double& p0e,
+    double& p1e,
+    double& cov,
+    double& chi2);
 
 }
 

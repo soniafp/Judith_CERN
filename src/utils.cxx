@@ -95,18 +95,18 @@ void linearFit(
     const double* x,
     const double* y,
     const double* ye,
-    double& a,
-    double& ae,
-    double& b,
-    double& be,
-    double& chi2,
-    double& cov) {
-  a = 0;
-  ae = 0;
-  b = 0;
-  be = 0;
-  chi2 = 0;
+    double& p0,
+    double& p1,
+    double& p0e,
+    double& p1e,
+    double& cov,
+    double& chi2) {
+  p0 = 0;
+  p1 = 0;
+  p0e = 0;
+  p1e = 0;
   cov = 0;
+  chi2 = 0;
 
   // Regression variables
   double ss = 0;
@@ -127,17 +127,17 @@ void linearFit(
   for (unsigned i = 0; i < n; i++) {
     const double t = (x[i]-sxoss) / ye[i];
     st2 += t*t;
-    a += t*y[i]/ye[i];
+    p1 += t*y[i]/ye[i];
   }
 
-  a /= st2;
-  b = (sy - sx*a) / ss;
+  p1 /= st2;
+  p0 = (sy - sx*p1) / ss;
 
-  ae = std::sqrt(1./st2);
-  be = sqrt((1. + sx*sx / (ss*st2)) / ss);
+  p1e = std::sqrt(1./st2);
+  p0e = sqrt((1. + sx*sx / (ss*st2)) / ss);
 
   for (unsigned i = 0; i < n; i++)
-    chi2 += std::pow((y[i] - (a*x[i]+b) / ye[i]), 2);
+    chi2 += std::pow((y[i] - (p0 + p1*x[i])) / ye[i], 2);
 
   cov = -sx / (ss * st2);
 }

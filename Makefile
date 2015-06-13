@@ -1,6 +1,6 @@
 CC := g++
 CFLAGS := `root-config --cflags` -g -O3 -Wall
-LIB := -Llib -ljudstorage -ljudmechanics -ljudproc -ljudana -ljudloop `root-config --ldflags --glibs` -O1
+LIB := -Llib -ljudstorage -ljudmechanics -ljudproc -ljudana -ljudloop `root-config --ldflags --glibs` -O2
 INC := -Iinclude
 
 # Run these commands before entering targets

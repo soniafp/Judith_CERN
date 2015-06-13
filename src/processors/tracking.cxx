@@ -37,31 +37,32 @@ void Tracking::buildTrack(
     icluster += 1;
   }
 
-  double ax = 0;
-  double aex = 0;
-  double bx = 0;
-  double bex = 0;
-  double chi2x = 0;
-  double covx = 0;
-  double ay = 0;
-  double aey = 0;
-  double by = 0;
-  double bey = 0;
-  double chi2y = 0;
-  double covy = 0;
+  double xp0 = 0;  // x intercept
+  double xp1 = 0;  // x slope
+  double xp0e = 0;  // x intercept error
+  double xp1e = 0;  // x slope error
+  double xcov = 0;  // x intercept slope covariance
+  double xchi2 = 0;  // x fit chi^2
+
+  double yp0 = 0;
+  double yp1 = 0;
+  double yp0e = 0;
+  double yp1e = 0;
+  double ycov = 0;
+  double ychi2 = 0;
 
   Utils::linearFit(
-    nclusters, &z[0], &x[0], &xe[0], ax, aex, bx, bex, chi2x, covx);
+    nclusters, &z[0], &x[0], &xe[0], xp0, xp1, xp0e, xp1e, xcov, xchi2);
   Utils::linearFit(
-    nclusters, &z[0], &y[0], &ye[0], ay, aey, by, bey, chi2y, covy);
+    nclusters, &z[0], &y[0], &ye[0], yp0, yp1, yp0e, yp1e, ycov, ychi2);
 
-  track.setSlope(ax, ay);
-  track.setSlopeErr(aex, aey);
-  track.setOrigin(bx, by);
-  track.setOriginErr(bex, bey);
-  track.setCovariance(covx, covy);
+  track.setSlope(xp1, yp1);
+  track.setSlopeErr(xp1e, yp1e);
+  track.setOrigin(xp0, yp0);
+  track.setOriginErr(xp0e, yp0e);
+  track.setCovariance(xcov, ycov);
   // 2n d.o.f. - 2 fixed
-  track.setChi2((chi2x+chi2y)/(2*nclusters-2));
+  track.setChi2((xchi2+ychi2)/(2*nclusters-2));
 }
 
 void Tracking::process() {
