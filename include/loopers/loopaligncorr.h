@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "analyzers/correlations.h"
+#include "analyzers/clusterresiduals.h"
 #include "loopers/looper.h"
 
 namespace Storage { class StorageI; }
@@ -13,7 +13,7 @@ namespace Loopers {
 
 /**
   * Loop over all events in a series of inputs. Build up the inter-plane 
-  * correlation of clusters with the correlations analyzer. Use the result
+  * residuals of clusters with the cluster residuals analyzer. Use the result
   * to align the planes.
   *
   * @author Garrin McGoldrick (garrin.mcgoldrick@cern.ch)
@@ -23,7 +23,7 @@ private:
   /** Devices to post-process alignment into */
   std::vector<Mechanics::Device*> m_devices;
   /** Analyzer to store the computations for aligning */
-  Analyzers::Correlations m_correlations;
+  Analyzers::ClusterResiduals m_residuals;
 
 public:
   LoopAlignCorr(
