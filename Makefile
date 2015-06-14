@@ -103,8 +103,8 @@ build/anaclusterresiduals.o: src/analyzers/clusterresiduals.cxx include/analyzer
 
 ### Loopers library ###
 
-lib/libjudloop.a: build/utils.o build/looper.o build/loopprocess.o build/loopaligncorr.o
-	ar ru lib/libjudloop.a build/utils.o build/looper.o build/loopprocess.o build/loopaligncorr.o
+lib/libjudloop.a: build/utils.o build/looper.o build/loopprocess.o build/loopaligncorr.o build/looptransfers.o build/loopaligntracks.o
+	ar ru lib/libjudloop.a build/utils.o build/looper.o build/loopprocess.o build/loopaligncorr.o build/looptransfers.o build/loopaligntracks.o
 
 build/looper.o: src/loopers/looper.cxx include/loopers/looper.h
 	$(CC) $(CFLAGS) $(INC) -c src/loopers/looper.cxx -o build/looper.o
@@ -114,6 +114,12 @@ build/loopprocess.o: src/loopers/loopprocess.cxx include/loopers/loopprocess.h
 
 build/loopaligncorr.o: src/loopers/loopaligncorr.cxx include/loopers/loopaligncorr.h
 	$(CC) $(CFLAGS) $(INC) -c src/loopers/loopaligncorr.cxx -o build/loopaligncorr.o
+
+build/looptransfers.o: src/loopers/looptransfers.cxx include/loopers/looptransfers.h
+	$(CC) $(CFLAGS) $(INC) -c src/loopers/looptransfers.cxx -o build/looptransfers.o
+
+build/loopaligntracks.o: src/loopers/loopaligntracks.cxx include/loopers/loopaligntracks.h
+	$(CC) $(CFLAGS) $(INC) -c src/loopers/loopaligntracks.cxx -o build/loopaligntracks.o
 
 clean:
 	rm -rf build/ lib/* bin/*
