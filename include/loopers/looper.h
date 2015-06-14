@@ -8,6 +8,7 @@
 
 namespace Storage { class StorageI; }
 namespace Storage { class Event; }
+namespace Mechanics { class Device; }
 namespace Processors { class Processor; }
 namespace Analyzers { class Analyzer; }
 
@@ -34,10 +35,15 @@ protected:
   const std::vector<Storage::StorageI*> m_inputs;
   /** List of events (in the same order as the inputs) read an iteration */
   std::vector<Storage::Event*> m_events;
+  /** Optional vector of device information. Note: it is up to the derived 
+    * analyzer to check if device information is provided. */
+  const std::vector<Mechanics::Device*> m_devices;
   /** The largets event index from the inputs */
   ULong64_t m_maxEvents;
   /** The smallest last event index from the inputs */
   ULong64_t m_minEvents;
+  /** Remember if the looper has been finalized */
+  bool m_finalized;
 
   /** Track the current event globally for the progress bar */
   ULong64_t m_ievent;
@@ -64,9 +70,16 @@ public:
   /** Draw outputs or not (not always applicable) */
   bool m_draw;
 
+  /** Constructor for multi device looper without device information */
   Looper(const std::vector<Storage::StorageI*>& inputs);
-  /** Convenience constructor for single input loopers */
+  /** Constructor for multi device looper with device information */
+  Looper(
+      const std::vector<Storage::StorageI*>& inputs,
+      const std::vector<Mechanics::Device*>& devices);
+  /** Constructor for single device looper without device information */
   Looper(Storage::StorageI& input);
+  /** Constructor for single device looper with device information */
+  Looper(Storage::StorageI& input, Mechanics::Device& device);
   virtual ~Looper() {}
   
   /** Loop over the largest common set of events in the inputs */

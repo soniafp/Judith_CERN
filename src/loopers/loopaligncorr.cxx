@@ -18,23 +18,8 @@ namespace Loopers {
 LoopAlignCorr::LoopAlignCorr(
     const std::vector<Storage::StorageI*>& inputs,
     const std::vector<Mechanics::Device*>& devices) :
-    Looper(inputs),
-    m_devices(devices),
-    m_residuals(m_devices) {
-  // Need at least one device
-  if (m_devices.empty())
-    throw std::runtime_error(
-        "LoopAlignCorr::LoopAlignCorr: no devices");
-  // Check that there is 1 input per device
-  if (m_devices.size() != m_inputs.size())
-    throw std::runtime_error(
-        "LoopAlignCorr::LoopAlignCorr: device / inputs mismatch");
-  // Check that the device sensors match the input planes
-  for (size_t i = 0; i < m_devices.size(); i++)
-    if (m_devices[i]->getNumSensors() != m_inputs[i]->getNumPlanes())
-      throw std::runtime_error(
-          "LoopAlignCorr::LoopAlignCorr: device / input plane mismatch");
-  // The correlations shouldn't be stored, they are used internally only
+    Looper(inputs, devices),
+    m_residuals(devices) {
   m_residuals.setOutput(0);
   addAnalyzer(m_residuals);
 }
@@ -42,12 +27,8 @@ LoopAlignCorr::LoopAlignCorr(
 LoopAlignCorr::LoopAlignCorr(
     Storage::StorageI& input,
     Mechanics::Device& device) :
-    Looper(input),
-    m_devices(1, &device),
+    Looper(input, device),
     m_residuals(device) {
-  if (device.getNumSensors() != input.getNumPlanes())
-    throw std::runtime_error(
-        "LoopAlignCorr::loop: device / input plane mismatch");
   m_residuals.setOutput(0);
   addAnalyzer(m_residuals);
 }

@@ -6,6 +6,7 @@
 
 #include "storage/storagei.h"
 #include "storage/event.h"
+#include "mechanics/device.h"
 #include "processors/processor.h"
 #include "analyzers/analyzer.h"
 #include "loopers/looper.h"
@@ -15,8 +16,11 @@ namespace Loopers {
 Looper::Looper(const std::vector<Storage::StorageI*>& inputs) :
     m_inputs(inputs),
     m_events(m_inputs.size()),  // reserve event vector size
+    m_devices(),
     m_maxEvents(0),
     m_minEvents(-1),  // largest unsigned integer
+    m_finalized(false),
+    m_ievent(0),
     m_start(0),
     m_nprocess(-1),  // causes iteration over entire range
     m_nstep(1),
@@ -30,12 +34,47 @@ Looper::Looper(const std::vector<Storage::StorageI*>& inputs) :
   }
 }
 
+Looper::Looper(
+    const std::vector<Storage::StorageI*>& inputs,
+    const std::vector<Mechanics::Device*>& devices) :
+    m_inputs(inputs),
+    m_events(m_inputs.size()),  // reserve event vector size
+    m_devices(devices),
+    m_maxEvents(0),
+    m_minEvents(-1),  // largest unsigned integer
+    m_finalized(false),
+    m_ievent(0),
+    m_start(0),
+    m_nprocess(-1),  // causes iteration over entire range
+    m_nstep(1),
+    m_printInterval(1E4),
+    m_draw(false) {
+  // Keep track of the smallest and largest event indices at end of inputs
+  for (size_t i = 0; i < m_inputs.size(); i++) {
+    const Storage::StorageI& input = *m_inputs[i];
+    m_minEvents = std::min(m_minEvents, (ULong64_t)input.getNumEvents());
+    m_maxEvents = std::max(m_maxEvents, (ULong64_t)input.getNumEvents());
+  }
+  // Need at least one device
+  if (m_devices.empty())
+    throw std::runtime_error("Looper::Looper: no devices");
+  // Check that there is 1 input per device
+  if (m_devices.size() != m_inputs.size())
+    throw std::runtime_error("Looper::Looper: device/inputs mismatch");
+  // Check that the device sensors match the input planes
+  for (size_t i = 0; i < m_devices.size(); i++)
+    if (m_devices[i]->getNumSensors() != m_inputs[i]->getNumPlanes())
+      throw std::runtime_error("Looper::Looper: device/inputs planes mismatch");
+}
+
 Looper::Looper(Storage::StorageI& input) :
     // Single input vector, filled with input address
     m_inputs(1, &input),
     m_events(m_inputs.size()),
     m_maxEvents(0),
     m_minEvents(-1),  // largest unsigned integer
+    m_finalized(false),
+    m_ievent(0),
     m_start(0),
     m_nprocess(-1),  // causes iteration over entire range
     m_nstep(1),
@@ -43,6 +82,27 @@ Looper::Looper(Storage::StorageI& input) :
     m_draw(false) {
   m_minEvents = (ULong64_t)input.getNumEvents();
   m_maxEvents = (ULong64_t)input.getNumEvents();
+}
+
+Looper::Looper(Storage::StorageI& input, Mechanics::Device& device) :
+    // Single input vector, filled with input address
+    m_inputs(1, &input),
+    m_events(m_inputs.size()),
+    // Single vector again
+    m_devices(1, &device),
+    m_maxEvents(0),
+    m_minEvents(-1),  // largest unsigned integer
+    m_finalized(false),
+    m_ievent(0),
+    m_start(0),
+    m_nprocess(-1),  // causes iteration over entire range
+    m_nstep(1),
+    m_printInterval(1E4),
+    m_draw(false) {
+  m_minEvents = (ULong64_t)input.getNumEvents();
+  m_maxEvents = (ULong64_t)input.getNumEvents();
+  if (m_devices[0]->getNumSensors() != m_inputs[0]->getNumPlanes())
+    throw std::runtime_error("Looper::Looper: device/inputs planes mismatch");
 }
 
 void Looper::printProgress() {
@@ -103,10 +163,11 @@ void Looper::execute() {
 }
 
 void Looper::finalize() {
+  if (m_finalized)
+    throw std::runtime_error("Looper::finalize: looper already finalized");
+  m_finalized = true;
+
   // Do post-processing as needed
-  for (std::vector<Processors::Processor*>::iterator it = m_processors.begin();
-      it != m_processors.end(); ++it)
-    (*it)->finalize();
   for (std::vector<Analyzers::Analyzer*>::iterator it = m_analyzers.begin();
       it != m_analyzers.end(); ++it)
     (*it)->finalize();
