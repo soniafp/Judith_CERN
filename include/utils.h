@@ -35,6 +35,20 @@ void linearFit(
     double& cov,
     double& chi2);
 
+void linePlaneIntercept(
+    double p0x,
+    double p1x,
+    double p0y,
+    double p1y,
+    double originX,
+    double originY,
+    double originZ,
+    double normalX,
+    double normalY,
+    double normalZ,
+    double& X,
+    double& y,
+    double& z);
 }
 
 #endif  // UTILS_H

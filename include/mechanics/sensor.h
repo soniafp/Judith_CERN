@@ -82,6 +82,15 @@ public:
     * been provided */
   bool getPixelNoise(unsigned row, unsigned col) const;
 
+  /** Compute and return the normal unit vector. */
+  void getNormal(double& x, double&y, double& z) const;
+  /** Compute the pixel bounding box size with rotation */
+  void getPixBox(double& x, double& y) const;
+  /** Compute the sensor bounding box size with rotation */
+  void getSensorBox(double& x, double& y) const;
+  /** Compute the sensor bounding box edges with rotation. x1 < x2, y1 < y2 */
+  void getSensorBox(double& x1,double& y1,double& x2, double& y2) const;
+
   // Allow Device objects to access the `m_device` member
   friend Device;
 };

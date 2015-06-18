@@ -45,13 +45,9 @@ private:
   void process();
 
 public:
-  /** All constructors take in a const object, be it a vector of const devices,
-    * a vector of devices, or a single device. Accept any, and let the compiler
-    * choose the correct base class constructor */
+  /** Automatically calls the correct base constuctor */
   template <class T>
-  Correlations(const T& t) : Analyzer(t) {
-    initialize();
-  }
+  Correlations(const T& t) : Analyzer(t) { initialize(); }
   /** Memory managed by base class */
   ~Correlations() {}
 

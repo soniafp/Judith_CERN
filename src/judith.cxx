@@ -14,9 +14,13 @@
 #include "mechanics/device.h"
 #include "mechanics/mechparsers.h"
 #include "processors/clustering.h"
+#include "processors/tracking.h"
 #include "processors/aligning.h"
+#include "loopers/looper.h"
 #include "loopers/loopprocess.h"
 #include "loopers/loopaligncorr.h"
+#include "loopers/looptransfers.h"
+#include "loopers/loopaligntracks.h"
 
 void printHelp() {
   printf("usage: judith <command> [<args>]\n");
@@ -32,6 +36,7 @@ void printHelp() {
   printf("  %2s %-15s %s\n", "-n", "--events", "Process up to this many events past first");
   printf("  %2s %-15s %s\n", "-k", "--skip", "Skip this many events at each loop iteration");
   printf("  %2s %-15s %s\n", "", "--progress", "Display progress at this interval (0 is off)");
+  printf("  %2s %-15s %s\n", "", "--draw", "Give visual feedback when availalbe (e.g. fits)");
 
   printf("\nCommands:\n");
   printf("  %-15s %s\n", "process", "Generate clusters and tracks from the given input");
@@ -279,8 +284,9 @@ int main(int argc, const char** argv) {
     std::vector<Storage::StorageI*> inputs;
     for (size_t i = 0; i < inputNames.size(); i++) {
       Storage::StorageI* input = new Storage::StorageI(
-          inputNames[i],  // ith input file
-          Storage::StorageIO::TRACKS,  // no tracks for corr. align
+          inputNames[i],
+          // Don't read tracks or clusters, new clusters will be made
+          Storage::StorageIO::TRACKS | Storage::StorageIO::CLUSTERS,
           &devices[i].getSensorMask());
       inputs.push_back(input);
     }
@@ -288,7 +294,6 @@ int main(int argc, const char** argv) {
     // Prepare a processing looper with the devices which it will align
     Loopers::LoopAlignCorr looper(inputs, devices.getVector());
 
-    // Alignment needs clusters
     Processors::Clustering clustering;
     if (options.hasArg("process-clusters-nrows"))
       clustering.m_maxRows = strToInt(options.getValue("process-clusters-nrows"));
@@ -321,7 +326,79 @@ int main(int argc, const char** argv) {
   // Tack alignment
 
   else if (command == "align-tracks") {
+    const Options::Values& inputNames = options.getValues("input");
+    if (inputNames.size() < 1) {
+      std::cerr << "ERROR: need at least 1 input" << std::endl;
+      return -1;
+    }
+    if (inputNames.size() > 2) {
+      std::cerr << "ERROR: uses 2 devices at most" << std::endl;
+      return -1;
+    }
+    if (inputNames.size() != devices.getNumDevices()) {
+      std::cerr << "ERROR: need one device for each input" << std::endl;
+      return -1;
+    }
 
+    // Build the input storages for the devices to align
+    std::vector<Storage::StorageI*> inputs;
+    for (size_t i = 0; i < inputNames.size(); i++) {
+      Storage::StorageI* input = new Storage::StorageI(
+          inputNames[i],  // ith input file
+          Storage::StorageIO::TRACKS | Storage::StorageIO::CLUSTERS,
+          &devices[i].getSensorMask());
+      inputs.push_back(input);
+    }
+
+    // Prepare a processing looper with the devices which it will align
+    Loopers::LoopAlignTracks looper(inputs, devices.getVector());
+
+    // Alignment needs clusters
+    Processors::Clustering clustering;
+    if (options.hasArg("process-clusters-nrows"))
+      clustering.m_maxRows = strToInt(options.getValue("process-clusters-nrows"));
+    if (options.hasArg("process-clusters-ncols"))
+      clustering.m_maxRows = strToInt(options.getValue("process-clusters-ncols"));
+    looper.addProcessor(clustering);
+
+    // Need to align clusters to global coordinates
+    Processors::Aligning aligning(devices.getVector());
+    looper.addProcessor(aligning);
+
+    // Configure the alignment's tracking processor
+    if (options.hasArg("process-tracks-radius"))
+      looper.m_tracking.m_radius = strToFloat(
+          options.getValue("process-tracks-radius"));
+
+    // If transfers were requested, then do a pre-run to get transfer scales
+    if (options.evalBoolArg("process-tracks-transfers")) {
+      // Setup the pre-looper to measure transfers for only the reference
+      Loopers::LoopTransfers preLooper(*inputs[0], devices[0]);
+      preLooper.addProcessor(clustering);
+      preLooper.addProcessor(aligning);
+      configureLooper(options, preLooper);
+      // Run it
+      preLooper.loop();
+      preLooper.finalize();
+      // Set tracking transfer scales based on residual distributions
+      preLooper.apply(looper.m_tracking);
+    }
+
+    // Apply generic looping options to the looper
+    configureLooper(options, looper);
+
+    // Run the looper
+    looper.loop();
+    looper.finalize();
+
+    // Write out the alignment to file
+    for (size_t i = 0; i < devices.getNumDevices(); i++)
+      Mechanics::writeAlignment(devices[i]);
+
+    // Clear the inputs from memory
+    for (std::vector<Storage::StorageI*>::iterator it = inputs.begin();
+        it != inputs.end(); ++it)
+      delete *it;
   }
 
   else {

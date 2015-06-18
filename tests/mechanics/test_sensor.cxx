@@ -138,6 +138,66 @@ int test_transformations() {
   return 0;
 }
 
+int test_boxes() {
+  // 2x2 sensor
+  Mechanics::Sensor sensor;
+  sensor.m_nrows = 2;
+  sensor.m_ncols = 2;
+  sensor.m_rowPitch = 3;
+  sensor.m_colPitch = 2;
+
+  // Arbitrary rotations and offsets
+  sensor.setOffX(1);
+  sensor.setOffY(-1);
+  sensor.setOffZ(0.5);
+  sensor.setRotX(M_PI/6);
+  sensor.setRotY(M_PI/3);
+  sensor.setRotZ(M_PI);
+
+  // Variables to fill when getting sensor box dimensions
+  double x1, y1, x2, y2, x3, y3, x4, y4, dummy;
+
+  // Get the middle of two pixels, diagonal to one another
+  sensor.pixelToSpace(0, 0, x1, y1, dummy);
+  sensor.pixelToSpace(1, 1, x2, y2, dummy);
+  // Get the width and height of a pixel (rotated)
+  sensor.getPixBox(x3, y3);
+  // Check that this agrees with the offsets of the diagonal pixels
+  if (!approxEqual(x3, std::fabs(x2-x1)) ||
+      !approxEqual(y3, std::fabs(y2-y1))) {
+    std::cerr << "getPixBox failed" << std::endl;
+    return -1;
+  }
+
+  // Get the coordinate of the bottom left of 0,0 pixel and the top right of
+  // the 1,1 pixel
+  sensor.pixelToSpace(-.5, -.5, x1, y1, dummy);
+  sensor.pixelToSpace(1.5, 1.5, x2, y2, dummy);
+  // Get the width and height (rotated) of the sensor
+  sensor.getSensorBox(x3, y3);
+  // Width and height is corner-to-corner distance
+  if (!approxEqual(x3, std::fabs(x2-x1)) ||
+      !approxEqual(y3, std::fabs(y2-y1))) {
+    std::cerr << "getSensorBox failed to measure extent" << std::endl;
+    return -1;
+  }
+
+  sensor.pixelToSpace(-.5, -.5, x1, y1, dummy);
+  sensor.pixelToSpace(1.5, 1.5, x2, y2, dummy);
+  // Get the coordinates of the box corners, sorted such that x3 < x4, y3 < y4
+  sensor.getSensorBox(x3, y3, x4, y4);
+  // Note that due to rotation, x2 < x1 and y2 < y1 
+  if (!approxEqual(x3, x2) || 
+      !approxEqual(x4, x1) ||
+      !approxEqual(y3, y2) ||
+      !approxEqual(y4, y1)) {
+    std::cerr << "getSensorBox failed to measure corners" << std::endl;
+    return -1;
+  }
+
+  return 0;
+}
+
 int main() {
   int retval = 0;
 
@@ -145,6 +205,7 @@ int main() {
     if ((retval = test_pixelToSpace()) != 0) return retval;
     if ((retval = test_spaceToPixel()) != 0) return retval;
     if ((retval = test_transformations()) != 0) return retval;
+    if ((retval = test_boxes()) != 0) return retval;
   }
   
   catch (std::exception& e) {

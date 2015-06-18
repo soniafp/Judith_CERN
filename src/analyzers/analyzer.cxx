@@ -10,24 +10,12 @@
 
 namespace Analyzers {
 
-// Many constructors follow to allow for different initialization of devices,
-// but they all call the initialize method.
-
-Analyzer::Analyzer(size_t ndevices) :
-    // No device information used by this analyzer
-    m_devices(),
-    m_ndevices(ndevices),
-    // Reserve the event pointer memory ahead of time
-    m_events(m_ndevices, 0) {
-  if (m_ndevices == 0)
-    throw std::runtime_error("Analyzer::Analyzer: can't expect 0 events");
-}
-
 Analyzer::Analyzer(const std::vector<Mechanics::Device*>& devices) :
     // Can't directly cast vector to vector of consts, initialize from iterators
     m_devices(devices.begin(), devices.end()),
     m_ndevices(m_devices.size()),
-    m_events(m_ndevices, 0) {
+    m_events(m_ndevices, 0),
+    m_finalized(false) {
   if (m_ndevices == 0)
     throw std::runtime_error("Analyzer::Analyzer: empty device vector");
 }
@@ -36,7 +24,8 @@ Analyzer::Analyzer(const std::vector<const Mechanics::Device*>& devices) :
     // Const devices were passed, copy vector
     m_devices(devices),
     m_ndevices(m_devices.size()),
-    m_events(m_ndevices, 0) {
+    m_events(m_ndevices, 0),
+    m_finalized(false) {
   if (m_ndevices == 0)
     throw std::runtime_error("Analyzer::Analyzer: empty device vector");
 }
@@ -45,7 +34,8 @@ Analyzer::Analyzer(const Mechanics::Device& device) :
     // Single device, so create a 1 item vector filled with its address
     m_devices(1, &device),
     m_ndevices(1),
-    m_events(m_ndevices, 0) {}
+    m_events(m_ndevices, 0),
+    m_finalized(false) {}
 
 Analyzer::~Analyzer() {
   for (std::list<TH1*>::iterator it = m_histograms.begin();
@@ -99,6 +89,12 @@ void Analyzer::execute(const Storage::Event& event) {
     throw std::runtime_error("Analyzer::execute: incorrect number of events passed");
   m_events[0] = &event;
   process();
+}
+
+void Analyzer::finalize() {
+  if (m_finalized)
+    throw std::runtime_error("Analyzer::finalize: analyzer already finalized");
+  m_finalized = true;
 }
 
 }

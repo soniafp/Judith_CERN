@@ -45,6 +45,7 @@ void Aligning::processEvent(
       device.pixelToSpace(
           cluster.getPixX(), cluster.getPixY(), iplane, x, y, z);
       cluster.setPos(x, y, z);
+      // TODO: rotation and scale calculation only
       // Compute also the positions shifted by 1 sigma
       double ex, ey, ez;
       device.pixelToSpace(

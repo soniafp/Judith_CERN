@@ -20,6 +20,9 @@ namespace Processors {
   * Very similar to analyzers, but they do modify data, and do not have a
   * default internal storage mechanism.
   *
+  * NOTE: processors should *not* store state, so the same object can be used
+  * many times on different inputs.
+  *
   * @author Garrin McGoldrick (garrin.mcgoldrick@cern.ch)
   */
 class Processor {
@@ -48,9 +51,6 @@ public:
   void execute(const std::vector<Storage::Event*>& events);
   /** Single device event execution */
   void execute(Storage::Event& event);
-
-  /** Post processing */
-  virtual void finalize() {}
 };
 
 }

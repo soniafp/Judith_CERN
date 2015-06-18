@@ -89,8 +89,8 @@ build/proctracking.o: src/processors/tracking.cxx include/processors/tracking.h
 	
 ### Analyzers library ###
 
-lib/libjudana.a: build/utils.o build/analyzer.o build/anacorrelations.o build/anaclusterresiduals.o
-	ar ru lib/libjudana.a build/utils.o build/analyzer.o build/anacorrelations.o build/anaclusterresiduals.o
+lib/libjudana.a: build/utils.o build/analyzer.o build/anacorrelations.o build/anaclusterresiduals.o build/anatrackresiduals.o build/anatrackchi2.o
+	ar ru lib/libjudana.a build/utils.o build/analyzer.o build/anacorrelations.o build/anaclusterresiduals.o build/anatrackresiduals.o build/anatrackchi2.o
 
 build/analyzer.o: src/analyzers/analyzer.cxx include/analyzers/analyzer.h
 	$(CC) $(CFLAGS) $(INC) -c src/analyzers/analyzer.cxx -o build/analyzer.o
@@ -100,6 +100,12 @@ build/anacorrelations.o: src/analyzers/correlations.cxx include/analyzers/correl
 
 build/anaclusterresiduals.o: src/analyzers/clusterresiduals.cxx include/analyzers/clusterresiduals.h
 	$(CC) $(CFLAGS) $(INC) -c src/analyzers/clusterresiduals.cxx -o build/anaclusterresiduals.o
+
+build/anatrackresiduals.o: src/analyzers/trackresiduals.cxx include/analyzers/trackresiduals.h
+	$(CC) $(CFLAGS) $(INC) -c src/analyzers/trackresiduals.cxx -o build/anatrackresiduals.o
+
+build/anatrackchi2.o: src/analyzers/trackchi2.cxx include/analyzers/trackchi2.h
+	$(CC) $(CFLAGS) $(INC) -c src/analyzers/trackchi2.cxx -o build/anatrackchi2.o
 
 ### Loopers library ###
 

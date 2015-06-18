@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdio>
+#include <cmath>
 
 #include "mechanics/device.h"
 #include "mechanics/sensor.h"
@@ -91,6 +92,76 @@ bool Sensor::getPixelNoise(unsigned row, unsigned col) const {
   if (m_noiseProfile.empty()) throw std::runtime_error(
       "Sensor::getPixelMask: noise profile not set");
   return m_noiseProfile[getPixelIndex(row, col)];
+}
+
+void Sensor::getNormal(double& x, double& y, double& z) const {
+  // Sensor origin in local coordinates
+  double x1 = 0;
+  double y1 = 0;
+  double z1 = 0;
+  // Get it in global coordinates
+  transform(x1, y1, z1); 
+
+  // Unit vector in locl coordinates
+  double x2 = 0;
+  double y2 = 0;
+  double z2 = 1;
+  transform(x2, y2, z2);
+
+  // Get back the unit vector in global coordinates
+  x = x2-x1;
+  y = y2-y1;
+  z = z2-z1;
+}
+
+void Sensor::getPixBox(double& x, double& y) const {
+  double dummy = 0;
+
+  // Middle of a pixel
+  double x1 = 0;
+  double y1 = 0;
+  // In global coordinates
+  pixelToSpace(0, 0, x1, y1, dummy);
+
+  // Middle of neighbouring pixel
+  double x2 = 0;
+  double y2 = 0;
+  pixelToSpace(1, 1, x2, y2, dummy);
+
+  // Separation in X and Y of the two pixels
+  x = std::fabs(x2-x1);
+  y = std::fabs(y2-y1);
+}
+
+void Sensor::getSensorBox(double& x, double& y) const {
+  double dummy = 0;
+
+  // Bottom left pixel in local coordinates
+  double x1 = 0;
+  double y1 = 0;
+  // In global coordinates
+  pixelToSpace(-.5, -.5, x1, y1, dummy);
+
+  // Top right pixel
+  double x2 = 0;
+  double y2 = 0;
+  pixelToSpace(m_ncols-.5, m_nrows-.5, x2, y2, dummy);
+
+  // Width and height
+  x = std::fabs(x2-x1);
+  y = std::fabs(y2-y1);
+}
+
+void Sensor::getSensorBox(
+    double& x1,
+    double& y1,
+    double& x2,
+    double& y2) const {
+  double dummy = 0;
+  pixelToSpace(-.5, -.5, x1, y1, dummy);
+  pixelToSpace(m_ncols-.5, m_nrows-.5, x2, y2, dummy);
+  if (x1 > x2) std::swap(x1, x2);
+  if (y1 > y2) std::swap(y1, y2);
 }
 
 }

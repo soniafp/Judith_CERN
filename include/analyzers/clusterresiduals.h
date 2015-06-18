@@ -24,6 +24,9 @@ private:
   ClusterResiduals(const ClusterResiduals&);
   ClusterResiduals& operator=(const ClusterResiduals&);
 
+  /** Residual plots for all sensor combinations. Each reference sensor gets
+    * a residual plot to each other reference. Each DUT sensor gets a residual
+    * plot to each reference sensor */
   std::vector<TH1D*> m_hResidualsX;
   std::vector<TH1D*> m_hResidualsY;
 
@@ -38,10 +41,9 @@ private:
   void process();
 
 public:
+  /** Automatically calls the correct base constuctor */
   template <class T>
-  ClusterResiduals(const T& t) : Analyzer(t) {
-    initialize();
-  }
+  ClusterResiduals(const T& t) : Analyzer(t) { initialize(); }
   ~ClusterResiduals() {}
 
   void setOutput(TDirectory* dir, const std::string& name="ClusterResiduals") {
@@ -50,10 +52,8 @@ public:
   }
 
   /** Get the residual for isensor in idevice, relative to iref sensor in the
-    * reference device, along the x directoion. */
+    * reference device */
   TH1D& getResidualX(size_t idevice, size_t isensor, size_t iref) const;
-  /** Get the residual for isensor in idevice, relative to iref sensor in the
-    * reference device, along the y directoion. */
   TH1D& getResidualY(size_t idevice, size_t isensor, size_t iref) const;
 };
 

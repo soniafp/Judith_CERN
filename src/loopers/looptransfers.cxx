@@ -65,6 +65,10 @@ void LoopTransfers::finalize() {
           double sigma = 1;
           double norm = 1;
           double bg = 0;
+          //TCanvas* can = new TCanvas();
+          //hist.Draw();
+          //Utils::fitGausBg(hist, mean, sigma, norm, bg, true, true);
+          //can->WaitPrimitive();
           Utils::fitGausBg(hist, mean, sigma, norm, bg, true, false);
           if (axis==XAXIS) m_scalesX[iglobal] = sigma;
           else m_scalesY[iglobal] = sigma;

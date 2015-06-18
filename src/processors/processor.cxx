@@ -6,9 +6,6 @@
 
 namespace Processors {
 
-// Many constructors follow to allow for different initialization of devices,
-// but they all call the initialize method.
-
 Processor::Processor(size_t ndevices) :
     // No device information used by this analyzer
     m_devices(),

@@ -149,5 +149,42 @@ void linearFit(
   cov = -sx / (ss * st2);
 }
 
+void linePlaneIntercept(
+    double p0x,
+    double p1x,
+    double p0y,
+    double p1y,
+    double originX,
+    double originY,
+    double originZ,
+    double normalX,
+    double normalY,
+    double normalZ,
+    double& x,
+    double& y,
+    double& z) {
+  // p0: point on plane, l0: point on line, l: line vector, n normal
+
+  // (p0 - l0) dot n
+  const double num =
+      (originX-p0x) * normalX +
+      (originY-p0y) * normalY +
+      (originZ-0.0) * normalZ;
+
+  // l dot n
+  const double denum = 
+      p1x * normalX +
+      p1y * normalY +
+      1.0 * normalZ;
+
+  // The distance along the track to the intercept
+  const double d = num / denum;
+
+  // Extrapolate to the intercept
+  x = d * p1x + p0x;
+  y = d * p1y + p0y;
+  z = d * 1.0 + 0.0;
+}
+
 }
 

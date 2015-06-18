@@ -3,6 +3,7 @@
 #include <cassert>
 #include <string>
 #include <algorithm>
+#include <cmath>
 
 #include <TDirectory.h>
 #include <TH1D.h>
@@ -28,49 +29,47 @@ void ClusterResiduals::initialize() {
     for (size_t isensor = 0; isensor < device.getNumSensors(); isensor++) {
       const Mechanics::Sensor& sensor = device[isensor];
 
+      // Get the bounding box of the sensor
+
       // Get the x, y coordinates of two opposite sensor corners
-      double sensX1= 0;
+      double sensX1 = 0;
       double sensX2 = 0;
       double sensY1 = 0;
       double sensY2 = 0;
-      double dummy = 0;
-      sensor.pixelToSpace(
-          0, 0,
-          sensX1, sensY1, dummy);
-      sensor.pixelToSpace(
-          sensor.m_ncols-1, sensor.m_nrows-1, 
-          sensX2, sensY2, dummy);
+      sensor.getSensorBox(sensX1, sensY1, sensX2, sensY2);
+
+      // Get the sensor resolution with rotations
+      double sensResX = 0;
+      double sensResY = 0;
+      sensor.getPixBox(sensResX, sensResY);
 
       for (size_t iref = 0; iref < refDevice.getNumSensors(); iref++) {
         const Mechanics::Sensor& ref = refDevice[iref];
 
         // Repetitive, but this is a one time initialization so its ok I guess
-        double refX1= 0;
+        double refX1 = 0;
         double refX2 = 0;
         double refY1 = 0;
         double refY2 = 0;
-        ref.pixelToSpace(
-            0, 0,
-            refX1, refY1, dummy);
-        ref.pixelToSpace(
-            ref.m_ncols-1, ref.m_nrows-1, 
-            refX2, refY2, dummy);
+        ref.getSensorBox(refX1, refY1, refX2, refY2);
+
+        double refResX = 0;
+        double refResY = 0;
+        ref.getPixBox(refResX, refResY);
+
+        // Spatial extent of the sensor (largest of two scenarios: either the
+        // sensor is shifted to the left, or the reference is)
+        const double sizeX = std::max(sensX2-refX1, refX2-sensX2);
+        const double sizeY = std::max(sensY2-refY1, refY2-sensY2);
+
+        // Don't bin more finely than the distance between two pixel which
+        // barely overlap but see the same particle (should prevent aliasing
+        // features in the plots, better for fitting this way)
+        const double resX = sensResX/2. + refResX/2.;
+        const double resY = sensResY/2. + refResY/2.;
 
         const std::string name = 
             device.m_name + "_" + sensor.m_name + "_" + ref.m_name;
-
-        const double sizeX = std::max(
-            // Right most sensor edge to left most reference edge
-            std::max(sensX1, sensX2) - std::min(refX1, refX2),
-            // Right most reference edge to left most sensor edge
-            std::max(refX1, refX2) - std::min(sensX1, sensX2));
-
-        const double sizeY = std::max(
-            std::max(sensY1, sensY2) - std::min(refY1, refY2),
-            std::max(refY1, refY2) - std::min(sensY1, sensY2));
-
-        const double resX = std::max(sensor.m_colPitch, ref.m_colPitch);
-        const double resY = std::max(sensor.m_rowPitch, ref.m_rowPitch);
 
         const size_t nbinsX = 2 * sizeX / resX;
         const size_t nbinsY = 2 * sizeY / resY;
@@ -138,7 +137,7 @@ void ClusterResiduals::process() {
           }
 
           if (!nearest) continue;
-        
+
           m_hResidualsX[iglobal]->Fill(cluster.getPosX() - nearest->getPosX());
           m_hResidualsY[iglobal]->Fill(cluster.getPosY() - nearest->getPosY());
         }

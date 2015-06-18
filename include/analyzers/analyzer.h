@@ -29,13 +29,15 @@ namespace Analyzers {
   */
 class Analyzer {
 protected:
-  /** Optional vector of device information. Note: it is up to the derived 
-    * analyzer to check if device information is provided. */
+  /** Devices being analyzed. One event will be passed for each device at
+    * each execute call */
   const std::vector<const Mechanics::Device*> m_devices;
   /** Number of devices being analyzed (also number of events) */
   const size_t m_ndevices;
   /** The events for each device, updated at each execute */
   std::vector<const Storage::Event*> m_events;
+  /** Remember if this analyzer has already been finalized. */
+  bool m_finalized;
 
   /** List of all histograms managed by this analyzer. Note that all histograms
     * cast to TH1. */
@@ -45,8 +47,6 @@ protected:
   virtual void process() = 0;
 
 public:
-  /** Constructor for an analyzer which doesn't need devices, only events */
-  Analyzer(size_t ndevices);
   /** Constructor for an analyzer which needs device information */
   Analyzer(const std::vector<Mechanics::Device*>& devices);
   /** Constructor for const devices */
@@ -67,7 +67,7 @@ public:
   void execute(const Storage::Event& event);
 
   /** Post processing */
-  virtual void finalize() {}
+  virtual void finalize();
 };
 
 }

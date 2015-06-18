@@ -105,7 +105,7 @@ void Alignment::transform(double* values, bool inverse) const {
 // NOTE: all these methods need to call the `calculate` method to update the
 // rotation matrix
 
-void Alignment::setAlignment(double* values) {
+void Alignment::setAlignment(const double* values) {
   for (unsigned i = 0; i < 6; i++)
     m_alignment[i] = values[i];
   calculate();

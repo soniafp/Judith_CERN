@@ -52,7 +52,7 @@ public:
 
   /** Set the alignment from an array of 6 values whose indices are specified
     * by the `AlignAxis` enum */
-  void setAlignment(double* values);
+  void setAlignment(const double* values);
   /** Set the value of a particular alignment */
   void setAlignment(AlignAxis axis, double value);
   /** Set the vaue of the alignment offset in x */

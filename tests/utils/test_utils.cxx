@@ -144,6 +144,38 @@ int test_fitGausBg() {
   return 0;
 }
 
+int test_linePlaneIntercept() {
+  const double p0x = 1;
+  const double p0y = 2;
+  const double p1x = 0.5;
+  const double p1y = -1;
+
+  const double ox = 5;
+  const double oy = 10;
+  const double oz = 20;
+
+  const double nx = 0;
+  const double ny = 0;
+  const double nz = 1;
+
+  double x, y, z;
+  Utils::linePlaneIntercept(
+      p0x, p1x, p0y, p1y, ox, oy, oz, nx, ny, nz, x, y, z);
+
+  // Moves by 20 in z, starts at 0 : 20
+  // Moves by 0.5*20=10 in x, starts at 1 : 11
+  // Moves by -1*20=-20 in y, starts at 2 : -18
+
+  if (!approxEqual(x, 11) ||
+      !approxEqual(y, -18) ||
+      !approxEqual(z, 20)) {
+    std::cerr << "Utils: linePlaneIntercept: failed extrapolation" << std::endl;
+    return -1;
+  }
+
+  return 0;
+}
+
 int main() {
   int retval = 0;
 
@@ -151,6 +183,7 @@ int main() {
     if ((retval = test_linearFit()) != 0) return retval;
     if ((retval = test_preFitGausBg()) != 0) return retval;
     if ((retval = test_fitGausBg()) != 0) return retval;
+    if ((retval = test_linePlaneIntercept()) != 0) return retval;
   }
   
   catch (std::exception& e) {

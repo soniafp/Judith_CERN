@@ -36,7 +36,7 @@ protected:
   /** List of events (in the same order as the inputs) read an iteration */
   std::vector<Storage::Event*> m_events;
   /** Optional vector of device information. Note: it is up to the derived 
-    * analyzer to check if device information is provided. */
+    * looper to check if device information is provided. */
   const std::vector<Mechanics::Device*> m_devices;
   /** The largets event index from the inputs */
   ULong64_t m_maxEvents;
