@@ -3,6 +3,7 @@
 #include <cassert>
 #include <string>
 #include <algorithm>
+#include <cmath>
 
 #include <TDirectory.h>
 #include <TH1D.h>
