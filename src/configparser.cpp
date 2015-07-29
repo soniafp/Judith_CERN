@@ -6,6 +6,7 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include <stdint.h>
 
 using std::string;
 using std::cout;
