@@ -53,7 +53,7 @@ void CoarseAlignDut::loop()
   for (unsigned int nsensor = 0; nsensor < _dutDevice->getNumSensors(); nsensor++)
   {
     Mechanics::Sensor* sensor = _dutDevice->getSensor(nsensor);
-
+    std::cout << "CoarseAlignDut::loop - sensor name: " << sensor->getName() << std::endl;
     //S.F: TH1D* alignX = correlation.getAlignmentPlotX(nsensor);
     double offsetX = 0;
     double sigmaX = 0;
@@ -76,7 +76,8 @@ void CoarseAlignDut::loop()
       double SFoffsetX=0;
       Processors::fitGaussian( alignPadX, offsetX, sigmaX,_displayFits);
       maxbinX= alignPadX->GetMaximumBin();
-      SFoffsetX=alignPadX->GetBinContent(maxbinX);
+      //SFoffsetX=alignPadX->GetBinContent(maxbinX);
+      SFoffsetX=(alignPadX->GetXaxis()->GetBinUpEdge(maxbinX) + alignPadX->GetXaxis()->GetBinLowEdge(maxbinX))/2.0;
       offsetX = - SFoffsetX;
       //Processors::fitBox( alignPadX, offsetX, sigmaX,
       //                    sensor->getPitchX(),
@@ -95,7 +96,8 @@ void CoarseAlignDut::loop()
       double SFoffsetY=0;
       Processors::fitGaussian( alignPadY, offsetY, sigmaY,_displayFits);
       maxbinY= alignPadY->GetMaximumBin();
-      SFoffsetY=alignPadY->GetBinCenter(maxbinY);
+      //SFoffsetY=alignPadY->GetBinCenter(maxbinY);
+      SFoffsetY=(alignPadY->GetXaxis()->GetBinUpEdge(maxbinY) + alignPadY->GetXaxis()->GetBinLowEdge(maxbinY))/2.0;      
       std::cout << "getbin_center " << SFoffsetY<< std::endl;
       offsetY = - SFoffsetY;
       
