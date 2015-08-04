@@ -160,7 +160,8 @@ void DUTCorrelation::initializeHist(const Mechanics::Sensor* sensor0,
           << " To " << sensor0->getDevice()->getName() << " " << sensor0->getName()
           << ((axis) ? " X" : " Y");
     TH1D* align = new TH1D(name.str().c_str(), title.str().c_str(),
-                           2 * npix1 - 1, -sens1Size, sens1Size);
+			   2 * npix0 - 1, sens0Low, sens0Upp); // use the telescope instead of the DUT because there is only 1 pixel
+                           //2 * npix1 - 1, -sens1Size, sens1Size);
     axisTitleX.str("");
     axisTitleX << ((axis) ? "X " : "Y ") << " position difference"
                << " [" << _refDevice->getSpaceUnit() << "]";
@@ -259,6 +260,8 @@ DUTCorrelation::DUTCorrelation(const Mechanics::Device* refDevice,
       _nearestRef = nsens;
     }
   }
+  std::cout << "DUTCorrelation::DUTCorrelation - nearest: " << nearest
+	    << " nearestRef: " << _nearestRef << std::endl;
 
   for (unsigned int nsens = 0; nsens < _dutDevice->getNumSensors(); nsens++)
     initializeHist(nearest, _dutDevice->getSensor(nsens));
