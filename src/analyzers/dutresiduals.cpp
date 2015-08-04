@@ -146,7 +146,7 @@ DUTResiduals::DUTResiduals(const Mechanics::Device* refDevice,
       title << sensor->getDevice()->getName() << " " << sensor->getName()
             << ((axis) ? " X" : " Y");
       TH1D* res1d = new TH1D(name.str().c_str(), title.str().c_str(),
-                             nbins, -width / 2.0, width / 2.0);
+                             nbins*4, -width * 2.0, width * 2.0);
       res1d->SetDirectory(dir1d);
       res1d->GetXaxis()->SetTitle(xAxisTitle.str().c_str());
       if (axis) _residualsX.push_back(res1d);
