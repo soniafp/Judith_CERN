@@ -28,6 +28,15 @@ enum Mode {
   OUTPUT
 };
 
+ enum VarType {
+   kNone,
+   kFloat,
+   kDouble,
+   kInt,
+   kUInt,
+   kBool
+ };
+ 
 namespace Flags {
 enum TreeFlags
 {
@@ -75,6 +84,9 @@ private:
   Int_t    hitTimingInt[MAX_HITS];
   Int_t    hitInCluster[MAX_HITS];
 
+  VarType hitValueType;    
+  VarType hitTimingType;
+  
   Int_t    numClusters;
   Double_t clusterPixX[MAX_CLUSTERS];
   Double_t clusterPixY[MAX_CLUSTERS];
@@ -168,7 +180,8 @@ public:
   Long64_t getNumEvents() const;
   unsigned int getNumPlanes() const;
   Storage::Mode getMode() const;
-
+  Storage::VarType getType(const std::string &t) const;
+  
 private:
   StorageIO(const StorageIO&); // Disable the copy constructor
   StorageIO& operator=(const StorageIO&); // Disable the assignment operator

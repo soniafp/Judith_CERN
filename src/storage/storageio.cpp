@@ -8,6 +8,7 @@
 #include <TFile.h>
 #include <TDirectory.h>
 #include <TTree.h>
+#include <TLeaf.h>
 #include <TBranch.h>
 
 #include "event.h"
@@ -105,7 +106,11 @@ Event* StorageIO::readEvent(Long64_t n)
       Hit* hit = event->newHit(nplane);
       hit->setPix(hitPixX[nhit], hitPixY[nhit]);
       hit->setPos(hitPosX[nhit], hitPosY[nhit], hitPosZ[nhit]);
+      if(hitValueType==kInt)      
+	hitValue[nhit] = (double)hitValueInt[nhit];
       hit->setValue(hitValue[nhit]);
+      if(hitTimingType==kInt)	
+	hitTiming[nhit] = (double)hitTimingInt[nhit];      
       hit->setTiming(hitTiming[nhit]);
 
       // If this hit is in a cluster, mark this (and the clusters tree is active)
@@ -266,17 +271,15 @@ StorageIO::StorageIO(const char* filePath, Mode fileMode, unsigned int numPlanes
 
       _hits.push_back(hits);
       _clusters.push_back(clusters);
-      //cout << "*********start branch" <<endl;
       hits->Branch("NHits", &numHits, "NHits/I");
       hits->Branch("PixX", hitPixX, "HitPixX[NHits]/I");
       hits->Branch("PixY", hitPixY, "HitPixY[NHits]/I");
-      hits->Branch("Value", hitValue, "HitValue[NHits]/D"); //Matevz 20141203 I to D
+      hits->Branch("Value", hitValue, "HitValue[NHits]/D"); //Matevz 20141203 I to D 
       hits->Branch("Timing", hitTiming, "HitTiming[NHits]/D"); //S.F --> I to D
       hits->Branch("HitInCluster", hitInCluster, "HitInCluster[NHits]/I");
       hits->Branch("PosX", hitPosX, "HitPosX[NHits]/D");
       hits->Branch("PosY", hitPosY, "HitPosY[NHits]/D");
       hits->Branch("PosZ", hitPosZ, "HitPosZ[NHits]/D");
-      //cout << "*********Branch done" <<endl;
 
       clusters->Branch("NClusters", &numClusters, "NClusters/I");
       clusters->Branch("PixX", clusterPixX, "ClusterPixX[NClusters]/D");
@@ -352,32 +355,6 @@ StorageIO::StorageIO(const char* filePath, Mode fileMode, unsigned int numPlanes
       _hits.push_back(hits);
       _clusters.push_back(clusters);
       _numPlanes++;
-      
-      //---------- check the branch type ------------
-      //hits->Print();
-      std::stringstream brname;
-      brname << hits->GetBranch("Value")->GetTitle();
-      //cout<<brname.str()<<endl;
-      if (!brname.str().compare("HitValue[NHits]/I")) {
-        //cout<<"hitvalue is integer"<<endl;
-      } else if (!brname.str().compare("HitValue[NHits]/D")) {
-        //cout<<"hitvalue is double"<<endl;
-      } else {
-        cout<<"ERROR WHILE READING THE HITVALUE"<<endl;
-      }
-      
-      //hits->Print();
-      std::stringstream brname1;
-      brname1 << hits->GetBranch("Timing")->GetTitle();
-      //cout<<brname1.str()<<endl;
-      if (!brname1.str().compare("HitTiming[NHits]/I")) {
-        //cout<<"hitTiming is integer"<<endl;
-      } else if (!brname1.str().compare("HitTiming[NHits]/D")) {
-        //cout<<"hitTiming is double"<<endl;
-      } else {
-        cout<<"ERROR WHILE READING THE HITTiming"<<endl;
-      }
-      //---------------------------------------------
 
       if (hits)
       {
@@ -386,47 +363,48 @@ StorageIO::StorageIO(const char* filePath, Mode fileMode, unsigned int numPlanes
         hits->SetBranchAddress("PixX", hitPixX, &bHitPixX);
         hits->SetBranchAddress("PixY", hitPixY, &bHitPixY);
         
-        
-//**************VALUE:
-        if (!brname.str().compare("HitValue[NHits]/I")) {
-          hits->SetBranchAddress("Value", hitValueInt, &bHitValue);
-          
-          for (int i=0; i<numHits; i++) {
-            hitValue[i] = (double)hitValueInt[i];
-          }
-        } else if (!brname.str().compare("HitValue[NHits]/D")) {
+	//**************VALUE:
+	TLeaf *la = 0;
+	if(hits->GetBranch("Value")->GetListOfLeaves()) {
+	  la = dynamic_cast<TLeaf *>( hits->GetBranch("Value")->GetListOfLeaves()->First());
+	}
+	if(!la) {
+	  std::cout << "VarData::SetVarBranch - missing leaf:Value " << endl;
+	  hits->GetBranch("Value")->Print();
+	}
+
+	hitValueType = getType(la->GetTypeName());
+        if (hitValueType==kInt) {
+          hits->SetBranchAddress("Value", hitValueInt, &bHitValueInt);
+        } else if (hitValueType==kDouble) {
           hits->SetBranchAddress("Value", hitValue, &bHitValue);
         } else {
           cout<<"ERROR WHILE READING THE HITVALUE"<<endl;
         }
       
-        //cout<<"VALUE TITLE:    "<<bHitValue->GetTitle()<<endl;
-
-        
-      
-        
-//***************Timing:
-       // hits->SetBranchAddress("Timing", hitTiming, &bHitTiming);
-        if (!brname1.str().compare("HitTiming[NHits]/I")) {
-          hits->SetBranchAddress("Timing", hitTimingInt, &bHitTiming);
-          for (int i=0; i<numHits; i++) {
-            hitTiming[i] = (double)hitTimingInt[i];
-          }
-        } else if (!brname1.str().compare("HitTiming[NHits]/D")) {
+	//***************Timing:
+	la=0;
+	if(hits->GetBranch("Timing")->GetListOfLeaves()) {
+	  la = dynamic_cast<TLeaf *>( hits->GetBranch("Timing")->GetListOfLeaves()->First());
+	}
+	if(!la) {
+	  std::cout << "VarData::SetVarBranch - missing leaf: Timing " << endl;
+	  hits->GetBranch("Timing")->Print();
+	}
+	hitTimingType = getType(la->GetTypeName());
+        if (hitTimingType==kInt) {
+          hits->SetBranchAddress("Timing", hitTimingInt, &bHitTimingInt);
+        } else if (hitTimingType==kDouble) {
           hits->SetBranchAddress("Timing", hitTiming, &bHitTiming);
         } else {
           cout<<"ERROR WHILE READING THE HITTIME"<<endl;
         }
-        //cout<<"TIMING TITLE:    " <<bHitTiming->GetTitle()<<endl;
-//***********************
+	
+	//***********************
         hits->SetBranchAddress("HitInCluster", hitInCluster, &bHitInCluster);
-
-        
-        
         hits->SetBranchAddress("PosX", hitPosX, &bHitPosX);
         hits->SetBranchAddress("PosY", hitPosY, &bHitPosY);
         hits->SetBranchAddress("PosZ", hitPosZ, &bHitPosZ);
-        
       }
 
       if (clusters)
@@ -524,14 +502,30 @@ StorageIO::StorageIO(const char* filePath, Mode fileMode, unsigned int numPlanes
   }
 }
 
-StorageIO::~StorageIO()
-{
-  
-  if (_file && _fileMode == OUTPUT)
+  //----------------------------------------------------------------------------
+  Storage::VarType StorageIO::getType(const std::string &t) const
   {
-    _file->Write();
-    delete _file;
+    //
+    // Convert known type strings to enum                                     
+    //    
+    if     (t == "Double_t") return kDouble;
+    else if(t == "Float_t" ) return kFloat;
+    else if(t == "Int_t"   ) return kInt;
+    else if(t == "UInt_t"  ) return kUInt;
+    else if(t == "Bool_t"  ) return kBool;
+    
+    cout << "StorageIO::getType - unknown type: " << t << endl;
+    return kNone;
   }
-}
-
+  
+  StorageIO::~StorageIO()
+  {
+    
+    if (_file && _fileMode == OUTPUT)
+      {
+	_file->Write();
+	delete _file;
+      }
+  }
+  
 }
