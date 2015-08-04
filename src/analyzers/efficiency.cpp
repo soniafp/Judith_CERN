@@ -40,10 +40,8 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
 {
   assert(refEvent && dutEvent && "Analyzer: can't process null events");
 
-
   // Throw an error for sensor / plane mismatch
   eventDeivceAgree(refEvent, dutEvent);
-
   //fill in the amplitude distribution histogram
   for (unsigned int nsensor = 0; nsensor < _dutDevice->getNumSensors(); nsensor++)
   {
@@ -54,12 +52,9 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
       _amplDist.at(nsensor)->Fill( hit->getValue() );
     }
   }
-
   // Check if the event passes the cuts
   for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
     if (!_eventCuts.at(ncut)->check(refEvent)) return;
-
-
 
   for (unsigned int ntrack = 0; ntrack < refEvent->getNumTracks(); ntrack++)
   {
@@ -70,8 +65,6 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
     for (unsigned int ncut = 0; ncut < _numTrackCuts; ncut++)
       if (!_trackCuts.at(ncut)->check(track)) { pass = false; break; }
     if (!pass) continue;
-
-
 
     // Make a list of the planes with their matched cluster
     std::vector<Storage::Cluster*> matches;
@@ -118,8 +111,6 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
       unsigned int pixelY = py;
       double ninepixelX = 5.0;
       double ninepixelY = 5.0;
-
-
 
       if (match)
       {
@@ -196,20 +187,9 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
         if (_efficiencyTime.size())
           _efficiencyTime.at(nsensor)->Fill(false, _refDevice->tsToTime(refEvent->getTimeStamp()));
       }
-
-
-
-
     }
   }
 }
-
-
-
-
-
-
-
 
 void Efficiency::postProcessing()
 {

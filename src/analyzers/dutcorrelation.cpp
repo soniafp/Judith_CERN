@@ -131,9 +131,16 @@ void DUTCorrelation::initializeHist(const Mechanics::Sensor* sensor0,
     title << sensor1->getDevice()->getName() << " " << sensor1->getName()
           << " To " << sensor0->getDevice()->getName() << " " << sensor0->getName()
           << ((axis) ? " X" : " Y");
-    TH2D* corr = new TH2D(name.str().c_str(), title.str().c_str(),
+    TH2D* corr = NULL;
+    if(npix0==1)
+      corr = new TH2D(name.str().c_str(), title.str().c_str(),
                           npix0, sens0Low, sens0Upp,
-                          npix1, sens1Low, sens1Upp);
+			  npix1, sens1Low, sens1Upp);
+    else // set the telescope as y limits for the dut if only 1 pixel exists
+      corr = new TH2D(name.str().c_str(), title.str().c_str(),
+                          npix0, sens0Low, sens0Upp,
+			  npix0, sens0Low, sens0Upp);
+
     axisTitleX.str(""); axisTitleY.str("");
     axisTitleX << ((axis) ? "X " : "Y ") << " position on " << sensor0->getName()
                << " [" << _refDevice->getSpaceUnit() << "]";
@@ -159,8 +166,15 @@ void DUTCorrelation::initializeHist(const Mechanics::Sensor* sensor0,
     title << sensor1->getDevice()->getName() << " " << sensor1->getName()
           << " To " << sensor0->getDevice()->getName() << " " << sensor0->getName()
           << ((axis) ? " X" : " Y");
-    TH1D* align = new TH1D(name.str().c_str(), title.str().c_str(),
+    
+    TH1D* align =NULL;
+    if(npix1==1)
+      align = new TH1D(name.str().c_str(), title.str().c_str(),
 			   2 * npix0 - 1, sens0Low, sens0Upp); // use the telescope instead of the DUT because there is only 1 pixel
+    else
+      align = new TH1D(name.str().c_str(), title.str().c_str(),
+		       2 * npix1 - 1, -sens1Size, sens1Size); 
+    
                            //2 * npix1 - 1, -sens1Size, sens1Size);
     axisTitleX.str("");
     axisTitleX << ((axis) ? "X " : "Y ") << " position difference"
@@ -260,8 +274,6 @@ DUTCorrelation::DUTCorrelation(const Mechanics::Device* refDevice,
       _nearestRef = nsens;
     }
   }
-  std::cout << "DUTCorrelation::DUTCorrelation - nearest: " << nearest
-	    << " nearestRef: " << _nearestRef << std::endl;
 
   for (unsigned int nsens = 0; nsens < _dutDevice->getNumSensors(); nsens++)
     initializeHist(nearest, _dutDevice->getSensor(nsens));

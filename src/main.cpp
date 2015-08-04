@@ -281,10 +281,9 @@ void process(const char* inputName, const char* outputName,
     Storage::StorageIO output(outputName, Storage::OUTPUT, device->getNumSensors(), outMask);
     
     if (device->getAlignment()) device->getAlignment()->readFile();
-    
+
     Loopers::ProcessEvents looper(device, &output, clusterMaker, trackMaker,
                                   &input, startEvent, numEvents);
-
     const Storage::Event* start = input.readEvent(looper.getStartEvent());
     const Storage::Event* end = input.readEvent(looper.getEndEvent());
     device->setTimeStart(start->getTimeStamp());
@@ -450,16 +449,15 @@ void analysisDUT(const char* refInputName, const char* dutInputName,
 
     ConfigParser runConfig(tbCfg);
 
-    Processors::TrackMatcher* trackMatcher = new Processors::TrackMatcher(dutDevice);
-
     Storage::StorageIO refInput(refInputName, Storage::INPUT);
     Storage::StorageIO dutInput(dutInputName, Storage::INPUT);
 
     if (refDevice->getAlignment()) refDevice->getAlignment()->readFile();
     if (dutDevice->getAlignment()) dutDevice->getAlignment()->readFile();
 
+    Processors::TrackMatcher* trackMatcher = new Processors::TrackMatcher(dutDevice);
+    
     Loopers::AnalysisDut looper(&refInput, &dutInput, trackMatcher, startEvent, numEvents);
-
 
     const Storage::Event* start = refInput.readEvent(looper.getStartEvent());
     const Storage::Event* end = refInput.readEvent(looper.getEndEvent());
@@ -468,21 +466,16 @@ void analysisDUT(const char* refInputName, const char* dutInputName,
     delete start;
     delete end;
 
-    std::cout << "1" << std::endl;
     TFile* results = 0;
     if (strlen(resultsName))
       results = new TFile(resultsName, "RECREATE");
-    std::cout << "2" << std::endl;
     Analyzers::configLooper(runConfig, &looper, refDevice, dutDevice, results);
-    std::cout << "3" << std::endl;
     looper.loop();
-    std::cout << "4" << std::endl;
     if (results)
     {
       results->Write();
       delete results;
     }
-    std::cout << "5" << std::endl;
     delete trackMatcher;
     delete refDevice;
     delete dutDevice;
@@ -713,7 +706,7 @@ int main(int argc, char** argv)
   }
   else if ( !inArgs.getCommand().compare("analysisDUT") )
   {
-    analysisDUT( // fills all the histograms: correletans, efficiencied, tracks,
+    analysisDUT( // fills all the histograms: correletions, efficiencies, tracks,
                  // alignments plots, residuals,...
                 inArgs.getInputRef().c_str(),
                 inArgs.getInputDUT().c_str(),

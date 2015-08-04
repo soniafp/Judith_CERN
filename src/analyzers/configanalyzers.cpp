@@ -981,17 +981,11 @@ void configLooper(const ConfigParser& config,
   }
   else
   {
-    std::cout << "conf1" << std::endl;
     configDUTDepictor(config, looper, refDevice, dutDevice);
-    std::cout << "conf2" << std::endl;
     configDUTCorrelation(config, looper, refDevice, dutDevice, results);
-    std::cout << "conf3" << std::endl;
     configResiduals(config, looper, refDevice, dutDevice, results);
-    std::cout << "conf4" << std::endl;
     configMatching(config, looper, refDevice, dutDevice, results);
-    std::cout << "conf5" << std::endl;
     configEfficiency(config, looper, refDevice, dutDevice, results);
-    std::cout << "conf6" << std::endl;
   }
 }
 

@@ -49,7 +49,10 @@ void CoarseAlign::loop()
   for (unsigned int nsensor = 1; nsensor < _refDevice->getNumSensors(); nsensor++)
   {
     Mechanics::Sensor* sensor = _refDevice->getSensor(nsensor);
-
+    std::cout << "CoarseAlign::loop - sensor name: " << sensor->getName()
+	      << " numX: " << sensor->getNumX()
+	      << " numY: " << sensor->getNumY()
+	      << std::endl;
     TH1D* alignX = correlation.getAlignmentPlotX(nsensor);
     double offsetX = 0;
     double sigmaX = 0;

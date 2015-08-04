@@ -46,7 +46,7 @@ void Alignment::writeFile()
 
   if (!file.is_open())
     throw "AlginmentFile: unable to open file for writing";
-
+  else{std::cout << "Writing alignment: " << _fileName.c_str() << std::endl; }
   file << std::setprecision(9);
   file << std::fixed;
 
