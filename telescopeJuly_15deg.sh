@@ -4,18 +4,18 @@
 ###
 ###either fast hits or all hits can be choosen for the analysis.
 
-export PATH="./../Judith_original"
+export PATH="./../Judith_CERN/TestData"
 
 
 
 
 
-export DUT=$PATH/TestData/testbeam_50pixel_unirr_run24
-export RCE=$PATH/TestData/cosmic_000024
-export RCE_MASKED=$PATH/TestData/cosmic_000024-mask
-export ALIG=$PATH/TestData/cosmic_000024.root
-export RCE_PROCC=$PATH/TestData/cosmic_000024-process
-export DUT_PROCC=$PATH/TestData/testbeam_50pixel_unirr_run24-proccess
+export DUT=$PATH/dut-120V_runs-23-24-25-26-27-28-29-30
+export RCE=$PATH/cosmic-120V_runs-23-24-25-26-27-28-29-30
+export RCE_MASKED=$PATH/cosmic-120V_runs-23-24-25-26-27-28-29-30-mask
+export ALIG=$PATH/cosmic_000024.root
+export RCE_PROCC=$PATH/cosmic-120V_runs-23-24-25-26-27-28-29-30-process
+export DUT_PROCC=$PATH/dut-120V_runs-23-24-25-26-27-28-29-30-proccess
 
 
 echo "15 TILT---JUL2015 ----XFAB -------SONIA"
@@ -33,7 +33,7 @@ echo "-------------------FineAlign telescope"
 echo "-------------------CoarseAlign dut"
 ./Judith -c coarseAlignDUT -i ${RCE_MASKED}.root -I $DUT.root -r configs/reforig_July2015_15deg.cfg -t configs/globalorig.cfg -d configs/dutXfab.cfg
 echo "-------------------FineAlign dut"
-./Judith -c fineAlignDUT -i ${RCE}.root -I ${DUT}.root -t configs/globalorig.cfg -r configs/reforig_July2015_0deg.cfg -d configs/dutXfab.cfg
+./Judith -c fineAlignDUT -i ${RCE_MASKED}.root -I ${DUT}.root -t configs/globalorig.cfg -r configs/reforig_July2015_15deg.cfg -d configs/dutXfab.cfg
 
 echo "-------------------process telescope"
 ./Judith -c process -i ${RCE_MASKED}.root -o ${RCE_PROCC}.root -r configs/reforig_July2015_15deg.cfg -t configs/globalorig_July2015.cfg -R ${RCE}_15deg-proccess-result.root
