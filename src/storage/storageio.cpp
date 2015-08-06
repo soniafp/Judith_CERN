@@ -401,7 +401,10 @@ StorageIO::StorageIO(const char* filePath, Mode fileMode, unsigned int numPlanes
         }
 	
 	//***********************
-        hits->SetBranchAddress("HitInCluster", hitInCluster, &bHitInCluster);
+        if(hits->GetBranchStatus("HitInCluster"))
+	  hits->SetBranchAddress("HitInCluster", hitInCluster, &bHitInCluster);
+	else
+	  hits->SetBranchAddress("InCluster", hitInCluster, &bHitInCluster);	
         hits->SetBranchAddress("PosX", hitPosX, &bHitPosX);
         hits->SetBranchAddress("PosY", hitPosY, &bHitPosY);
         hits->SetBranchAddress("PosZ", hitPosZ, &bHitPosZ);
