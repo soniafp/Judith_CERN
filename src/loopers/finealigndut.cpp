@@ -122,7 +122,7 @@ FineAlignDut::FineAlignDut(Mechanics::Device* refDevice,
                            Storage::StorageIO* dutInput,
                            ULong64_t startEvent,
                            ULong64_t numEvents,
-                           unsigned int eventSkip) :
+                           Long64_t eventSkip) :
   Looper(refInput, dutInput, startEvent, numEvents, eventSkip),
   _refDevice(refDevice),
   _dutDevice(dutDevice),

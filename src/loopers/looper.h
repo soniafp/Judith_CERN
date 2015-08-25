@@ -18,7 +18,7 @@ protected:
   Storage::StorageIO* _dutStorage;
   ULong64_t _startEvent;
   ULong64_t _numEvents;
-  unsigned int _eventSkip;
+  Long64_t _eventSkip;
   ULong64_t _totalEvents;
   ULong64_t _endEvent;
 
@@ -31,7 +31,7 @@ protected:
          Storage::StorageIO* dutStorage = 0,
          ULong64_t startEvent = 0,
          ULong64_t numEvents = 0,
-         unsigned int eventSkip = 1);
+         Long64_t eventSkip = 1);
   virtual ~Looper();
 
   void progressBar(ULong64_t nevent);

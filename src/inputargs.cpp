@@ -19,6 +19,7 @@ InputArgs::InputArgs() :
   _command(""),
   _numEvents(0),
   _eventOffset(0),
+  _synchroEventsOffset(1),  
   _noBar(false)
 { }
 
@@ -44,7 +45,7 @@ void InputArgs::usage()
   cout << setw(w1) << "  fineAlign"
        << " : fine align device planes (-i, -r, -t, [-n, -s])\n";
   cout << setw(w1) << "  coarseAlignDUT"
-       << " : coarse align DUT to ref. device (-i, -I, -r, -d, -t, [-n, -s])\n";
+       << " : coarse align DUT to ref. device (-i, -I, -r, -d, -t, [-n, -s, -y])\n";
   cout << setw(w1) << "  fineAlignDUT"
        << " : fine align DUT planes to ref. tracks (-i, -I, -r, -d, -t, [-n, -s])\n";
   cout << setw(w1) << "  process"
@@ -67,6 +68,7 @@ void InputArgs::usage()
   cout << "  -t  " << setw(w2) << "--cfgTestbeam" << " : path to testbeam configuration\n";
   cout << "  -n  " << setw(w2) << "--numEvents" << " : number of events to process\n";
   cout << "  -s  " << setw(w2) << "--eventOffset" << " : starting at this event\n";
+  cout << "  -y  " << setw(w2) << "--synchroOffset" << " : skipping this many events for the telescope\n";  
   cout << "  -h  " << setw(w2) << "--help" << " : print this help message\n";
   cout << endl;
 
@@ -157,6 +159,11 @@ void InputArgs::parseArgs(int* argc, char** argv)
         _eventOffset = atoi( argv[++i] );
         cout << setw(w) << "  eventOffset" << " : " << _eventOffset << endl;
       }
+      else if ( (!arg.compare("-y") || !arg.compare("--synchroOffset")))
+      {
+        _synchroEventsOffset = atoi( argv[++i] );
+        cout << setw(w) << "  synchroOffset" << " : " << _synchroEventsOffset << endl;
+      }      
       else if ( (!arg.compare("-b") || !arg.compare("--noBar")) &&
                 !_noBar)
       {
@@ -190,4 +197,5 @@ string InputArgs::getCfgDUT() const { return _cfgDUT; }
 string InputArgs::getCfgTestbeam() const { return _cfgTestbeam; }
 ULong64_t InputArgs::getNumEvents() const { return _numEvents; }
 ULong64_t InputArgs::getEventOffset() const { return _eventOffset; }
+Long64_t InputArgs::getSynchroEventsOffset() const { return _synchroEventsOffset; }
 bool InputArgs::getNoBar() const { return _noBar; }

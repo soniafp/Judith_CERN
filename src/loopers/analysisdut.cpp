@@ -45,7 +45,7 @@ AnalysisDut::AnalysisDut(Storage::StorageIO* refInput,
                          Processors::TrackMatcher* trackMatcher,
                          ULong64_t startEvent,
                          ULong64_t numEvents,
-                         unsigned int eventSkip) :
+                         Long64_t eventSkip) :
   Looper(refInput, dutInput, startEvent, numEvents, eventSkip),
   _trackMatcher(trackMatcher)
 {

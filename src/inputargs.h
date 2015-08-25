@@ -17,6 +17,7 @@ private:
   std::string _command;
   ULong64_t _numEvents;
   ULong64_t _eventOffset;
+  Long64_t _synchroEventsOffset;  
   bool _noBar;
 
 public:
@@ -36,6 +37,7 @@ public:
   std::string getCfgTestbeam() const;
   ULong64_t getNumEvents() const;
   ULong64_t getEventOffset() const;
+  Long64_t getSynchroEventsOffset() const;  
   bool getNoBar() const;
 };
 

@@ -62,8 +62,10 @@ void Residuals::processEvent(const Storage::Event* refEvent)
 
         const double rx = tx - cluster->getPosX();
         const double ry = ty - cluster->getPosY();
+        const double rz = tz - cluster->getPosZ();	
         _residualsX.at(nplane)->Fill(rx);
         _residualsY.at(nplane)->Fill(ry);
+        _residualsZ.at(nplane)->Fill(rz);	
         _residualsXX.at(nplane)->Fill(rx, tx);
         _residualsYY.at(nplane)->Fill(ry, ty);
         _residualsXY.at(nplane)->Fill(rx, ty);
@@ -117,41 +119,40 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
   std::stringstream name; // Build name strings for each histo
   std::stringstream title; // Build title strings for each histo
 
-  std::stringstream xAxisTitle;
-  std::stringstream yAxisTitle;
-
   // Generate a histogram for each sensor in the device
   for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++)
   {
     Mechanics::Sensor* sensor = _device->getSensor(nsens);
-    for (unsigned int axis = 0; axis < 2; axis++)
+    for (unsigned int axis = 0; axis < 3; axis++)
     {
 // HP try
-      const double width = nPixX * 
+      const double width = (axis==2) ? 30.0 : nPixX * 
           (axis ? sensor->getPosPitchX() : sensor->getPosPitchY());
-      unsigned int nbins = binsPerPix * nPixX;
+      unsigned int nbins = 2.0 * binsPerPix * nPixX;
       if (!(nbins % 2)) nbins += 1;
       double height = 0;
 
       // Generate the 1D residual distribution for the given axis
       name.str(""); title.str("");
       name << sensor->getDevice()->getName() << sensor->getName()
-           << ((axis) ? "X" : "Y") << _nameSuffix;
+           << ((axis==2) ? "Z" : (axis) ? "X" : "Y") << _nameSuffix;
       title << sensor->getDevice()->getName() << " " << sensor->getName()
-            << ((axis) ? " X" : " Y")
-            << ";Track cluster difference " << (axis ? "X" : "Y")
+            << ((axis==2) ? "Z" : (axis) ? " X" : " Y")
+            << ";Track cluster difference " << ((axis==2) ? "Z" : axis ? "X" : "Y")
             << " [" << _device->getSpaceUnit() << "]"
             << ";Clusters / " << 1.0 / binsPerPix << " pixel";
       TH1D* res1d = new TH1D(name.str().c_str(), title.str().c_str(),
                              nbins, -width / 2.0, width / 2.0);
       res1d->SetDirectory(dir1d);
-      if (axis) _residualsX.push_back(res1d);
-      else      _residualsY.push_back(res1d);
+      if (axis==1)      _residualsX.push_back(res1d);
+      else if(axis==0)  _residualsY.push_back(res1d);
+      else if(axis==2)  _residualsZ.push_back(res1d);
 
       // Generate the XX or YY residual distribution
-
+      if(axis==2) continue; // Z is not programmed, so we skip it
+      
       // The height of this plot depends on the sensor and X or Y axis
-      height = axis ? sensor->getPosSensitiveX() : sensor->getPosSensitiveY();
+      height =  axis ? sensor->getPosSensitiveX() : sensor->getPosSensitiveY(); //(axis==2) ? sensor->getPosSensitiveZ() :
 
       name.str(""); title.str("");
       name << sensor->getDevice()->getName() << sensor->getName()
@@ -171,7 +172,6 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
       else      _residualsYY.push_back(resAA);
 
       // Generate the XY or YX distribution
-
       height = axis ? sensor->getSensitiveY() : sensor->getSensitiveX();
 
       name.str(""); title.str("");

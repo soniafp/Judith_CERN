@@ -39,6 +39,7 @@
 #include "loopers/noisescan.h"
 #include "loopers/processevents.h"
 #include "loopers/synchronize.h"
+#include "loopers/synchronizerms.h"
 #include "loopers/configloopers.h"
 #include "configparser.h"
 #include "inputargs.h"
@@ -208,7 +209,7 @@ void coarseAlign(const char* inputName, ULong64_t startEvent, ULong64_t numEvent
 }
 
 void coarseAlignDUT(const char* refInputName, const char* dutInputName,
-                    ULong64_t startEvent, ULong64_t numEvents,
+                    ULong64_t startEvent, ULong64_t numEvents,  Long64_t skipEvent,
                     const char* refDeviceCfg, const char* dutDeviceCfg,
                     const char* tbCfg)
 {
@@ -230,7 +231,7 @@ void coarseAlignDUT(const char* refInputName, const char* dutInputName,
     if (refDevice->getAlignment()) refDevice->getAlignment()->readFile();
 
     Loopers::CoarseAlignDut looper(refDevice, dutDevice, clusterMaker,
-                                   &refInput, &dutInput, startEvent, numEvents);
+                                   &refInput, &dutInput, startEvent, numEvents, skipEvent);
     Loopers::configCoarseAlign(runConfig, looper);
     looper.loop();
 
@@ -403,30 +404,69 @@ void synchronize(const char* refInputName, const char* dutInputName,
     planeMask.push_back(false);
     planeMask.push_back(false);
     ConfigParser runConfig(tbCfg);
-    std::cout << " 1 " << std::endl;
     Storage::StorageIO refInput(refInputName, Storage::INPUT,0 , inMask, &planeMask);
-    std::cout << " 2 " << std::endl;
-
     Storage::StorageIO dutInput(dutInputName, Storage::INPUT);
-    std::cout << " 3 " << std::endl;
-
     Storage::StorageIO refOutput(refOutputName, Storage::OUTPUT,
                                  refInput.getNumPlanes());
-    std::cout << " 4 " << std::endl;
 
     Storage::StorageIO dutOutput(dutOutputName, Storage::OUTPUT,
                                  dutInput.getNumPlanes());
-    std::cout << " 5 " << std::endl;
-
     Loopers::Synchronize looper(refDevice, dutDevice, &refOutput, &dutOutput,
                                 &refInput, &dutInput, startEvent, numEvents);
-    std::cout << " 6 " << std::endl;
 
     Loopers::configSynchronize(runConfig, looper);
     looper.loop();
-    std::cout << " 7 " << std::endl;
     delete refDevice;
     delete dutDevice;
+  }
+  catch (const char* e)
+  {
+    cout << "ERR :: " << e << endl;
+  }
+}
+
+void synchronizeRMS(const char* refInputName, const char* dutInputName,
+                 const char* refOutputName, const char* dutOutputName,
+                 ULong64_t startEvent, ULong64_t numEvents,
+                 const char* refDeviceCfg, const char* dutDeviceCfg,
+                 const char* tbCfg)
+{
+  try
+  {
+
+    ConfigParser runConfig(tbCfg);
+    Processors::ClusterMaker* clusterMaker = Processors::generateClusterMaker(runConfig);
+    
+    ConfigParser refConfig(refDeviceCfg);
+    Mechanics::Device* refDevice = Mechanics::generateDevice(refConfig);
+
+    ConfigParser dutConfig(dutDeviceCfg);
+    Mechanics::Device* dutDevice = Mechanics::generateDevice(dutConfig);
+      
+ 
+    unsigned int inMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
+
+    Storage::StorageIO refInput(refInputName, Storage::INPUT, 0, inMask);
+    Storage::StorageIO dutInput(dutInputName, Storage::INPUT, 0, inMask);
+    Storage::StorageIO refOutput(refOutputName, Storage::OUTPUT,
+                                 refInput.getNumPlanes());
+
+    Storage::StorageIO dutOutput(dutOutputName, Storage::OUTPUT,
+                                 dutInput.getNumPlanes());
+
+    if (refDevice->getAlignment()) refDevice->getAlignment()->readFile();
+    if (dutDevice->getAlignment()) dutDevice->getAlignment()->readFile();
+    
+    Loopers::SynchronizeRMS looper(refDevice, dutDevice, clusterMaker, &refOutput, &dutOutput,
+				   &refInput, &dutInput, startEvent, numEvents);
+
+    Loopers::configSynchronizeRMS(runConfig, looper);
+    looper.loop();
+
+    // cleanup
+    delete refDevice;
+    delete dutDevice;
+    delete clusterMaker;
   }
   catch (const char* e)
   {
@@ -613,6 +653,22 @@ int main(int argc, char** argv)
                 inArgs.getCfgDUT().c_str(),
                 inArgs.getCfgTestbeam().c_str() );
   }
+  else if ( !inArgs.getCommand().compare("synchronizeRMS") )
+  {
+    synchronizeRMS( // synchronizes DUT with Ref (2 inputs, 2 outputs)
+                 // start at EvOffset, do NumEvents (0=ALL)
+                 // 2 configs (Ref and DUT) synched data goes to
+                 // OutputRef/DUT
+                inArgs.getInputRef().c_str(),
+                inArgs.getInputDUT().c_str(),
+                inArgs.getOutputRef().c_str(),
+                inArgs.getOutputDUT().c_str(),
+                inArgs.getEventOffset(),
+                inArgs.getNumEvents(),
+                inArgs.getCfgRef().c_str(),
+                inArgs.getCfgDUT().c_str(),
+                inArgs.getCfgTestbeam().c_str() );
+  }  
   else if ( !inArgs.getCommand().compare("noiseScan") )
   {
     noiseScan( // produse a noise mask with a specified cut (prompted for)
@@ -666,6 +722,7 @@ int main(int argc, char** argv)
                 inArgs.getInputDUT().c_str(),
                 inArgs.getEventOffset(),
                 inArgs.getNumEvents(),
+		inArgs.getSynchroEventsOffset(),
                 inArgs.getCfgRef().c_str(),
                 inArgs.getCfgDUT().c_str(),
                 inArgs.getCfgTestbeam().c_str() );

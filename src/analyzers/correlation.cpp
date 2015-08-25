@@ -147,7 +147,7 @@ void Correlation::initializeHist(const Mechanics::Sensor* sensor0,
 
     // Aliasing issue if you don't subtract from npix
     TH1D* align = new TH1D(name.str().c_str(), title.str().c_str(),
-                           2 * npix1 - 1, -sens1Size, sens1Size);
+                           2*(2 * npix1 - 1), -sens1Size, sens1Size);
 
     axisTitleX.str("");
     axisTitleX << ((axis) ? "X " : "Y ") << " position difference"

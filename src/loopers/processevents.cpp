@@ -40,10 +40,10 @@ void ProcessEvents::loop()
   ULong64_t statMostTracksEvent = 0;
   unsigned int statMostTracks = 0;
 
-  for (ULong64_t nevent = _startEvent; nevent <= _endEvent; nevent++)
+  for (ULong64_t nevent = _startEvent; nevent <= _endEvent; ++nevent)
   {
     Storage::Event* refEvent = _refStorage->readEvent(nevent);
-    
+
     if (refEvent->getNumClusters())
       throw "ProcessEvents: can't recluster an event, mask the tree in the input";
     for (unsigned int nplane = 0; nplane < refEvent->getNumPlanes(); nplane++)
@@ -129,7 +129,7 @@ ProcessEvents::ProcessEvents(Mechanics::Device* refDevice,
                              Storage::StorageIO* refInput,
                              ULong64_t startEvent,
                              ULong64_t numEvents,
-                             unsigned int eventSkip) :
+                             Long64_t eventSkip) :
   Looper(refInput, 0, startEvent, numEvents, eventSkip),
   _refDevice(refDevice),
   _refOutput(refOutput),

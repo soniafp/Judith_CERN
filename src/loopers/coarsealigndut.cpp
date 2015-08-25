@@ -28,7 +28,7 @@ void CoarseAlignDut::loop()
 
   for (ULong64_t nevent = _startEvent; nevent <= _endEvent; nevent++)
   {
-    Storage::Event* refEvent = _refStorage->readEvent(nevent);
+    Storage::Event* refEvent = _refStorage->readEvent(nevent+_eventSkip-1);
     Storage::Event* dutEvent = _dutStorage->readEvent(nevent);
 
     if (refEvent->getNumClusters() || dutEvent->getNumClusters())
@@ -83,7 +83,7 @@ void CoarseAlignDut::loop()
       //                    sensor->getPitchX(),
       //                    _displayFits);
       //offsetX = - offsetX;
-      std::cout << "X offset " << offsetX << std::endl;
+      std::cout << "X offset " << offsetX << " RMS: " << alignPadX->GetRMS() << " Fit width: " << sigmaX << std::endl;
     }
     //if the device has one pixel in x direction
     if ( _dutDevice->getSensor(nsensor)->getNumY() == 1 )
@@ -106,12 +106,12 @@ void CoarseAlignDut::loop()
       //                    _displayFits);
       //offsetY = -offsetY;
       
-      std::cout << "Y offset " << offsetY << std::endl;
+      std::cout << "Y offset " << offsetY << " RMS: " << alignPadY->GetRMS() << " Fit width: " << sigmaY << std::endl;
     }
     //Add another TH1D for single-pixel coarse alignment
     //add another processor for fitting a gaussian to the new th1d.
-    std::cout << "X offset " << offsetX << std::endl;
-    std::cout << "Y offset " << offsetY << std::endl;
+    std::cout << "X offset " << offsetX  << std::endl;
+    std::cout << "Y offset " << offsetY  << std::endl;
     std::cout << "X current " << sensor->getOffX() << std::endl;
     std::cout << "X new     " << sensor->getOffX() - offsetX << std::endl;
     std::cout << "Y current " << sensor->getOffY() << std::endl;
@@ -132,7 +132,7 @@ CoarseAlignDut::CoarseAlignDut(Mechanics::Device* refDevice,
                                Storage::StorageIO* dutInput,
                                ULong64_t startEvent,
                                ULong64_t numEvents,
-                               unsigned int eventSkip) :
+                               Long64_t eventSkip) :
   Looper(refInput, dutInput, startEvent, numEvents, eventSkip),
   _refDevice(refDevice),
   _dutDevice(dutDevice),

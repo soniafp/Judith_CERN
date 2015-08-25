@@ -35,7 +35,7 @@ public:
                 Storage::StorageIO* dutInput = 0,
                 ULong64_t startEvent = 0,
                 ULong64_t numEvents = 0,
-                unsigned int eventSkip = 1);
+                Long64_t eventSkip = 1);
 
   void loop();
 };

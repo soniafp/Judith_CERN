@@ -290,7 +290,7 @@ Chi2Align::Chi2Align(Mechanics::Device* refDevice,
                      Storage::StorageIO* refInput,
                      ULong64_t startEvent,
                      ULong64_t numEvents,
-                     unsigned int eventSkip) :
+                     Long64_t eventSkip) :
   Looper(refInput, 0, startEvent, numEvents, eventSkip),
   _refDevice(refDevice),
   _clusterMaker(clusterMaker),

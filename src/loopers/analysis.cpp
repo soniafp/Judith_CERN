@@ -33,7 +33,7 @@ void Analysis::loop()
 Analysis::Analysis(Storage::StorageIO* refInput,
                    ULong64_t startEvent,
                    ULong64_t numEvents,
-                   unsigned int eventSkip) :
+                   Long64_t eventSkip) :
   Looper(refInput, 0, startEvent, numEvents, eventSkip)
 {
   assert(refInput && "Looper: initialized with null object(s)");

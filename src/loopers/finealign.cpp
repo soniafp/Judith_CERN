@@ -35,22 +35,41 @@ void FineAlign::loop()
   std::vector<unsigned int> sensorPermutations(_refDevice->getNumSensors(), 0);
   for (unsigned int i = 0; i < _refDevice->getNumSensors(); i++)
     sensorPermutations[i] = i;
-  // Start with permutation so that the first itertaion permutes back to the
+  // Start with permutation so that the first itertation permutes back to the
   // ordered list (just looks less strange if the first iteration is ordered)
   std::prev_permutation(sensorPermutations.begin(), sensorPermutations.end());
 
-  for (unsigned int niter = 0; niter < _numIterations; niter++)
+  for (unsigned int niter = 0; niter < _numIterations+2; niter++)
   {
     cout << "Iteration " << niter << " of " << _numIterations - 1 << endl;
 
     // Get the average slopes to make device rotations
-    double avgSlopeX = 0;
-    double avgSlopeY = 0;
+    double avgSlopeX = 0.0;
+    double avgSlopeY = 0.0;
     ULong64_t numSlopes = 0;
 
     // Permute the order in which the sensors will be processed
     std::next_permutation(sensorPermutations.begin(), sensorPermutations.end());
-
+    if(niter==_numIterations){
+      sensorPermutations[0]=5;
+      sensorPermutations[1]=4;
+      sensorPermutations[2]=3;
+      sensorPermutations[3]=2;
+      sensorPermutations[4]=1;
+      sensorPermutations[5]=0;      
+    }
+    if(niter==_numIterations+1){
+      sensorPermutations[0]=4;
+      sensorPermutations[1]=2;
+      sensorPermutations[2]=0;
+      sensorPermutations[3]=3;
+      sensorPermutations[4]=5;
+      sensorPermutations[5]=1;      
+    }    
+    // Print the permutation
+    for(unsigned j=0; j<sensorPermutations.size(); ++j){ std::cout << sensorPermutations.at(j) << " ";}
+    cout << std::endl;
+    
     // Each sensor gets an unbiased residual run, and there is an extra run for overall alignment
     for (unsigned int nsensor = 0; nsensor < _refDevice->getNumSensors(); nsensor++)
     {
@@ -65,7 +84,7 @@ void FineAlign::loop()
       const unsigned int numPixX = (niter == 0) ? _numPixXBroad : _numPixX;
       const double binxPerPix = (niter == 0) ? _binsPerPixBroad : _binsPerPix;
 
-      Analyzers::Residuals residuals(_refDevice, 0, "", numPixX, binxPerPix, _numBinsY);
+      Analyzers::Residuals residuals(_refDevice, 0, "", numPixX, binxPerPix, _numBinsY); // create residual plots
 
       // Use events with only 1 track
       Analyzers::Cuts::EventTracks* cut1 =
@@ -80,6 +99,7 @@ void FineAlign::loop()
       residuals.addCut(cut1);
       residuals.addCut(cut2);
 
+      // iterate events
       for (ULong64_t nevent = _startEvent; nevent <= _endEvent; nevent++)
       {
         Storage::Event* refEvent = _refStorage->readEvent(nevent);
@@ -87,7 +107,7 @@ void FineAlign::loop()
         if (refEvent->getNumClusters())
           throw "FineAlign: can't recluster an event, mask the tree in the input";
         for (unsigned int nplane = 0; nplane < refEvent->getNumPlanes(); nplane++)
-          _clusterMaker->generateClusters(refEvent, nplane);
+          _clusterMaker->generateClusters(refEvent, nplane); // make clusters in the plane
 
         Processors::applyAlignment(refEvent, _refDevice);
 
@@ -96,7 +116,7 @@ void FineAlign::loop()
         _trackMaker->generateTracks(refEvent,
                                     _refDevice->getBeamSlopeX(),
                                     _refDevice->getBeamSlopeY(),
-                                    nsens);
+                                    nsens); // This is the masked plane, which is looped over.
 
         // For the average track slopes
         for (unsigned int ntrack = 0; ntrack < refEvent->getNumTracks(); ntrack++)
@@ -125,7 +145,7 @@ void FineAlign::loop()
       sensor->setRotZ(sensor->getRotZ() + rotation);
     }
 
-    // Ajudst the device rotation using the average slopes
+    // Adjust the device rotation using the average slopes
     avgSlopeX /= (double)numSlopes;
     avgSlopeY /= (double)numSlopes;
     _refDevice->setBeamSlopeX(_refDevice->getBeamSlopeX() + avgSlopeX);
@@ -152,7 +172,7 @@ FineAlign::FineAlign(Mechanics::Device* refDevice,
                      Storage::StorageIO* refInput,
                      ULong64_t startEvent,
                      ULong64_t numEvents,
-                     unsigned int eventSkip) :
+                     Long64_t eventSkip) :
   Looper(refInput, 0, startEvent, numEvents, eventSkip),
   _refDevice(refDevice),
   _clusterMaker(clusterMaker),

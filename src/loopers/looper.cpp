@@ -60,7 +60,7 @@ Looper::Looper(Storage::StorageIO* refStorage,
                Storage::StorageIO* dutStorage,
                ULong64_t startEvent,
                ULong64_t numEvents,
-               unsigned int eventSkip) :
+               Long64_t eventSkip) :
   _refStorage(refStorage),
   _dutStorage(dutStorage),
   _startEvent(startEvent),
@@ -77,8 +77,10 @@ Looper::Looper(Storage::StorageIO* refStorage,
   if (_dutStorage && (Long64_t)_totalEvents > _dutStorage->getNumEvents())
     _totalEvents = _dutStorage->getNumEvents();
 
-  if (_eventSkip < 1)
-    throw "Looper: event skip can't be smaller than 1";
+  //if (_eventSkip < 1)
+  // throw "Looper: event skip can't be smaller than 1";
+  if (int(_eventSkip) - int(_startEvent) < 1)
+    throw "Looper: event skip can't be smaller than startEvent";  
   if (_startEvent >= _totalEvents)
     throw "Looper: start event exceeds storage file";
 

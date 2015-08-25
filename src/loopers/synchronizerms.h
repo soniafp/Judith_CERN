@@ -1,7 +1,8 @@
-#ifndef SYNCHRONIZE_H
-#define SYNCHRONIZE_H
+#ifndef SYNCHRONIZERMS_H
+#define SYNCHRONIZERMS_H
 
 #include "looper.h"
+#include "../analyzers/dutcorrelation.h"
 
 #include <TH1D.h>
 
@@ -9,17 +10,17 @@ namespace Storage { class StorageIO; }
 namespace Mechanics { class Device; }
 namespace Processors { class ClusterMaker; }
 namespace Processors { class TrackMaker; }
-namespace Analyzers { class SyncFluctuation; }
 
 namespace Loopers {
 
-class Synchronize : public Looper
+class SynchronizeRMS : public Looper
 {
 private:
   Mechanics::Device* _refDevice;
   Mechanics::Device* _dutDevice;
   Storage::StorageIO* _refOutput;
   Storage::StorageIO* _dutOutput;
+  Processors::ClusterMaker* _clusterMaker;  
 
   double _threshold;
   unsigned int _syncRatioSample;
@@ -30,30 +31,29 @@ private:
   bool _displayDistributions;
   unsigned int _maxConsecutiveFails;
 
-  Analyzers::SyncFluctuation* setupAnalyzer();
   void displaySyncPlots(TH1D* syncHist, TH1D* unsyncHist);
   unsigned int  syncRatioLoop(ULong64_t start, ULong64_t num,
                               unsigned int refOffset, unsigned int dutOffset);
-  bool findLargeOffset(unsigned int nevent,
-                       unsigned int& refShift,
-                       unsigned int& dutShift);
 
 public:
-  Synchronize(/* Use if you need mechanics (noise mask, pixel arrangement ...) */
+  SynchronizeRMS(/* Use if you need mechanics (noise mask, pixel arrangement ...) */
               Mechanics::Device* refDevice,
               Mechanics::Device* dutDevice,
+	      // clusters
+	      Processors::ClusterMaker* clusterMaker,
               /* Use if you will use the input to generate a new output (processing) */
               Storage::StorageIO* refOutput,
               Storage::StorageIO* dutOutput,
               /* These arguments are needed to be passed to the base looper class */
               Storage::StorageIO* refInput,
               Storage::StorageIO* dutInput,
+	      
               ULong64_t startEvent = 0,
               ULong64_t numEvents = 0,
               Long64_t eventSkip = 1);
 
   void loop();
-  void calculateSyncRatio();
+  bool isSync(Analyzers::DUTCorrelation *correlation);
 
   void setThreshold(double threshold);
   void setSyncSample(unsigned int value);

@@ -4,7 +4,7 @@ LFLAGS = `root-config --ldflags --glibs` -lMathCore -O1
 OBJPATH = obj
 SRCPATH = src
 EXECUTABLE = Judith
-OBJECTS = $(OBJPATH)/configparser.o $(OBJPATH)/inputargs.o $(OBJPATH)/main.o $(OBJPATH)/clusterinfo.o $(OBJPATH)/configanalyzers.o $(OBJPATH)/correlation.o $(OBJPATH)/depiction.o $(OBJPATH)/dualanalyzer.o $(OBJPATH)/dutcorrelation.o $(OBJPATH)/dutdepiction.o $(OBJPATH)/dutresiduals.o $(OBJPATH)/efficiency.o $(OBJPATH)/eventinfo.o $(OBJPATH)/exampledualanalyzer.o $(OBJPATH)/examplesingleanalyzer.o $(OBJPATH)/hitinfo.o $(OBJPATH)/matching.o $(OBJPATH)/occupancy.o $(OBJPATH)/residuals.o $(OBJPATH)/singleanalyzer.o $(OBJPATH)/syncfluctuation.o $(OBJPATH)/trackinfo.o $(OBJPATH)/kartelconvert.o $(OBJPATH)/analysis.o $(OBJPATH)/analysisdut.o $(OBJPATH)/applymask.o $(OBJPATH)/chi2align.o $(OBJPATH)/coarsealign.o $(OBJPATH)/coarsealigndut.o $(OBJPATH)/configloopers.o $(OBJPATH)/examplelooper.o $(OBJPATH)/finealign.o $(OBJPATH)/finealigndut.o $(OBJPATH)/looper.o $(OBJPATH)/noisescan.o $(OBJPATH)/processevents.o $(OBJPATH)/synchronize.o $(OBJPATH)/alignment.o $(OBJPATH)/configmechanics.o $(OBJPATH)/device.o $(OBJPATH)/noisemask.o $(OBJPATH)/sensor.o $(OBJPATH)/clustermaker.o $(OBJPATH)/configprocessors.o $(OBJPATH)/eventdepictor.o $(OBJPATH)/largesynchronizer.o $(OBJPATH)/processors.o $(OBJPATH)/synchronizer.o $(OBJPATH)/trackmaker.o $(OBJPATH)/trackmatcher.o $(OBJPATH)/cluster.o $(OBJPATH)/event.o $(OBJPATH)/hit.o $(OBJPATH)/plane.o $(OBJPATH)/storageio.o $(OBJPATH)/track.o 
+OBJECTS = $(OBJPATH)/configparser.o $(OBJPATH)/inputargs.o $(OBJPATH)/main.o $(OBJPATH)/clusterinfo.o $(OBJPATH)/configanalyzers.o $(OBJPATH)/correlation.o $(OBJPATH)/depiction.o $(OBJPATH)/dualanalyzer.o $(OBJPATH)/dutcorrelation.o $(OBJPATH)/dutdepiction.o $(OBJPATH)/dutresiduals.o $(OBJPATH)/efficiency.o $(OBJPATH)/eventinfo.o $(OBJPATH)/exampledualanalyzer.o $(OBJPATH)/examplesingleanalyzer.o $(OBJPATH)/hitinfo.o $(OBJPATH)/matching.o $(OBJPATH)/occupancy.o $(OBJPATH)/residuals.o $(OBJPATH)/singleanalyzer.o $(OBJPATH)/syncfluctuation.o $(OBJPATH)/trackinfo.o $(OBJPATH)/kartelconvert.o $(OBJPATH)/analysis.o $(OBJPATH)/analysisdut.o $(OBJPATH)/applymask.o $(OBJPATH)/chi2align.o $(OBJPATH)/coarsealign.o $(OBJPATH)/coarsealigndut.o $(OBJPATH)/configloopers.o $(OBJPATH)/examplelooper.o $(OBJPATH)/finealign.o $(OBJPATH)/finealigndut.o $(OBJPATH)/looper.o $(OBJPATH)/noisescan.o $(OBJPATH)/processevents.o $(OBJPATH)/synchronize.o $(OBJPATH)/synchronizerms.o $(OBJPATH)/alignment.o $(OBJPATH)/configmechanics.o $(OBJPATH)/device.o $(OBJPATH)/noisemask.o $(OBJPATH)/sensor.o $(OBJPATH)/clustermaker.o $(OBJPATH)/configprocessors.o $(OBJPATH)/eventdepictor.o $(OBJPATH)/largesynchronizer.o $(OBJPATH)/processors.o $(OBJPATH)/synchronizer.o $(OBJPATH)/trackmaker.o $(OBJPATH)/trackmatcher.o $(OBJPATH)/cluster.o $(OBJPATH)/event.o $(OBJPATH)/hit.o $(OBJPATH)/plane.o $(OBJPATH)/storageio.o $(OBJPATH)/track.o 
 all: Judith
 
 Judith: $(OBJECTS)
@@ -120,6 +120,9 @@ $(OBJPATH)/processevents.o: $(SRCPATH)/loopers/processevents.cpp
 
 $(OBJPATH)/synchronize.o: $(SRCPATH)/loopers/synchronize.cpp
 	$(CC) $(CFLAGS) -c $(SRCPATH)/loopers/synchronize.cpp -o $(OBJPATH)/synchronize.o
+
+$(OBJPATH)/synchronizerms.o: $(SRCPATH)/loopers/synchronizerms.cpp
+	$(CC) $(CFLAGS) -c $(SRCPATH)/loopers/synchronizerms.cpp -o $(OBJPATH)/synchronizerms.o
 
 $(OBJPATH)/alignment.o: $(SRCPATH)/mechanics/alignment.cpp
 	$(CC) $(CFLAGS) -c $(SRCPATH)/mechanics/alignment.cpp -o $(OBJPATH)/alignment.o
