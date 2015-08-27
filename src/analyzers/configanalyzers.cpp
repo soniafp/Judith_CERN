@@ -124,6 +124,8 @@ void parseCut(const ConfigParser::Row* row,
       cut = new Cuts::ClusterPosY(value, type);
     else if (!variable.compare("matchdist"))
       cut = new Cuts::ClusterMatch(value, type);
+    else if (!variable.compare("ToverV"))
+      cut = new Cuts::ClusterToverV(value, type);    
     else
       throw "Analyzers: invalid cluster cut variable";
 

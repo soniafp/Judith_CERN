@@ -214,6 +214,21 @@ public:
   }
 };
 
+class ClusterToverV : public ClusterCut
+{
+private:
+  const unsigned int _value;
+public:
+  ClusterToverV(unsigned int value, Type type) : ClusterCut(type), _value(value) { }
+  inline bool check(const Storage::Cluster* cluster) const
+  {
+    if (_type == EQ && cluster->getToverV() != _value) return false;
+    if (_type == LT && cluster->getToverV() > _value) return false;
+    if (_type == GT && cluster->getToverV() < _value) return false;
+    return true;
+  }
+};
+
 class ClusterHits : public ClusterCut
 {
 private:

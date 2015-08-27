@@ -32,6 +32,10 @@ private:
   std::vector<TH2D*> _trackRes;
   std::vector<TH2D*> _trackResHit;
   std::vector<TH2D*> _trackResEff;
+
+  std::vector<TH2D*> _trackResCharge;
+  std::vector<TH2D*> _trackResTime;  
+  std::vector<TH2D*> _hitTimeVsCharge;    
   
   std::vector<TH2D*> _dutHitEff;  
   std::vector<TH1D*> _amplDist;

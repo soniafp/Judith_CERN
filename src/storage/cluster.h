@@ -72,6 +72,7 @@ public:
   inline double getTiming() const { return _timing; }
   inline double getValue() const { return _value; }
   inline double getMatchDistance() const { return _matchDistance; }
+  inline double getToverV() const { if(_value!=0.0) return _timing/_value; else return 0.0; }  
   inline int getIndex() const { return _index; }
 
   friend class Plane;     // Needs to use the set plane method

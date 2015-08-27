@@ -94,6 +94,10 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
 	//std::cout << "getclustX: " << cluster->getPosX() << " tx: " << tx << std::endl;
 	//std::cout << "getclustY: " << cluster->getPosY() << " ty: " << ty << std::endl;	
 	_trackResHit.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY());
+
+	_trackResCharge.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY(), cluster->getValue());
+	_trackResTime.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY(), cluster->getTiming());
+	_hitTimeVsCharge.at(nsensor)->Fill(cluster->getValue(), cluster->getTiming());
       } // end cluster loop
 
     }
@@ -347,6 +351,18 @@ void Efficiency::postProcessing()
     htmp_res->SetDirectory(_trackRes.at(nplane)->GetDirectory());
     _trackResEff.push_back(htmp_res);
   }
+
+  for(unsigned nplane = 0; nplane<_trackResCharge.size(); ++nplane){
+    for(unsigned i=0; i<_trackResCharge.at(nplane)->GetNbinsX(); ++i ){
+      for(unsigned j=0; j<_trackResCharge.at(nplane)->GetNbinsY(); ++j ){      
+	float entries = float(_trackResHit.at(nplane)->GetBinContent(i,j));
+	if (entries>0.0){
+	  _trackResCharge.at(nplane)->SetBinContent(i,j, _trackResCharge.at(nplane)->GetBinContent(i,j)/entries);
+	  _trackResTime.at(nplane)->SetBinContent(i,j, _trackResTime.at(nplane)->GetBinContent(i,j)/entries);	  
+	}
+      }
+    }
+  }
   
   _postProcessed = true;
 }
@@ -546,6 +562,55 @@ Efficiency::Efficiency(const Mechanics::Device* refDevice,
 
     trackOcc->SetDirectory(plotDir);
     _trackOcc.push_back(trackOcc);
+
+
+    // Average Charge 
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         <<  "DUTCharge" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+          << " Charge "
+          << ";X position [" << _dutDevice->getSpaceUnit() << "]"
+          << ";Y position [" << _dutDevice->getSpaceUnit() << "]"
+          << ";Tracks";
+    TH2D* trackResCharge = new TH2D(name.str().c_str(), title.str().c_str(),
+			      4*pixBinsX, -2.0*num_pixels*sensor->getPitchX(), 2.0*num_pixels*sensor->getPitchX(),
+			      4*pixBinsY, -2.0*num_pixels*sensor->getPitchY(), 2.0*num_pixels*sensor->getPitchY());
+
+    trackResCharge->SetDirectory(plotDir);
+    _trackResCharge.push_back(trackResCharge);
+
+    // Average time to collect charge
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         <<  "DUTTime" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+          << " Time "
+          << ";X position [" << _dutDevice->getSpaceUnit() << "]"
+          << ";Y position [" << _dutDevice->getSpaceUnit() << "]"
+          << ";Tracks";
+    TH2D* trackResTime = new TH2D(name.str().c_str(), title.str().c_str(),
+			      4*pixBinsX, -2.0*num_pixels*sensor->getPitchX(), 2.0*num_pixels*sensor->getPitchX(),
+			      4*pixBinsY, -2.0*num_pixels*sensor->getPitchY(), 2.0*num_pixels*sensor->getPitchY());
+
+    trackResTime->SetDirectory(plotDir);
+    _trackResTime.push_back(trackResTime);
+
+    // Average time to collect charge
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         <<  "TimeVsCharge" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+          << " TimeVsCharge "
+          << "; Time " 
+          << "; Charge " 
+          << ";Tracks";
+    TH2D* hitTimeVsCharge = new TH2D(name.str().c_str(), title.str().c_str(),
+			      100, -0.1, 0.2,
+			      100, 0.0, 1000.0);
+
+    hitTimeVsCharge->SetDirectory(plotDir);
+    _hitTimeVsCharge.push_back(hitTimeVsCharge);      
 
     // Track occupancy extrapolated to DUT position
     name.str(""); title.str("");
