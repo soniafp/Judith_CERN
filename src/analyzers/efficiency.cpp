@@ -30,6 +30,7 @@
 #define VERBOSE 1
 #endif
 
+//using namespace std;
 using std::cout;
 using std::endl;
 
@@ -52,6 +53,75 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
       _amplDist.at(nsensor)->Fill( hit->getValue() );
     }
   }
+
+  //
+  // Fill occupancy based
+  //
+  bool pass_track_selection = false;
+  for (unsigned int ntrack = 0; ntrack < refEvent->getNumTracks(); ntrack++)
+  {
+    Storage::Track* track = refEvent->getTrack(ntrack);
+
+    // Check if the track passes the cuts
+    bool pass = true;
+    for (unsigned int ncut = 0; ncut < _numTrackCuts; ncut++)
+      if (!_trackCuts.at(ncut)->check(track)) { pass = false; break; }
+    if (!pass) continue;
+    
+    pass_track_selection=true;
+
+    for (unsigned int nsensor = 0; nsensor < _dutDevice->getNumSensors(); nsensor++)
+    {
+      Mechanics::Sensor* sensor = _dutDevice->getSensor(nsensor);
+
+      double tx = -9999.0, ty = -9999.0, tz = -9999.0;
+      Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
+      
+      // Fill Track occupancy at DUT
+      _trackOcc.at(nsensor)->Fill(tx - sensor->getOffX(), ty - sensor->getOffY());
+      _trackRes.at(nsensor)->Fill(tx - sensor->getOffX(), ty - sensor->getOffY());
+
+      // Fill track residual
+      Storage::Plane* plane = dutEvent->getPlane(nsensor);	  
+      for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++){
+	Storage::Cluster* cluster = plane->getCluster(ncluster);	  
+
+	// Check if the cluster passes the cuts
+	bool cluster_pass = true;
+	for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
+	  if (!_clusterCuts.at(ncut)->check(cluster)) { cluster_pass = false; break; }
+	if (!cluster_pass) continue;
+	//std::cout << "getclustX: " << cluster->getPosX() << " tx: " << tx << std::endl;
+	//std::cout << "getclustY: " << cluster->getPosY() << " ty: " << ty << std::endl;	
+	_trackResHit.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY());
+      } // end cluster loop
+
+    }
+  }// end track loop
+  
+  // if there is a track, then plot the occupancy
+  if(pass_track_selection){
+    for (unsigned int nplane = 0; nplane < dutEvent->getNumPlanes(); nplane++){
+      Storage::Plane* plane = dutEvent->getPlane(nplane);	  
+      for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++){
+	Storage::Cluster* cluster = plane->getCluster(ncluster);	  
+
+        // Check if the cluster passes the cuts
+        bool pass = true;
+        for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
+          if (!_clusterCuts.at(ncut)->check(cluster)) { pass = false; break; }
+        if (!pass) continue;
+	
+	// DUT hit occupancy
+
+	_dutHitOcc.at(nplane)->Fill(cluster->getPosX() - _dutDevice->getSensor(nplane)->getOffX(), cluster->getPosY() - _dutDevice->getSensor(nplane)->getOffY());
+      }
+    }
+  } // end has a track
+  //
+  // end occupancy filling
+  //
+  
   // Check if the event passes the cuts
   for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
     if (!_eventCuts.at(ncut)->check(refEvent)) return;
@@ -244,12 +314,42 @@ void Efficiency::postProcessing()
     }
   }
 
+  // Compute the Efficiency
+  assert(_dutHitOcc.size()==_trackOcc.size() && "Analyzer::Efficiency: track occupancy different in size from hit occ.");
+  std::stringstream name; // Build name strings for each histo
+  std::stringstream title; // Build title strings for each histo
+  
+  for(unsigned nplane = 0; nplane<_trackOcc.size(); ++nplane){
+    TH2D *htmp = static_cast<TH2D *>(_dutHitOcc.at(nplane)->Clone());
+    htmp->Divide(_trackOcc.at(nplane));
+
+    name.str(""); title.str("");
+    name << "sensor" << nplane << "_"
+         << "hitEff" << _nameSuffix;
+    title << "sensor" << nplane 
+          << " Hit Efficiency";    
+    htmp->SetName(name.str().c_str());
+    htmp->SetTitle(title.str().c_str());
+    htmp->SetDirectory(_dutHitOcc.at(nplane)->GetDirectory());
+    _dutHitEff.push_back(htmp);
+
+    // Track residual
+    TH2D *htmp_res = static_cast<TH2D *>(_trackResHit.at(nplane)->Clone());
+    htmp_res->Divide(_trackRes.at(nplane));
+
+    name.str(""); title.str("");
+    name << "sensor" << nplane << "_"
+         << "TrackResEff" << _nameSuffix;
+    title << "sensor" << nplane 
+          << " Track Residual Efficiency";    
+    htmp_res->SetName(name.str().c_str());
+    htmp_res->SetTitle(title.str().c_str());
+    htmp_res->SetDirectory(_trackRes.at(nplane)->GetDirectory());
+    _trackResEff.push_back(htmp_res);
+  }
+  
   _postProcessed = true;
 }
-
-
-
-
 
 Efficiency::Efficiency(const Mechanics::Device* refDevice,
                        const Mechanics::Device* dutDevice,
@@ -429,6 +529,72 @@ Efficiency::Efficiency(const Mechanics::Device* refDevice,
                                                      pixBinsY, 0, sensor->getPitchY());
     inPixelEfficiency->SetDirectory(plotDir);
     _inPixelEfficiency.push_back(inPixelEfficiency);
+
+    // Track occupancy extrapolated to DUT position
+    float num_pixels = _dutDevice->getNumPixels()==1 ? 5.0 : float(_dutDevice->getNumPixels());
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         <<  "TrackOccupancy" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+          << " Track Occupancy "
+          << ";X position [" << _dutDevice->getSpaceUnit() << "]"
+          << ";Y position [" << _dutDevice->getSpaceUnit() << "]"
+          << ";Tracks";
+    TH2D* trackOcc = new TH2D(name.str().c_str(), title.str().c_str(),
+			      4*pixBinsX, -2.0*num_pixels*sensor->getPitchX(), 2.0*num_pixels*sensor->getPitchX(),
+			      4*pixBinsY, -2.0*num_pixels*sensor->getPitchY(), 2.0*num_pixels*sensor->getPitchY());
+
+    trackOcc->SetDirectory(plotDir);
+    _trackOcc.push_back(trackOcc);
+
+    // Track occupancy extrapolated to DUT position
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         <<  "TrackResidual" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+          << " Track TrackResidual "
+          << ";X position [" << _dutDevice->getSpaceUnit() << "]"
+          << ";Y position [" << _dutDevice->getSpaceUnit() << "]"
+          << ";Tracks";
+    TH2D* trackRes = new TH2D(name.str().c_str(), title.str().c_str(),
+			      4*pixBinsX, -2.0*num_pixels*sensor->getPitchX(), 2.0*num_pixels*sensor->getPitchX(),
+			      4*pixBinsY, -2.0*num_pixels*sensor->getPitchY(), 2.0*num_pixels*sensor->getPitchY());
+
+    trackRes->SetDirectory(plotDir);
+    _trackRes.push_back(trackRes);    
+
+    // Track occupancy extrapolated to DUT position
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         <<  "TrackResidualHit" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+          << " Track TrackResidual Hit "
+          << ";X position [" << _dutDevice->getSpaceUnit() << "]"
+          << ";Y position [" << _dutDevice->getSpaceUnit() << "]"
+          << ";Tracks";
+    TH2D* trackResHit = new TH2D(name.str().c_str(), title.str().c_str(),
+			      4*pixBinsX, -2.0*num_pixels*sensor->getPitchX(), 2.0*num_pixels*sensor->getPitchX(),
+			      4*pixBinsY, -2.0*num_pixels*sensor->getPitchY(), 2.0*num_pixels*sensor->getPitchY());
+
+    trackResHit->SetDirectory(plotDir);
+    _trackResHit.push_back(trackResHit);     
+
+    // DUT hit occupancy
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         <<  "DUTHitOccupancy" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+          << " DUT Hit Occupancy "
+          << ";X position [" << _dutDevice->getSpaceUnit() << "]"
+          << ";Y position [" << _dutDevice->getSpaceUnit() << "]"
+          << ";Tracks";
+    TH2D* dutHitOcc = new TH2D(name.str().c_str(), title.str().c_str(),
+			       4*pixBinsX, -2.0*num_pixels*sensor->getPitchX(), 2.0*num_pixels*sensor->getPitchX(),
+			       4*pixBinsY, -2.0*num_pixels*sensor->getPitchY(), 2.0*num_pixels*sensor->getPitchY());
+
+    dutHitOcc->SetDirectory(plotDir);
+    _dutHitOcc.push_back(dutHitOcc);    
+    
 
     if (_refDevice->getTimeEnd() > _refDevice->getTimeStart()) // If not used, they are both == 0
     {

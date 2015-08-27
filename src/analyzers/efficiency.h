@@ -17,6 +17,7 @@ namespace Analyzers {
 
 class Efficiency : public DualAnalyzer
 {
+  
 private:
   std::vector<TEfficiency*> _efficiencyMap;
   std::vector<TH1D*> _efficiencyDistribution;
@@ -25,6 +26,14 @@ private:
   std::vector<TEfficiency*> _inPixelEfficiency;
   std::vector<TEfficiency*> _inPixelEfficiencyExtended;
   std::vector<TH2D*> _inPixelCCE;
+  std::vector<TH2D*> _trackOcc;
+  std::vector<TH2D*> _dutHitOcc;
+  
+  std::vector<TH2D*> _trackRes;
+  std::vector<TH2D*> _trackResHit;
+  std::vector<TH2D*> _trackResEff;
+  
+  std::vector<TH2D*> _dutHitEff;  
   std::vector<TH1D*> _amplDist;
   std::vector<TH1D*> _amplDistCuts;
   std::vector<TH1D*> _amplDistCommon;

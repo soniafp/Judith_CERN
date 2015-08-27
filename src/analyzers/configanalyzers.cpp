@@ -425,7 +425,7 @@ void configEfficiency(const ConfigParser& config,
 
   bool active = false;
   std::string suffix = "";
-  unsigned int relativeTo = -1;
+  int relativeTo = -1;
   unsigned int pixGroupX = 1;
   unsigned int pixGroupY = 1;
   unsigned int pixBinsX = 20;
