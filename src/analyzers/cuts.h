@@ -47,9 +47,17 @@ public:
 class ClusterCut : public Cut
 {
 public:
-  ClusterCut(Type type = EQ) : Cut(type) { }
+ ClusterCut(Type type = EQ, std::string name="") : Cut(type), _name(name) { }
   virtual ~ClusterCut() { }
   virtual bool check(const Storage::Cluster* cluster) const = 0;
+  virtual double getSlope() { return 0.0; };
+  virtual double getIntercept() { return 0.0; }
+  virtual void setIntercept(const double ) {}
+  virtual void setSlope(const double ) {}
+  
+  std::string _name;
+  std::string getName(){ return _name; }
+
 };
 
 class HitCut : public Cut
@@ -217,17 +225,56 @@ public:
 class ClusterToverV : public ClusterCut
 {
 private:
-  const unsigned int _value;
+  const double _value;
+  double _intercept;
 public:
-  ClusterToverV(unsigned int value, Type type) : ClusterCut(type), _value(value) { }
+ ClusterToverV(double value, Type type, std::string name="") : ClusterCut(type, name), _value(value), _intercept(0.0) { }
   inline bool check(const Storage::Cluster* cluster) const
   {
-    if (_type == EQ && cluster->getToverV() != _value) return false;
-    if (_type == LT && cluster->getToverV() > _value) return false;
-    if (_type == GT && cluster->getToverV() < _value) return false;
+    double val = _intercept + _value*cluster->getValue();
+    // inclusiding the slope
+    if (_type == EQ && cluster->getTiming() != val) return false;
+    if (_type == LT && cluster->getTiming() > val) return false;
+    if (_type == GT && cluster->getTiming() < val) return false;
+    return true;
+  }
+  void setIntercept(const double intercept) { _intercept = intercept; }
+  double getSlope() { return _value; }   
+};
+
+class ClusterT0 : public ClusterCut
+{
+private:
+  const double _value;
+public:
+  ClusterT0(double value, Type type) : ClusterCut(type), _value(value) { }
+  inline bool check(const Storage::Cluster* cluster) const
+  {
+    if (_type == EQ && cluster->getT0() != _value) return false;
+    if (_type == LT && cluster->getT0() > _value) return false;
+    if (_type == GT && cluster->getT0() < _value) return false;
     return true;
   }
 };
+
+class ClusterInterceptTime : public ClusterCut
+{
+private:
+  const double _value;
+  double _slope;
+public:
+ ClusterInterceptTime(double value, Type type, std::string name="") : ClusterCut(type, name), _value(value), _slope(-10.0) { }
+  inline bool check(const Storage::Cluster* cluster) const
+  {
+    double val = _value + _slope*cluster->getValue();
+    if (_type == EQ && cluster->getTiming() != val) return false;
+    if (_type == LT && cluster->getTiming() > val) return false;
+    if (_type == GT && cluster->getTiming() < val) return false;
+    return true;
+  } 
+  void setSlope(const double slope) { _slope = slope; }
+  double getIntercept() { return _value; }   
+}; 
 
 class ClusterHits : public ClusterCut
 {

@@ -124,8 +124,26 @@ void parseCut(const ConfigParser::Row* row,
       cut = new Cuts::ClusterPosY(value, type);
     else if (!variable.compare("matchdist"))
       cut = new Cuts::ClusterMatch(value, type);
-    else if (!variable.compare("ToverV"))
-      cut = new Cuts::ClusterToverV(value, type);    
+    else if (!variable.compare("ToverV")){
+      cut = new Cuts::ClusterToverV(value, type, "ToverV");
+      for(unsigned c=0; c<clusterCuts.size(); ++c){
+	if(clusterCuts.at(c)->getName()=="intercepttime"){
+	  cut->setIntercept(clusterCuts.at(c)->getIntercept());
+	  clusterCuts.at(c)->setSlope(cut->getSlope());
+	}
+      }
+    }
+    else if (!variable.compare("intercepttime")){
+      cut = new Cuts::ClusterInterceptTime(value, type, "intercepttime");
+      for(unsigned c=0; c<clusterCuts.size(); ++c){
+	if(clusterCuts.at(c)->getName()=="ToverV"){
+	  cut->setSlope(clusterCuts.at(c)->getSlope());
+	  clusterCuts.at(c)->setIntercept(cut->getIntercept());
+	}
+      }
+    }
+    else if (!variable.compare("t0"))
+      cut = new Cuts::ClusterT0(value, type);        
     else
       throw "Analyzers: invalid cluster cut variable";
 

@@ -24,6 +24,7 @@ private:
   double _posErrZ;
   double _timing; // The timing of the underlying hits
   double _value; // The total value of all its hits
+  double _t0; // Hit T0
   double _matchDistance; // Distance to matched track
 
   Track* _track; // The track containing this cluster
@@ -57,6 +58,7 @@ public:
   inline void setPixErr(double x, double y) { _pixErrX = x; _pixErrY = y; }
   inline void setPosErr(double x, double y, double z) { _posErrX = x; _posErrY = y; _posErrZ = z; }
   inline void setMatchDistance(double value) { _matchDistance = value; }
+  inline void setT0(double t0) { _t0 = t0; }  
 
   inline unsigned int getNumHits() const { return _numHits; }
   inline double getPixX() const { return _pixX; }
@@ -69,6 +71,7 @@ public:
   inline double getPosErrX() const { return _posErrX; }
   inline double getPosErrY() const { return _posErrY; }
   inline double getPosErrZ() const { return _posErrZ; }
+  inline double getT0() const { return _t0; }  
   inline double getTiming() const { return _timing; }
   inline double getValue() const { return _value; }
   inline double getMatchDistance() const { return _matchDistance; }

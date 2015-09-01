@@ -79,6 +79,7 @@ private:
   Double_t hitPosY[MAX_HITS];
   Double_t hitPosZ[MAX_HITS];
   Double_t hitValue[MAX_HITS];
+  Double_t hitT0[MAX_HITS];  
   Int_t    hitValueInt[MAX_HITS];
   Double_t hitTiming[MAX_HITS];
   Int_t    hitTimingInt[MAX_HITS];
@@ -127,7 +128,8 @@ private:
   TBranch* bHitPosX;
   TBranch* bHitPosY;
   TBranch* bHitPosZ;
-  TBranch* bHitValue;
+  TBranch* bHitT0;
+  TBranch* bHitValue;  
   TBranch* bHitValueInt;
   TBranch* bHitTiming;
   TBranch* bHitTimingInt;

@@ -79,8 +79,10 @@ Looper::Looper(Storage::StorageIO* refStorage,
 
   //if (_eventSkip < 1)
   // throw "Looper: event skip can't be smaller than 1";
-  if (int(_eventSkip) - int(_startEvent) < 1)
-    throw "Looper: event skip can't be smaller than startEvent";  
+  if (int(_eventSkip) - int(_startEvent) < 1){
+    std::cout << "Looper: event skip " << _eventSkip << " can't be smaller than startEvent " << _startEvent << std::endl;
+    throw "Looper: event skip  can't be smaller than startEvent ";
+  }
   if (_startEvent >= _totalEvents)
     throw "Looper: start event exceeds storage file";
 

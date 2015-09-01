@@ -12,6 +12,7 @@
 
 namespace Storage { class Event; }
 namespace Mechanics { class Device; }
+namespace Mechanics { class Sensor; }
 
 namespace Analyzers {
 
@@ -31,9 +32,20 @@ private:
   
   std::vector<TH2D*> _trackRes;
   std::vector<TH2D*> _trackResHit;
+  std::vector<TH2D*> _trackResFine;
+  std::vector<TH2D*> _trackResHitFine;  
   std::vector<TH2D*> _trackResEff;
+  std::vector<TH2D*> _trackResEffFine;  
 
-  std::vector<TH2D*> _trackResCharge;
+  std::vector<TH1D*> _hitResidualxNoCut;
+  std::vector<TH1D*> _hitResidualxCut;
+  std::vector<TH1D*> _hitResidualyNoCut;
+  std::vector<TH1D*> _hitResidualyCut;
+
+  std::vector<TH1D*> _hitT0;
+  
+  std::vector<TH2D*> _trackResT0;
+  std::vector<TH2D*> _trackResCharge;  
   std::vector<TH2D*> _trackResTime;  
   std::vector<TH2D*> _hitTimeVsCharge;    
   
@@ -61,6 +73,8 @@ public:
   void processEvent(const Storage::Event* refEvent,
                     const Storage::Event* dutDevent);
   void postProcessing();
+
+  void printEfficiency(const TH2D* hnum, const TH2D *hden, const Mechanics::Sensor *sensor, const double size_of_dut = 0.8);
 };
 
 }

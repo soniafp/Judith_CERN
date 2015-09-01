@@ -17,6 +17,7 @@ private:
   double _value; // Time over threshold, typically
   int _valueInt; // Time over threshold, typically
   double _timing; // Level 1 accept, typically
+  double _t0; // start of hit detection
 
   Cluster* _cluster; // The cluster containing this hit
 
@@ -40,6 +41,7 @@ public:
   inline void setValue(double value) { _value = value; }
   inline void setValueInt(int value) { _valueInt = value; }
   inline void setTiming(double timing) { _timing = timing; }
+  inline void setT0(double t0) { _t0 = t0; }  
 
   inline unsigned int getPixX() const { return _pixX; }
   inline unsigned int getPixY() const { return _pixY; }
@@ -49,6 +51,7 @@ public:
   inline double getValue() const { return _value; }
   inline int getValueInt() const { return _valueInt; }
   inline double getTiming() const { return _timing; }
+  inline double getT0() const { return _t0; }  
 
   friend class Plane;     // Access set plane method
   friend class Event;     // Access cluster index

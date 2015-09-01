@@ -1,59 +1,59 @@
 [Sensor 0]
-offset x   : 0.000000000
+offset x   : 0.380474630
 offset y   : 0.000000000
 offset z   : 0.000000000
-rotation x : 0.000000000
+rotation x : 0.261799388
 rotation y : 0.000000000
-rotation z : 0.000000000
+rotation z : 0.000294849
 [End Sensor]
 
 [Sensor 1]
-offset x   : 2393.919040284
-offset y   : -208.231205449
+offset x   : 2360.002486770
+offset y   : -206.826975455
 offset z   : 52000.000000000
-rotation x : 0.261799388
+rotation x : 0.000000000
 rotation y : 0.000000000
 rotation z : -1.570796327
 [End Sensor]
 
 [Sensor 2]
-offset x   : 139.746198236
-offset y   : 1611.978443189
+offset x   : 150.332430098
+offset y   : 1561.049303550
 offset z   : 100000.000000000
-rotation x : 0.000000000
+rotation x : -0.261799388
 rotation y : 0.000000000
-rotation z : 0.000000000
+rotation z : 0.000049944
 [End Sensor]
 
 [Sensor 3]
-offset x   : -502.729175875
-offset y   : 835.660684537
+offset x   : -645.834258754
+offset y   : 801.452219194
 offset z   : 444000.000000000
-rotation x : -2.879793266
-rotation y : 0.000000000
+rotation x : -3.141592654
+rotation y : 0.261799388
 rotation z : -1.570796327
 [End Sensor]
 
 [Sensor 4]
-offset x   : 602.119944570
-offset y   : -854.336350577
+offset x   : 595.811170413
+offset y   : -866.310664640
 offset z   : 492000.000000000
 rotation x : -3.141592654
 rotation y : 0.000000000
-rotation z : 0.000000000
+rotation z : -0.001581840
 [End Sensor]
 
 [Sensor 5]
-offset x   : 336.320209775
-offset y   : 1960.979935357
+offset x   : 206.874587837
+offset y   : 1855.563594024
 offset z   : 544000.000000000
-rotation x : -3.403392041
-rotation y : 0.000000000
+rotation x : -3.141592654
+rotation y : -0.261799388
 rotation z : -1.570796327
 [End Sensor]
 
 [Device]
-slope x    : -0.000716146
-slope y    : 0.000609361
+slope x    : -0.000604939
+slope y    : 0.000023958
 [End Device]
 

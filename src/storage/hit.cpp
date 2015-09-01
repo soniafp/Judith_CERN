@@ -19,6 +19,7 @@ void Hit::print()
        << "  Value: " << getValue() << "\n"
        << "  ValueInt: " << getValueInt() << "\n"
        << "  Timing: " << getTiming() << "\n"
+       << "  T0: " << getT0() << "\n"    
        << "  Cluster: " << getCluster() << "\n"
        << "  Plane: "  << getPlane() << endl;
 }
@@ -35,7 +36,7 @@ Plane* Hit::getPlane() const { return _plane; }
 
 Hit::Hit() :
   _pixX(0), _pixY(0), _posX(0), _posY(0), _posZ(0),
-  _value(0), _valueInt(0), _timing(0), _cluster(0), _plane(0)
+  _value(0), _valueInt(0), _timing(0), _t0(0), _cluster(0), _plane(0)
 { }
 
 }

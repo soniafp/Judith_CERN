@@ -106,6 +106,7 @@ Event* StorageIO::readEvent(Long64_t n)
       Hit* hit = event->newHit(nplane);
       hit->setPix(hitPixX[nhit], hitPixY[nhit]);
       hit->setPos(hitPosX[nhit], hitPosY[nhit], hitPosZ[nhit]);
+      hit->setT0(hitT0[nhit]);
       if(hitValueType==kInt)      
 	hitValue[nhit] = (double)hitValueInt[nhit];
       hit->setValue(hitValue[nhit]);
@@ -193,6 +194,7 @@ void StorageIO::writeEvent(Event* event)
       hitPosY[nhit] = hit->getPosY();
       hitPosZ[nhit] = hit->getPosZ();
       hitValue[nhit] = hit->getValue();
+      hitT0[nhit] = hit->getT0();      
       hitTiming[nhit] = hit->getTiming();
       hitInCluster[nhit] = hit->getCluster() ? hit->getCluster()->getIndex() : -1;
     }
@@ -246,6 +248,9 @@ StorageIO::StorageIO(const char* filePath, Mode fileMode, unsigned int numPlanes
   numClusters = 0;
   numTracks = 0;
 
+  for(unsigned nh=0; nh<MAX_CLUSTERS;++nh)
+    hitT0[nh]=-1000.0;
+
   // Plane mask holds a true for masked planes
   if (planeMask && fileMode == OUTPUT)
     throw "StorageIO: can't use a plane mask in output mode";
@@ -274,7 +279,8 @@ StorageIO::StorageIO(const char* filePath, Mode fileMode, unsigned int numPlanes
       hits->Branch("NHits", &numHits, "NHits/I");
       hits->Branch("PixX", hitPixX, "HitPixX[NHits]/I");
       hits->Branch("PixY", hitPixY, "HitPixY[NHits]/I");
-      hits->Branch("Value", hitValue, "HitValue[NHits]/D"); //Matevz 20141203 I to D 
+      hits->Branch("Value", hitValue, "HitValue[NHits]/D"); //Matevz 20141203 I to D
+      hits->Branch("T0", hitT0, "HitDelay[NHits]/D");
       hits->Branch("Timing", hitTiming, "HitTiming[NHits]/D"); //S.F --> I to D
       hits->Branch("HitInCluster", hitInCluster, "HitInCluster[NHits]/I");
       hits->Branch("PosX", hitPosX, "HitPosX[NHits]/D");
@@ -362,7 +368,8 @@ StorageIO::StorageIO(const char* filePath, Mode fileMode, unsigned int numPlanes
         hits->SetBranchAddress("NHits", &numHits, &bNumHits);
         hits->SetBranchAddress("PixX", hitPixX, &bHitPixX);
         hits->SetBranchAddress("PixY", hitPixY, &bHitPixY);
-        
+	if(hits->GetBranch("T0"))
+	   hits->SetBranchAddress("T0", hitT0, &bHitT0);
 	//**************VALUE:
 	TLeaf *la = 0;
 	if(hits->GetBranch("Value")->GetListOfLeaves()) {
