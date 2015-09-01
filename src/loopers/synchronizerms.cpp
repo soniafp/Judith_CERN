@@ -142,6 +142,8 @@ void SynchronizeRMS::loop()
   ULong64_t goodSyncs = 0;
   ULong64_t numConsecutiveFails = 0;
   ULong64_t invalidEvents = 0;
+  ULong64_t invalidEventsDUT = 0;
+  ULong64_t invalidEventsRef = 0;  
   ULong64_t totalReadEvents = 0;
   ULong64_t totalWrittenEvents = 0;
   ULong64_t numConsecutiveSyncs = 0;
@@ -167,7 +169,6 @@ void SynchronizeRMS::loop()
 	// read in events
 	Storage::Event* refEvent = _refStorage->readEvent(nevent);
 	Storage::Event* dutEvent = _dutStorage->readEvent(nevent+_eventSkip-1);    
-
 	if (refEvent->getNumClusters() || dutEvent->getNumClusters())
 	  throw "SynchronizeRMS: can't recluster an event, mask the tree in the input";
 	for (unsigned int nplane = 0; nplane < refEvent->getNumPlanes(); nplane++)
@@ -178,7 +179,19 @@ void SynchronizeRMS::loop()
 	// applies the alignment to the newly created clusters
 	Processors::applyAlignment(refEvent, _refDevice);
 	Processors::applyAlignment(dutEvent, _dutDevice);
-    
+
+	if(dutEvent->getInvalid()){
+	  std::cout << "Invalid Event DUT - skipping" << std::endl;
+	  ++invalidEventsDUT;
+	  continue;
+	}
+
+	if( refEvent->getInvalid()){
+	  std::cout << "Invalid Event Reference - skipping " << std::endl;
+	  ++invalidEventsRef;
+	  continue;
+	}
+	
 	// fill the correlation hists
 	correlation->processEvent(refEvent, dutEvent);
 
@@ -197,9 +210,19 @@ void SynchronizeRMS::loop()
       
       for (unsigned int nevent = _startEvent+evtBlock*iter; nevent <= std::min(_startEvent+evtBlock*iter+evtBlock,_endEvent); ++nevent)
 	{
+	  
 	  // read in events
-	  Storage::Event* refEvent = _refStorage->readEvent(nevent);
-	  Storage::Event* dutEvent = _dutStorage->readEvent(nevent+_eventSkip-1);
+	  Storage::Event* refEvent = _refStorage->readEvent(nevent );
+	  Storage::Event* dutEvent = _dutStorage->readEvent(nevent +_eventSkip-1);
+	  if(dutEvent->getInvalid()){
+	    std::cout << "Invalid Event DUT - skipping writing" << std::endl;
+	    continue;
+	  }
+	  
+	  if( refEvent->getInvalid()){
+	    std::cout << "Invalid Event Reference - skipping writing " << std::endl;
+	    continue;
+	  }
 	  
 	  _refOutput->writeEvent(refEvent);
 	  _dutOutput->writeEvent(dutEvent);
@@ -245,6 +268,8 @@ void SynchronizeRMS::loop()
     cout << "  Failed syncs         : " << failedSyncs << "\n";
     cout << "  Consecutive fails    : " << numConsecutiveFails << "\n";
     cout << "  Invalid events       : " << invalidEvents << "\n";
+    cout << "  Invalid events DUT   : " << invalidEventsDUT << "\n";
+    cout << "  Invalid events Ref   : " << invalidEventsRef << "\n";        
     cout << "  Total read events    : " << totalReadEvents << "\n";
     cout << "  Total written events : " << totalWrittenEvents << "\n";
     cout << flush;
