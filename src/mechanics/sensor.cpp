@@ -262,7 +262,8 @@ double Sensor::getRotZ() const { return _rotZ; }
 double Sensor::getSensitiveX() const { return _sensitiveX; }
 double Sensor::getSensitiveY() const { return _sensitiveY; }
 const Device* Sensor::getDevice() const { return _device; }
-const char* Sensor::getName() const { return _name.c_str(); }
+  //const char* Sensor::getName() const { return _name.c_str(); }
+  const std::string Sensor::getName() const { return _name; }
 
 bool Sensor::sort(const Sensor* s1, const Sensor* s2)
 {

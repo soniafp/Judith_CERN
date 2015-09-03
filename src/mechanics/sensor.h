@@ -92,7 +92,8 @@ public:
   double getPosSensitiveX() const;
   double getPosSensitiveY() const;
   const Device* getDevice() const;
-  const char* getName() const;
+  //const char* getName() const;
+  const std::string getName() const;  
 
   static bool sort(const Sensor* s1, const Sensor* s2);
 };

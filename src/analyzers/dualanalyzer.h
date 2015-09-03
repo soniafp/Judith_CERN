@@ -22,7 +22,7 @@ protected:
   const Mechanics::Device* _refDevice;
   const Mechanics::Device* _dutDevice;
   TDirectory* _dir;
-  const char* _nameSuffix;
+  std::string _nameSuffix;
   bool _postProcessed;
 
   std::vector<const EventCut*> _eventCuts;

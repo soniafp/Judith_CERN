@@ -83,7 +83,8 @@ unsigned int Device::getNumPixels() const
 }
 
 const std::vector<bool>* Device::getSensorMask() const { return &_sensorMask; }
-const char* Device::getName() const { return _name; }
+  //const char* Device::getName() const { return _name; }
+  const std::string Device::getName() const { return _name; }  
 const char* Device::getSpaceUnit() const { return _spaceUnit.c_str(); }
 const char* Device::getTimeUnit() const { return _timeUnit.c_str(); }
 double Device::getClockRate() const { return _clockRate; }

@@ -21,7 +21,7 @@ class SingleAnalyzer
 protected:
   const Mechanics::Device* _device;
   TDirectory* _dir;
-  const char* _nameSuffix;
+  std::string _nameSuffix;
   bool _postProcessed;
 
   std::vector<const EventCut*> _eventCuts;

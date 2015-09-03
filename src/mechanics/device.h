@@ -16,7 +16,8 @@ class Alignment;
 class Device
 {
 private:
-  const char* _name;
+  //const char* _name;
+  std::string _name;
   double _clockRate;
   unsigned int _readOutWindow;
   std::string _spaceUnit;
@@ -60,7 +61,7 @@ public:
   unsigned int getNumPixels() const;
 
   const std::vector<bool>* getSensorMask() const;
-  const char* getName() const;
+  const std::string getName() const;
   const char* getSpaceUnit() const;
   const char* getTimeUnit() const;
   double getClockRate() const;
