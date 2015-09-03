@@ -133,8 +133,18 @@ def Fit(_suffix=''):
     
     ring = twoD.Clone()
 
-    midX=twoD.GetNbinsX()/2+int(1.5)
-    midY=twoD.GetNbinsY()/2+int(12.2)
+    can = ROOT.TCanvas("c2","c2",100,10,800,600);
+    can.cd()
+    twoD.Draw('colz')
+    can.Update()
+    can.WaitPrimitive() 
+    t1 = raw_input('input the x shift. typically the x-mean: ')
+    t2 = raw_input('input the y shift. typically the y-mean: ')
+    xshift = float(t1)
+    yshift = float(t2)
+    
+    midX=twoD.GetNbinsX()/2+int(xshift)
+    midY=twoD.GetNbinsY()/2+int(yshift)
     for i in range(0,midX):
         #sum up and average
         mysum = 0.0
@@ -157,16 +167,10 @@ def Fit(_suffix=''):
             ring.SetBinContent(midX+j,midY+i,mysum/entries)
             ring.SetBinContent(midX+j,midY-i,mysum/entries)
                 
-    can = ROOT.TCanvas("c2","c2",100,10,800,600);
-    can.cd()
 
     ring.GetXaxis().SetRangeUser(-100,100)
     ring.GetYaxis().SetRangeUser(-100,100)
-    ring.SetTitle('DUT Hit Efficiency')
-
-    twoD.Draw('colz')
-    can.Update()
-    can.WaitPrimitive()    
+    ring.SetTitle('DUT Hit Efficiency')   
     
     ring.Draw('colz')
     can.Update()

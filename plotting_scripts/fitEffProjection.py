@@ -131,7 +131,7 @@ def Fit(_suffix=''):
     twoD = f.Get('Efficiency/sensor0_TrackResEffFine')
     
     hx = twoD.ProjectionX("px")
-    hy = twoD.ProjectionY("px")
+    hy = twoD.ProjectionY("py")
     hx.Rebin(rebin)
     hy.Rebin(rebin)
 
