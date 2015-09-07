@@ -126,7 +126,7 @@ def Style():
     ROOT.SetAtlasStyle()
 
 #-----------------------------------------
-def Fit(_file_name='./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutt0.root',_suffix=''):
+def Fit(_file_name='./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutt0.root',_suffix='',_ext='.pdf'):
     WAIT=False
     f = ROOT.TFile.Open(_file_name)
 
@@ -142,7 +142,7 @@ def Fit(_file_name='./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5
     if WAIT:
         can.Update()
         can.WaitPrimitive() 
-    can.SaveAs('twoD_eff_'+_suffix+'.eps')
+    can.SaveAs('twoD_eff_'+_suffix+_ext)
     
     twoDcoarse.SetTitle('Hit Efficiency Coarse Binning')
     twoDcoarse.GetXaxis().SetRangeUser(-100,100)
@@ -151,7 +151,7 @@ def Fit(_file_name='./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5
     if WAIT:
         can.Update()
         can.WaitPrimitive() 
-    can.SaveAs('twoD_coarse_eff_'+_suffix+'.eps')
+    can.SaveAs('twoD_coarse_eff_'+_suffix+_ext)
 
     # draw average T0
     t0 = f.Get('Efficiency/DUTPlane0DUTT0')
@@ -163,17 +163,18 @@ def Fit(_file_name='./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5
     if WAIT:
         can.Update()
         can.WaitPrimitive() 
-    can.SaveAs('t0_2d_'+_suffix+'.eps')
+    can.SaveAs('t0_2d_'+_suffix+_ext)
     
     # draw average charge
     charge = f.Get('Efficiency/DUTPlane0DUTCharge')
     charge.GetXaxis().SetRangeUser(-100,100)
-    charge.GetYaxis().SetRangeUser(-100,100)     
+    charge.GetYaxis().SetRangeUser(-100,100)
+    chargeGetXaxis().SetTitle('Signal Size [V]')     
     charge.Draw('colz')
     if WAIT:
         can.Update()
         can.WaitPrimitive() 
-    can.SaveAs('charge_2d_'+_suffix+'.eps')    
+    can.SaveAs('charge_2d_'+_suffix+_ext)    
 
     # draw 1D T0
     t0 = f.Get('Efficiency/DUTPlane0HitT0')
@@ -181,17 +182,19 @@ def Fit(_file_name='./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5
     if WAIT:
         can.Update()
         can.WaitPrimitive() 
-    can.SaveAs('t0_2d_'+_suffix+'.eps')
+    can.SaveAs('t0_1d_'+_suffix+_ext)
     
     # draw time versus charge
     TvsC = f.Get('Efficiency/DUTPlane0TimeVsCharge')
     TvsC.GetXaxis().SetRangeUser(0.0,0.1)
     TvsC.GetYaxis().SetRangeUser(0.0,500.0)
+    TvsC.GetYaxis().SetTitle('Time [ns]')
+    chargeGetXaxis().SetTitle('Signal Size [V]')
     TvsC.Draw('colz')
     if WAIT:
         can.Update()
         can.WaitPrimitive() 
-    can.SaveAs('TvsC_'+_suffix+'.eps')
+    can.SaveAs('TvsC_'+_suffix+_ext)
 
     leg = ROOT.TLegend(0.6, 0.5, 0.8, 0.8)        
     leg.SetBorderSize(0)
@@ -206,7 +209,7 @@ def Fit(_file_name='./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5
     wCut.SetMarkerColor(2)
     leg.AddEntry(noCut,'No Cuts')
     leg.AddEntry(wCut,'With Cuts')
-    noCut.GetXaxis().SetRangeUser(0.1,2000)
+    noCut.GetYaxis().SetRangeUser(0.5,2000)
     can.SetLogy(True)
     noCut.Draw()
     wCut.Draw('same')
@@ -214,16 +217,16 @@ def Fit(_file_name='./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5
     if WAIT:
         can.Update()
         can.WaitPrimitive() 
-    can.SaveAs('resX_'+_suffix+'.eps')
+    can.SaveAs('resX_'+_suffix+_ext)
 
     # overlay the residuals
     noCuty = f.Get('Efficiency/DUTPlane0HitResidualyNoCut')
     wCuty = f.Get('Efficiency/DUTPlane0HitResidualyCut')
-    noCut.SetLineColor(1)   
-    noCut.SetMarkerColor(1)    
+    noCuty.SetLineColor(1)   
+    noCuty.SetMarkerColor(1)    
     wCuty.SetLineColor(2)
     wCuty.SetMarkerColor(2)
-    noCut.GetXaxis().SetRangeUser(0.1,2000)
+    noCut.GetYaxis().SetRangeUser(0.5,2000)
     can.SetLogy(True)      
     noCuty.Draw()
     wCuty.Draw('same')
@@ -231,7 +234,7 @@ def Fit(_file_name='./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5
     if WAIT:
         can.Update()
         can.WaitPrimitive() 
-    can.SaveAs('resY_'+_suffix+'.eps')      
+    can.SaveAs('resY_'+_suffix+_ext)      
         
 #Style()
 setPlotDefaults(ROOT)
@@ -239,6 +242,14 @@ Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sy
 
 Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutslope.root','60V_slope')
 
-Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutt0.root','90V_slope')
+Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutslope.root','90V_slope')
 
-Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutslope.root','90V_cutt0')
+Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutt0.root','90V_cutt0')
+
+Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result.root','90V_nocut')
+
+Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result.root','60V_nocut')
+Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result.root','120V_nocut1')
+Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings2_sync_analysis-result.root','120V_nocut2')
+
+

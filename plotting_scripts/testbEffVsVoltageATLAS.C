@@ -62,8 +62,10 @@ void testbEffVsVoltageATLAS(bool config = true)
   ///Graph 1 -- 25% pixel size
   const Int_t n1 = 3;
   Double_t x1[n1]  = {60, 90, 120};
-  Double_t y1[n1]  = { 0.439011,0.812868, 0.895039};
-  Double_t ey1[n1] = {0.00666625, 0.0056554, 0.00700407};
+  //Double_t y1[n1]  = { 0.439011,0.812868, 0.895039};
+  //Double_t y1[n1]  = { 0.456,0.853522, 0.942};
+  Double_t y1[n1]  = { 0.660,0.863522, 0.942};    
+  Double_t ey1[n1] = {0.20666625, 0.1056554, 0.10700407};
   TGraphErrors *gr1 = new TGraphErrors(n1,x1,y1,ey1);
   gr1->SetName("gr1");
   gr1->SetTitle("Hit detection efficiency vs Voltage");
@@ -86,8 +88,10 @@ void testbEffVsVoltageATLAS(bool config = true)
   
   const Int_t n2 = 3;
   Double_t x2[n2]  = {60, 90, 120};
-  Double_t y2[n2]  = { 0.387501,0.720055, 0.790867};
-  Double_t ey2[n2] = {0.00451383, 0.00446148, 0.0063383};
+  //Double_t y2[n2]  = { 0.387501,0.720055, 0.790867};
+  //Double_t y2[n2]  = {0.39 , 0.731, 0.815}; // off by 6um
+  Double_t y2[n2]  = {0.407 , 0.739, 0.815};    
+  Double_t ey2[n2] = {0.1045383, 0.10446148, 0.1063383};
   TGraphErrors *gr2 = new TGraphErrors(n2,x2,y2,ey2);
   gr2->SetName("gr2");
   gr2->SetMarkerColor(2);
@@ -103,7 +107,7 @@ void testbEffVsVoltageATLAS(bool config = true)
     TLegend *leg = new TLegend(0.45, 0.3, 0.85, 0.5);
     leg->SetBorderSize(0);
     leg->SetFillStyle(0);
-    leg->AddEntry(gr1, "20% Pixel Size");
+    leg->AddEntry(gr1, "36% Pixel Size");
     leg->AddEntry(gr2, "80% Pixel Size");
     leg->Draw();
     

@@ -127,8 +127,10 @@ def Style():
 
 def Fit(_suffix=''):
     rebin=2
-    #f = ROOT.TFile.Open('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result.root')
-    f = ROOT.TFile.Open('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result.root')
+    f = ROOT.TFile.Open('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result.root')
+    #f = ROOT.TFile.Open('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutslope.root')
+    #f = ROOT.TFile.Open('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result.root')
+    #f = ROOT.TFile.Open('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result.root')
     twoD = f.Get('Efficiency/sensor0_TrackResEffFine')
     
     ring = twoD.Clone()
@@ -142,43 +144,57 @@ def Fit(_suffix=''):
     t2 = raw_input('input the y shift. typically the y-mean: ')
     xshift = float(t1)
     yshift = float(t2)
-    
+    bin_width=5
     midX=twoD.GetNbinsX()/2+int(xshift)
     midY=twoD.GetNbinsY()/2+int(yshift)
-    for i in range(0,midX):
+    for q in range(0,int(midX/float(bin_width))):
+    #for q in range(0,midX):
+        #i=q*bin_width
         #sum up and average
         mysum = 0.0
         entries = 0.0
-        for j in range(-i,i+1):
-            entries+=4.0
-            mysum+=twoD.GetBinContent(midX+i,midY+j)
-            mysum+=twoD.GetBinContent(midX-i,midY+j)
-            if j!=i and j!=-1:
-                mysum+=twoD.GetBinContent(midX+j,midY+i)
-                mysum+=twoD.GetBinContent(midX+j,midY-i)
-            else:
-                entries-=1
+        for i in range(q*bin_width,(q+1)*bin_width):
+            for j in range(-i,i+1):
+                entries+=4.0
+                mysum+=twoD.GetBinContent(midX+i,midY+j)
+                mysum+=twoD.GetBinContent(midX-i,midY+j)
+                if j!=i and j!=-1:
+                    mysum+=twoD.GetBinContent(midX+j,midY+i)
+                    mysum+=twoD.GetBinContent(midX+j,midY-i)
+                else:
+                    entries-=1
+
+        if bin_width!=1 and q==1:
+            mysum+=twoD.GetBinContent(midX,midY)
+            entries+=1
         if entries==0.0:
             entries+=1.0
-        for j in range(-i,i+1):
-            ring.SetBinContent(midX+i,midY+j,mysum/entries)
-            ring.SetBinContent(midX-i,midY+j,mysum/entries)
-            #if j!=i and j!=-1:
-            ring.SetBinContent(midX+j,midY+i,mysum/entries)
-            ring.SetBinContent(midX+j,midY-i,mysum/entries)
+        for i in range(q*bin_width,(q+1)*bin_width):
+            for j in range(-i,i+1):
+                ring.SetBinContent(midX+i,midY+j,mysum/entries)
+                ring.SetBinContent(midX-i,midY+j,mysum/entries)
+                #if j!=i and j!=-1:
+                ring.SetBinContent(midX+j,midY+i,mysum/entries)
+                ring.SetBinContent(midX+j,midY-i,mysum/entries)
                 
-
+    if bin_width!=1:
+        ring.SetBinContent(midX,midY,ring.GetBinContent(midX+1,midY))
     ring.GetXaxis().SetRangeUser(-100,100)
     ring.GetYaxis().SetRangeUser(-100,100)
     ring.SetTitle('DUT Hit Efficiency')   
-    
+
+    for q in range(0,int(midX/float(bin_width))):
+        if ring.GetBinContent(midX+q*bin_width+1,midY)>0.0:
+            print 'Distance from center: ',q*bin_width+1,' Eff: ',ring.GetBinContent(midX+q*bin_width+1,midY)
+    ring.GetZaxis().SetRangeUser(0.0,0.9)
     ring.Draw('colz')
     can.Update()
     can.WaitPrimitive()
     raw_input('Waiting for you to finish editting')
-    ring.SaveAs('efficiencyRing_'+_suffix+'.eps')
+    can.SaveAs('efficiencyRing_'+_suffix+'.eps')
+    can.SaveAs('efficiencyRing_'+_suffix+'.pdf')    
 
 
 #Style()
 setPlotDefaults(ROOT)
-Fit('90V')
+Fit('60V')
