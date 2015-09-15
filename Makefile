@@ -183,3 +183,5 @@ $(OBJPATH)/track.o: $(SRCPATH)/storage/track.cpp
 
 clean:
 	 rm $(OBJPATH)/*.o Judith
+
+.PHONY: clean

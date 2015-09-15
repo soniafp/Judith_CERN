@@ -1,0 +1,50 @@
+### Project specific ###
+
+# ROOT data files
+*.root
+# Build directory is used only by make
+build/
+# Binaries
+bin/*
+# Ignore documentation build directory
+doc/build
+# Ignore the built PDF
+doc/*.pdf
+# Ignore tests bin directory
+tests/bin*
+# Ignore device configurations
+configs/*.txt
+
+### c++ and system-wide ignores ###
+
+# VIM temporary files
+*.swp
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app

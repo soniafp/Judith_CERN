@@ -127,11 +127,14 @@ def Style():
 
 def Fit(_suffix=''):
     rebin=2
-    f = ROOT.TFile.Open('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result.root')
+    #f = ROOT.TFile.Open('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result.root')
     #f = ROOT.TFile.Open('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutslope.root')
     #f = ROOT.TFile.Open('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result.root')
     #f = ROOT.TFile.Open('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result.root')
-    twoD = f.Get('Efficiency/sensor0_TrackResEffFine')
+    f = ROOT.TFile.Open('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result.root')
+    #twoD = f.Get('Efficiency/sensor0_TrackResEffFine')
+    twoD = f.Get('Efficiency/DUTPlane0TrackResidualHitFine')
+    twoDall = f.Get('Efficiency/DUTPlane0TrackResidualFine')        
     
     ring = twoD.Clone()
 
@@ -155,18 +158,22 @@ def Fit(_suffix=''):
         entries = 0.0
         for i in range(q*bin_width,(q+1)*bin_width):
             for j in range(-i,i+1):
-                entries+=4.0
                 mysum+=twoD.GetBinContent(midX+i,midY+j)
                 mysum+=twoD.GetBinContent(midX-i,midY+j)
+                entries+=twoDall.GetBinContent(midX+i,midY+j)
+                entries+=twoDall.GetBinContent(midX-i,midY+j)                
                 if j!=i and j!=-1:
                     mysum+=twoD.GetBinContent(midX+j,midY+i)
                     mysum+=twoD.GetBinContent(midX+j,midY-i)
-                else:
-                    entries-=1
+                    entries+=twoDall.GetBinContent(midX+j,midY+i)
+                    entries+=twoDall.GetBinContent(midX+j,midY-i)
+                #else:
+                #    entries-=1
 
         if bin_width!=1 and q==1:
             mysum+=twoD.GetBinContent(midX,midY)
-            entries+=1
+            entries+=twoDall.GetBinContent(midX,midY)            
+            #entries+=1
         if entries==0.0:
             entries+=1.0
         for i in range(q*bin_width,(q+1)*bin_width):
@@ -186,7 +193,7 @@ def Fit(_suffix=''):
     for q in range(0,int(midX/float(bin_width))):
         if ring.GetBinContent(midX+q*bin_width+1,midY)>0.0:
             print 'Distance from center: ',q*bin_width+1,' Eff: ',ring.GetBinContent(midX+q*bin_width+1,midY)
-    ring.GetZaxis().SetRangeUser(0.0,0.9)
+    ring.GetZaxis().SetRangeUser(0.0,1.0)
     ring.Draw('colz')
     can.Update()
     can.WaitPrimitive()
@@ -197,4 +204,4 @@ def Fit(_suffix=''):
 
 #Style()
 setPlotDefaults(ROOT)
-Fit('60V')
+Fit('120V')
