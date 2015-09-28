@@ -87,7 +87,8 @@ void chi2Align(const char* inputName, ULong64_t startEvent, ULong64_t numEvents,
 }
 
 void fineAlign(const char* inputName, ULong64_t startEvent, ULong64_t numEvents,
-               const char* deviceCfg, const char* tbCfg)
+	       Long64_t skipEvent,
+               const char* deviceCfg, const char* tbCfg, const char* resultsName)
 {
   try
   {
@@ -99,6 +100,10 @@ void fineAlign(const char* inputName, ULong64_t startEvent, ULong64_t numEvents,
 
     if (device->getAlignment()) device->getAlignment()->readFile();
 
+    TFile* results = 0;
+    if (strlen(resultsName))
+      results = new TFile(resultsName, "RECREATE");
+    
     Processors::TrackMaker* trackMaker = Processors::generateTrackMaker(runConfig, true);
 
     unsigned int treeMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
@@ -107,17 +112,23 @@ void fineAlign(const char* inputName, ULong64_t startEvent, ULong64_t numEvents,
     planeMask.push_back(false);
     planeMask.push_back(false);
     planeMask.push_back(false);
-    //planeMask.push_back(true);
+    planeMask.push_back(true);
     planeMask.push_back(false);
     planeMask.push_back(false);
     planeMask.push_back(false);
     Storage::StorageIO input(inputName, Storage::INPUT, 0, treeMask, &planeMask);
 
     Loopers::FineAlign looper(device, clusterMaker, trackMaker, &input,
-                              startEvent, numEvents);
+                              startEvent, numEvents, skipEvent, results);
     Loopers::configFineAlign(runConfig, looper);
     looper.loop();
 
+    if (results)
+    {
+      results->Write();
+      delete results;
+    }
+    
     delete trackMaker;
     delete device;
     delete clusterMaker;
@@ -129,15 +140,19 @@ void fineAlign(const char* inputName, ULong64_t startEvent, ULong64_t numEvents,
 }
 
 void fineAlignDUT(const char* refInputName, const char* dutInputName,
-                  ULong64_t startEvent, ULong64_t numEvents,
+                  ULong64_t startEvent, ULong64_t numEvents, Long64_t skipEvent,
                   const char* refDeviceCfg, const char* dutDeviceCfg,
-                  const char* tbCfg)
+                  const char* tbCfg, const char* resultsName)
 {
   try
   {
     ConfigParser runConfig(tbCfg);
     Processors::ClusterMaker* clusterMaker = Processors::generateClusterMaker(runConfig);
 
+    TFile* results = 0;
+    if (strlen(resultsName))
+      results = new TFile(resultsName, "RECREATE");
+    
     ConfigParser refConfig(refDeviceCfg);
     Mechanics::Device* refDevice = Mechanics::generateDevice(refConfig);
 
@@ -155,10 +170,17 @@ void fineAlignDUT(const char* refInputName, const char* dutInputName,
     if (dutDevice->getAlignment()) dutDevice->getAlignment()->readFile();
 
     Loopers::FineAlignDut looper(refDevice, dutDevice, clusterMaker, trackMaker,
-                                 &refInput, &dutInput, startEvent, numEvents);
+                                 &refInput, &dutInput, startEvent, numEvents,
+				 skipEvent, results);
     Loopers::configFineAlign(runConfig, looper);
     looper.loop();
 
+    if (results)
+    {
+      results->Write();
+      delete results;
+    }
+    
     delete trackMaker;
     delete refDevice;
     delete dutDevice;
@@ -189,7 +211,7 @@ void coarseAlign(const char* inputName, ULong64_t startEvent, ULong64_t numEvent
     planeMask.push_back(false);
     planeMask.push_back(false);
     planeMask.push_back(false);
-    //planeMask.push_back(true);
+    planeMask.push_back(true);
     planeMask.push_back(false);
     planeMask.push_back(false);
     planeMask.push_back(false);
@@ -703,8 +725,10 @@ int main(int argc, char** argv)
                 inArgs.getInputRef().c_str(),
                 inArgs.getEventOffset(),
                 inArgs.getNumEvents(),
+		inArgs.getSynchroEventsOffset(),
                 inArgs.getCfgRef().c_str(),
-                inArgs.getCfgTestbeam().c_str() );
+                inArgs.getCfgTestbeam().c_str(),
+	        inArgs.getResults().c_str() );
   }
   else if ( !inArgs.getCommand().compare("chi2Align") )
   {
@@ -734,9 +758,11 @@ int main(int argc, char** argv)
                 inArgs.getInputDUT().c_str(),
                 inArgs.getEventOffset(),
                 inArgs.getNumEvents(),
+		inArgs.getSynchroEventsOffset(),
                 inArgs.getCfgRef().c_str(),
                 inArgs.getCfgDUT().c_str(),
-                inArgs.getCfgTestbeam().c_str() );
+                inArgs.getCfgTestbeam().c_str(),
+		inArgs.getResults().c_str());
   }
   else if ( !inArgs.getCommand().compare("process") )
   {

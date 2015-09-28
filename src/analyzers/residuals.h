@@ -20,10 +20,13 @@ private:
   std::vector<TH1D*> _residualsX;
   std::vector<TH1D*> _residualsY;  
   std::vector<TH1D*> _residualsZ;
+  std::vector<TH2D*> _residualsRR;  
   std::vector<TH2D*> _residualsXX;
   std::vector<TH2D*> _residualsXY;
   std::vector<TH2D*> _residualsYY;
   std::vector<TH2D*> _residualsYX;
+
+  double _totResidual;
 
 public:
   Residuals(const Mechanics::Device* refDevice,
@@ -37,6 +40,7 @@ public:
   void processEvent(const Storage::Event* refEvent);
   void postProcessing();
 
+  double GetTotalResidual() {return _totResidual;}
   TH2D* getResidualXX(unsigned int nsensor);
   TH2D* getResidualXY(unsigned int nsensor);
   TH2D* getResidualYY(unsigned int nsensor);

@@ -65,7 +65,16 @@ void Residuals::processEvent(const Storage::Event* refEvent)
         const double rz = tz - cluster->getPosZ();	
         _residualsX.at(nplane)->Fill(rx);
         _residualsY.at(nplane)->Fill(ry);
-        _residualsZ.at(nplane)->Fill(rz);	
+        _residualsZ.at(nplane)->Fill(rz);
+
+	// Compute the rotation difference
+	/*
+	double theta = atan2(ty,tx);
+	double rr = cluster->getPosY()*sin(theta)+cluster->getPosY()*cos(theta);
+	double distR = sqrt(tx*tx+ty*ty);
+        _residualsRR.at(nplane)->Fill(distR, rr);
+	*/
+	_totResidual+=sqrt(rx*rx+ry*ry);
         _residualsXX.at(nplane)->Fill(rx, tx);
         _residualsYY.at(nplane)->Fill(ry, ty);
         _residualsXY.at(nplane)->Fill(rx, ty);
@@ -108,25 +117,47 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
                      double binsPerPix,
                      unsigned int binsY) :
   // Base class is initialized here and manages directory / device
-  SingleAnalyzer(refDevice, dir, suffix)
+  SingleAnalyzer(refDevice, dir, suffix),
+  _totResidual(0.0)
 {
   assert(refDevice && "Analyzer: can't initialize with null device");
 
-  // Makes or gets a directory called from inside _dir with this name
-  TDirectory* dir1d = makeGetDirectory("Residuals1D");
-  TDirectory* dir2d = makeGetDirectory("Residuals2D");
-
   std::stringstream name; // Build name strings for each histo
   std::stringstream title; // Build title strings for each histo
+  
+  // Makes or gets a directory called from inside _dir with this name
+  name.str("");
+  name << "Residuals1D" << suffix;
+  TDirectory* dir1d = makeGetDirectory(name.str().c_str());
+  name.str("");
+  name << "Residuals2D" << suffix;  
+  TDirectory* dir2d = makeGetDirectory(name.str().c_str());
 
   // Generate a histogram for each sensor in the device
   for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++)
   {
     Mechanics::Sensor* sensor = _device->getSensor(nsens);
+    
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+	 <<  "RvsR" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+	  << " R vs. R" 
+	  << ";Track cluster difference R "
+	  << " [" << _device->getSpaceUnit() << "]"
+	  << ";Track position " << "R "
+	  << " [" << _device->getSpaceUnit() << "]"
+	  << ";Clusters / " << 1.0 / binsPerPix << " pixel";
+    TH2D* resRR = new TH2D(name.str().c_str(), title.str().c_str(),
+			   100, 0.0, 400.0,
+			   100, -100.0, 100.0);
+    resRR->SetDirectory(dir2d);
+    _residualsRR.push_back(resRR);
+    
     for (unsigned int axis = 0; axis < 3; axis++)
     {
 // HP try
-      const double width = (axis==2) ? 30.0 : nPixX * 
+      const double width =  (axis==3) ? 30.0 : (axis==2) ? 30.0 : nPixX * 
           (axis ? sensor->getPosPitchX() : sensor->getPosPitchY());
       unsigned int nbins = 2.0 * binsPerPix * nPixX;
       if (!(nbins % 2)) nbins += 1;
@@ -135,10 +166,10 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
       // Generate the 1D residual distribution for the given axis
       name.str(""); title.str("");
       name << sensor->getDevice()->getName() << sensor->getName()
-           << ((axis==2) ? "Z" : (axis) ? "X" : "Y") << _nameSuffix;
+           << ((axis==3) ? "R" : (axis==2) ? "Z" : (axis) ? "X" : "Y") << _nameSuffix;
       title << sensor->getDevice()->getName() << " " << sensor->getName()
-            << ((axis==2) ? "Z" : (axis) ? " X" : " Y")
-            << ";Track cluster difference " << ((axis==2) ? "Z" : axis ? "X" : "Y")
+            << ((axis==3) ? "R" : (axis==2) ? "Z" : (axis) ? " X" : " Y")
+            << ";Track cluster difference " << ((axis==3) ? "R" : (axis==2) ? "Z" : axis ? "X" : "Y")
             << " [" << _device->getSpaceUnit() << "]"
             << ";Clusters / " << 1.0 / binsPerPix << " pixel";
       TH1D* res1d = new TH1D(name.str().c_str(), title.str().c_str(),
@@ -147,9 +178,10 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
       if (axis==1)      _residualsX.push_back(res1d);
       else if(axis==0)  _residualsY.push_back(res1d);
       else if(axis==2)  _residualsZ.push_back(res1d);
+      //else if(axis==3)  _residualsR.push_back(res1d);      
 
       // Generate the XX or YY residual distribution
-      if(axis==2) continue; // Z is not programmed, so we skip it
+      if(axis==2 || axis==3) continue; // Z is not programmed, so we skip it
       
       // The height of this plot depends on the sensor and X or Y axis
       height =  axis ? sensor->getPosSensitiveX() : sensor->getPosSensitiveY(); //(axis==2) ? sensor->getPosSensitiveZ() :

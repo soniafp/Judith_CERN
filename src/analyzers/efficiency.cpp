@@ -840,7 +840,7 @@ Efficiency::Efficiency(const Mechanics::Device* refDevice,
          <<  "HitT0" << _nameSuffix;
     title << sensor->getDevice()->getName() << " " << sensor->getName()
           << " T0 "
-          << ";T_{0} [#mus]"
+          << ";T_{0} [ns]"
           << ";Hits";
     TH1D* hitT0 = new TH1D(name.str().c_str(), title.str().c_str(),
 			   1000,0,1000.0 );

@@ -52,7 +52,7 @@ void testbEffVsVoltageATLAS(bool config = true)
     
   //SetAtlasStyle();
   
-  
+    float scale = 1.0/(1.0-0.03094871794871795);
   
   TCanvas* c1 = new TCanvas("c1","testbeam efficiency",50,50,600,600);
   TMultiGraph *mg = new TMultiGraph();
@@ -64,9 +64,10 @@ void testbEffVsVoltageATLAS(bool config = true)
   Double_t x1[n1]  = {60, 90, 120};
   //Double_t y1[n1]  = { 0.439011,0.812868, 0.895039};
   //Double_t y1[n1]  = { 0.456,0.853522, 0.942};
-  Double_t y1[n1]  = { 0.660,0.863522, 0.942};    
-  Double_t ey1[n1] = {0.20666625, 0.1056554, 0.10700407};
-  TGraphErrors *gr1 = new TGraphErrors(n1,x1,y1,ey1);
+  Double_t y1[n1]  = { 0.660*scale,0.863522*scale, 0.942*scale};    
+  Double_t ey1[n1] = {0.0012, 0.0012, 0.0012};
+  Double_t ex1[n1] = {0.0, 0.0, 0.0};  
+  TGraphErrors *gr1 = new TGraphErrors(n1,x1,y1,ex1,ey1);
   gr1->SetName("gr1");
   gr1->SetTitle("Hit detection efficiency vs Voltage");
     gr1->GetXaxis()->SetTitle("Bias Voltage [V]");
@@ -90,9 +91,10 @@ void testbEffVsVoltageATLAS(bool config = true)
   Double_t x2[n2]  = {60, 90, 120};
   //Double_t y2[n2]  = { 0.387501,0.720055, 0.790867};
   //Double_t y2[n2]  = {0.39 , 0.731, 0.815}; // off by 6um
-  Double_t y2[n2]  = {0.407 , 0.739, 0.815};    
-  Double_t ey2[n2] = {0.1045383, 0.10446148, 0.1063383};
-  TGraphErrors *gr2 = new TGraphErrors(n2,x2,y2,ey2);
+  Double_t y2[n2]  = {0.407*scale , 0.739*scale, 0.815*scale};    
+  Double_t ex2[n2] = {0.0, 0.0, 0.0};
+  Double_t ey2[n2] = {0.0012, 0.0012, 0.0012};  
+  TGraphErrors *gr2 = new TGraphErrors(n2,x2,y2,ex2,ey2);
   gr2->SetName("gr2");
   gr2->SetMarkerColor(2);
     gr2->SetLineColor(2);
@@ -100,9 +102,8 @@ void testbEffVsVoltageATLAS(bool config = true)
     
   gr2->SetLineWidth(2);
   gr2->SetMarkerStyle(21);
-    gr2->Draw("same PL");
+    gr2->Draw("same pl");
   mg->Add(gr2);
-  
     
     TLegend *leg = new TLegend(0.45, 0.3, 0.85, 0.5);
     leg->SetBorderSize(0);

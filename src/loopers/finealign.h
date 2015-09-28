@@ -26,6 +26,8 @@ private:
   bool _displayFits;
   double _relaxation;
 
+  TDirectory* _dir;
+
 public:
   FineAlign(/* Use if you need mechanics (noise mask, pixel arrangement ...) */
             Mechanics::Device* refDevice,
@@ -36,7 +38,8 @@ public:
             Storage::StorageIO* refInput,
             ULong64_t startEvent = 0,
             ULong64_t numEvents = 0,
-            Long64_t eventSkip = 1);
+            Long64_t eventSkip = 1,
+	    TDirectory* dir=0);
 
   void loop();
 

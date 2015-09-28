@@ -4,7 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
-
+#include <sstream>
 #include <Rtypes.h>
 
 #include "../storage/storageio.h"
@@ -39,7 +39,7 @@ void FineAlign::loop()
   // ordered list (just looks less strange if the first iteration is ordered)
   std::prev_permutation(sensorPermutations.begin(), sensorPermutations.end());
 
-  for (unsigned int niter = 0; niter < _numIterations+2; niter++)
+  for (unsigned int niter = 0; niter < _numIterations; niter++) // removed +2
   {
     cout << "Iteration " << niter << " of " << _numIterations - 1 << endl;
 
@@ -84,7 +84,26 @@ void FineAlign::loop()
       const unsigned int numPixX = (niter == 0) ? _numPixXBroad : _numPixX;
       const double binxPerPix = (niter == 0) ? _binsPerPixBroad : _binsPerPix;
 
-      Analyzers::Residuals residuals(_refDevice, 0, "", numPixX, binxPerPix, _numBinsY); // create residual plots
+      // name the directory
+      std::stringstream name; // Build name strings for each histo
+      double my_rotation=0.0;
+      std::vector<double> rot_residuals;
+      for(unsigned rot=0; rot<12; ++rot){
+
+	// setting up the rotations
+	if(rot>0){
+	  my_rotation = (0.02 * (6.0 - double(rot)) / (1.0+double(niter)*3.0));
+	  //if(rot>1){
+	  //  my_rotation=-0.1 * (double(rot)-1.0);
+	  //}
+	  sensor->setRotZ(sensor->getRotZ() + my_rotation);
+	}
+	
+      // Makes or gets a directory called from inside _dir with this name
+      name.str("");
+      name << "_sensor" << nsensor << "_perm" << niter;      
+      
+      Analyzers::Residuals residuals(_refDevice, (rot>0) ? 0 : _dir, name.str().c_str(), numPixX, binxPerPix, _numBinsY); // create residual plots
 
       // Use events with only 1 track
       Analyzers::Cuts::EventTracks* cut1 =
@@ -119,13 +138,15 @@ void FineAlign::loop()
                                     nsens); // This is the masked plane, which is looped over.
 
         // For the average track slopes
-        for (unsigned int ntrack = 0; ntrack < refEvent->getNumTracks(); ntrack++)
-        {
-          Storage::Track* track = refEvent->getTrack(ntrack);
-          avgSlopeX += track->getSlopeX();
-          avgSlopeY += track->getSlopeY();
-          numSlopes++;
-        }
+	if(rot==0){
+	  for (unsigned int ntrack = 0; ntrack < refEvent->getNumTracks(); ntrack++)
+	    {
+	      Storage::Track* track = refEvent->getTrack(ntrack);
+	      avgSlopeX += track->getSlopeX();
+	      avgSlopeY += track->getSlopeY();
+	      numSlopes++;
+	    }
+	}// align only for the first iteration
 
         residuals.processEvent(refEvent);
 
@@ -135,15 +156,40 @@ void FineAlign::loop()
       }
 
       double offsetX = 0, offsetY = 0, rotation = 0;
-      Processors::residualAlignment(residuals.getResidualXY(nsens),
-                                    residuals.getResidualYX(nsens),
-                                    offsetX, offsetY, rotation, 
-                                    _relaxation, _displayFits);
+      if(rot==0){
+	Processors::residualAlignment(residuals.getResidualXY(nsens),
+				      residuals.getResidualYX(nsens),
+				      offsetX, offsetY, rotation, 
+				      _relaxation, _displayFits);
+	std::cout << "Sensor: " << nsensor << " offsetX: " << offsetX << " offsetY: " << offsetY << " rotation: " << rotation << std::endl;
+	
+	sensor->setOffX(sensor->getOffX() + offsetX);
+	sensor->setOffY(sensor->getOffY() + offsetY);
+	sensor->setRotZ(sensor->getRotZ() + rotation);
+      }else{
+	std::cout << "Checking the rotation of " << my_rotation << " and the total residual is " << residuals.GetTotalResidual() << std::endl;
+	rot_residuals.push_back(residuals.GetTotalResidual());
+	//un-do the rotations
+	sensor->setRotZ(sensor->getRotZ() - my_rotation);
+      }
 
-      sensor->setOffX(sensor->getOffX() + offsetX);
-      sensor->setOffY(sensor->getOffY() + offsetY);
-      sensor->setRotZ(sensor->getRotZ() + rotation);
-    }
+      } // end rotations 
+
+      // find the minimum of residuals
+      double min_rot_residuals=-1.0;
+      int iter_rot_residuals=0;      
+      for(unsigned hh=0; hh<rot_residuals.size(); ++hh){
+	if(hh==0) min_rot_residuals = rot_residuals.at(hh);
+	if(rot_residuals.at(hh)<min_rot_residuals){
+	  min_rot_residuals=rot_residuals.at(hh);
+	  iter_rot_residuals=hh;
+	}
+      }
+      if(min_rot_residuals>0.0){
+	// apply the best rotation
+	sensor->setRotZ(sensor->getRotZ() + (0.02 * (6.0 - double(iter_rot_residuals+1)) / (1.0+double(niter)*3.0)));
+      }
+    } // end loop over sensors
 
     // Adjust the device rotation using the average slopes
     avgSlopeX /= (double)numSlopes;
@@ -152,7 +198,7 @@ void FineAlign::loop()
     _refDevice->setBeamSlopeY(_refDevice->getBeamSlopeY() + avgSlopeY);
 
     cout << endl; // Space between iterations
-  }
+  } // end loop over iterations
 
   _refDevice->getAlignment()->writeFile();
 }
@@ -172,7 +218,8 @@ FineAlign::FineAlign(Mechanics::Device* refDevice,
                      Storage::StorageIO* refInput,
                      ULong64_t startEvent,
                      ULong64_t numEvents,
-                     Long64_t eventSkip) :
+                     Long64_t eventSkip,
+		     TDirectory* dir) :
   Looper(refInput, 0, startEvent, numEvents, eventSkip),
   _refDevice(refDevice),
   _clusterMaker(clusterMaker),
@@ -184,7 +231,8 @@ FineAlign::FineAlign(Mechanics::Device* refDevice,
   _numPixXBroad(20),
   _binsPerPixBroad(1),
   _displayFits(true),
-  _relaxation(0.8)
+  _relaxation(0.8),
+  _dir(dir)
 {
   assert(refInput && refDevice && clusterMaker && trackMaker &&
          "Looper: initialized with null object(s)");

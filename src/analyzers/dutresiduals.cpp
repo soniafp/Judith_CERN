@@ -67,6 +67,7 @@ void DUTResiduals::processEvent(const Storage::Event* refEvent,
         const double ry = ty - cluster->getPosY();
         _residualsX.at(nplane)->Fill(rx);
         _residualsY.at(nplane)->Fill(ry);
+	_totResidual.at(nplane)+=sqrt(rx*rx+ry*ry);
         _residualsXX.at(nplane)->Fill(rx, tx);
         _residualsYY.at(nplane)->Fill(ry, ty);
         _residualsXY.at(nplane)->Fill(rx, ty);
@@ -78,6 +79,18 @@ void DUTResiduals::processEvent(const Storage::Event* refEvent,
 
 void DUTResiduals::postProcessing() { } // Needs to be declared even if not used
 
+TH1D* DUTResiduals::getResidualX(unsigned int nsensor)
+{
+  validDutSensor(nsensor);
+  return _residualsX.at(nsensor);
+}
+
+TH1D* DUTResiduals::getResidualY(unsigned int nsensor)
+{
+  validDutSensor(nsensor);
+  return _residualsY.at(nsensor);
+}  
+  
 TH2D* DUTResiduals::getResidualXX(unsigned int nsensor)
 {
   validDutSensor(nsensor);
@@ -114,12 +127,17 @@ DUTResiduals::DUTResiduals(const Mechanics::Device* refDevice,
 {
   assert(refDevice && dutDevice && "Analyzer: can't initialize with null device");
 
-  // Makes or gets a directory called from inside _dir with this name
-  TDirectory* dir1d = makeGetDirectory("DUTResiduals1D");
-  TDirectory* dir2d = makeGetDirectory("DUTResiduals2D");
-
   std::stringstream name; // Build name strings for each histo
   std::stringstream title; // Build title strings for each histo
+
+  name.str("");
+  name << "DUTResiduals1D" << suffix;  
+  
+  // Makes or gets a directory called from inside _dir with this name
+  TDirectory* dir1d = makeGetDirectory(name.str().c_str());
+  name.str("");
+  name << "DUTResiduals2D" << suffix;    
+  TDirectory* dir2d = makeGetDirectory(name.str().c_str());
 
   std::stringstream xAxisTitle;
   std::stringstream yAxisTitle;
@@ -127,6 +145,7 @@ DUTResiduals::DUTResiduals(const Mechanics::Device* refDevice,
   // Generate a histogram for each sensor in the device
   for (unsigned int nsens = 0; nsens < _dutDevice->getNumSensors(); nsens++)
   {
+    _totResidual.push_back(0.0);
     Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
     for (unsigned int axis = 0; axis < 2; axis++)
     {

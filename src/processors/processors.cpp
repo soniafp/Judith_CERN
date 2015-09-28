@@ -411,17 +411,17 @@ void residualAlignment(TH2D* residualX, TH2D* residualY, double& offsetX,
     else      hist = residualY;
 
     // Project the histogram and fit with a gaussian to center the sensor
-//    TH1D* project = hist->ProjectionX("ResidualProjetion", 1, hist->GetNbinsY());
-//    project->SetDirectory(0);
+    TH1D* project = hist->ProjectionX("ResidualProjetion", 1, hist->GetNbinsY());
+    project->SetDirectory(0);
 
-//    double sigma = project->GetBinWidth(1);
-//    double mean = 0;
-//    fitGaussian(project, mean, sigma, false);
+    double sigma = project->GetBinWidth(1);
+    double mean = 0;
+    fitGaussian(project, mean, sigma, false);
 
-//    if (axis) offsetX = mean;
-//    else      offsetY = mean;
+    if (axis) offsetX = mean;
+    else      offsetY = mean;
 
-//    delete project;
+    delete project;
 
     std::vector<double> ptsX;
     std::vector<double> ptsY;
@@ -550,7 +550,7 @@ void residualAlignment(TH2D* residualX, TH2D* residualY, double& offsetX,
 
   if (angleWeights > 10 * DBL_MIN)
     rotation /= angleWeights;
-
+  std::cout << "relaxation: " << relaxation << std::endl;
   rotation *= relaxation;
   offsetX *= relaxation;
   offsetY *= relaxation;
