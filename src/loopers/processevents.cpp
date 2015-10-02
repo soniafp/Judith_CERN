@@ -56,7 +56,7 @@ void ProcessEvents::loop()
     //HP
     if (_trackMaker) _trackMaker->generateTracks(refEvent,
                                                  _refDevice->getBeamSlopeX(),
-                                                 _refDevice->getBeamSlopeY(),2);
+                                                 _refDevice->getBeamSlopeY(),-1);
 
     // Write the event
     _refOutput->writeEvent(refEvent);
