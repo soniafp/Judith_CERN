@@ -20,11 +20,14 @@ private:
   std::vector<TH1D*> _residualsX;
   std::vector<TH1D*> _residualsY;  
   std::vector<TH1D*> _residualsZ;
-  std::vector<TH2D*> _residualsRR;  
+  std::vector<TH2D*> _residualsRR;
+  std::vector<TH2D*> _clusterOcc;    
   std::vector<TH2D*> _residualsXX;
   std::vector<TH2D*> _residualsXY;
   std::vector<TH2D*> _residualsYY;
   std::vector<TH2D*> _residualsYX;
+  std::vector<TH2D*> _residualsXclustersize;
+  std::vector<TH2D*> _residualsYclustersize;    
 
   double _totResidual;
 

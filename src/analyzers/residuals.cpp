@@ -44,7 +44,7 @@ void Residuals::processEvent(const Storage::Event* refEvent)
     for (unsigned int ncut = 0; ncut < _numTrackCuts; ncut++)
       if (!_trackCuts.at(ncut)->check(track)) { pass = false; break; }
     if (!pass) continue;
-
+    bool hack=false;
     for (unsigned int nplane = 0; nplane < refEvent->getNumPlanes(); nplane++)
     {
       Storage::Plane* plane = refEvent->getPlane(nplane);
@@ -62,7 +62,10 @@ void Residuals::processEvent(const Storage::Event* refEvent)
 
         const double rx = tx - cluster->getPosX();
         const double ry = ty - cluster->getPosY();
-        const double rz = tz - cluster->getPosZ();	
+        const double rz = tz - cluster->getPosZ();
+	//if(nplane==3 && rx<-5.0) hack=true;
+
+	if(hack) continue;
         _residualsX.at(nplane)->Fill(rx);
         _residualsY.at(nplane)->Fill(ry);
         _residualsZ.at(nplane)->Fill(rz);
@@ -79,6 +82,9 @@ void Residuals::processEvent(const Storage::Event* refEvent)
         _residualsYY.at(nplane)->Fill(ry, ty);
         _residualsXY.at(nplane)->Fill(rx, ty);
         _residualsYX.at(nplane)->Fill(ry, tx);
+	_clusterOcc.at(nplane)->Fill(cluster->getPosX(), cluster->getPosY());
+	_residualsXclustersize.at(nplane)->Fill(cluster->getNumHits(), rx);
+	_residualsYclustersize.at(nplane)->Fill(cluster->getNumHits(), ry);
       }
     }
   }
@@ -153,6 +159,23 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
 			   100, -100.0, 100.0);
     resRR->SetDirectory(dir2d);
     _residualsRR.push_back(resRR);
+
+    const double lowX = sensor->getOffX() - sensor->getPosSensitiveX() / 2.0;
+    const double uppX = sensor->getOffX() + sensor->getPosSensitiveX() / 2.0;
+    const double lowY = sensor->getOffY() - sensor->getPosSensitiveY() / 2.0;
+    const double uppY = sensor->getOffY() + sensor->getPosSensitiveY() / 2.0;
+    
+    name.str(""); title.str("");
+    name << sensor->getName() << "ClusterOccupancy" << _nameSuffix;
+    title << sensor->getName() << " Cluster Occupancy"
+          << ";X position [" << _device->getSpaceUnit() << "]"
+          << ";Y position [" << _device->getSpaceUnit() << "]"
+          << ";Clusters / pixel";
+    TH2D* histClust = new TH2D(name.str().c_str(), title.str().c_str(),
+                               sensor->getPosNumX(), lowX, uppX,
+                               sensor->getPosNumY(), lowY, uppY);
+    histClust->SetDirectory(dir2d);
+    _clusterOcc.push_back(histClust);    
     
     for (unsigned int axis = 0; axis < 3; axis++)
     {
@@ -202,7 +225,25 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
       resAA->SetDirectory(dir2d);
       if (axis) _residualsXX.push_back(resAA);
       else      _residualsYY.push_back(resAA);
-
+      
+      int maxClusterSize=10;
+      // Residuals vs cluster size
+      name.str(""); title.str("");
+      name << sensor->getDevice()->getName() << sensor->getName()
+           << ((axis) ? "XvsClusterSize" : "YvsClusterSize") << _nameSuffix;
+      title << sensor->getDevice()->getName() << " " << sensor->getName()
+            << ((axis) ? " X vs. Cluster Size" : " Y vs. Cluster Size")
+            << ";Cluster Size "
+            << ";Track cluster difference " << (axis ? "X" : "Y")
+            << " [" << _device->getSpaceUnit() << "]"	
+            << ";Clusters / " << 1.0 / binsPerPix << " pixel";
+      TH2D* resXYcl = new TH2D(name.str().c_str(), title.str().c_str(),
+			       maxClusterSize - 1, 1 - 0.5, maxClusterSize - 0.5,
+			       nbins, -width / 2.0, width / 2.0);
+      resXYcl->SetDirectory(dir2d);
+      if (axis) _residualsXclustersize.push_back(resXYcl);
+      else      _residualsYclustersize.push_back(resXYcl);      
+      
       // Generate the XY or YX distribution
       height = axis ? sensor->getSensitiveY() : sensor->getSensitiveX();
 
