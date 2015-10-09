@@ -65,8 +65,8 @@ void landauVsVoltageATLAS(bool config = true)
   ///Graph 1 -- 25% pixel size
   const Int_t n1 = 3;
   Double_t x1[n1]  = {60, 90, 120};
-  Double_t y1[n1]  = { 0.00344,0.00437, 0.00525}; // peak most probable
-  //Double_t y1[n1]  = { 0.00344,0.00454, 0.00551}; // mean from fit
+  //Double_t y1[n1]  = { 0.00344,0.00437, 0.00525}; // peak most probable
+  Double_t y1[n1]  = { 0.00344,0.00454, 0.00551}; // mean from fit
   Double_t ey1[n1] = {0.000503, 0.000820, 0.00103};
   Double_t ex1[n1] = {0.0, 0.0, 0.0};  
   TGraphErrors *gr1 = new TGraphErrors(n1,x1,y1,ex1,ey1);
