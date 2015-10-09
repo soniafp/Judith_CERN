@@ -68,7 +68,7 @@ void landauVsVoltageATLAS(bool config = true)
   Double_t y1[n1]  = { 0.00344,0.00437, 0.00525}; // peak most probable
   //Double_t y1[n1]  = { 0.00344,0.00454, 0.00551}; // mean from fit
   Double_t ey1[n1] = {0.000503, 0.000820, 0.00103};
-  Double_t ex1[n1] = {0.00334, 0.0, 0.0};  
+  Double_t ex1[n1] = {0.0, 0.0, 0.0};  
   TGraphErrors *gr1 = new TGraphErrors(n1,x1,y1,ex1,ey1);
   gr1->SetName("gr1");
   gr1->SetTitle("Hit detection efficiency vs Voltage");
