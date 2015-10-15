@@ -125,9 +125,26 @@ def Style():
     ROOT.gROOT.LoadMacro('/Users/schae/testarea/CAFAna/HWWMVACode/atlasstyle-00-03-05/AtlasUtils.C')
     ROOT.SetAtlasStyle()
 
-def Fit(_suffix=''):
+def Fit(file_name='./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutslope-align.root',_suffix=''):
     rebin=2
-    f = ROOT.TFile.Open('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result.root')
+
+#Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutt0wider-align.root','60V_cutt0')
+#Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutt0wider-align.root','90V_cutt0')
+#Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutt0wider-align.root','120V_cutt0')
+#
+#Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-nocut-align.root','60V_nocut')
+#Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-nocut-align.root','90V_nocut')
+#Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-nocut-align.root','120V_nocut')
+#
+#Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutslope-align.root','60V_cutslope')
+#Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutslope-align.root','90V_cutslope')
+#Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutslope-align.root','120V_cutslope')
+
+    
+    #f = ROOT.TFile.Open('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result.root')
+    #f = ROOT.TFile.Open('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutslope-align.root')
+    #f = ROOT.TFile.Open('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutslope-align.root')
+    f = ROOT.TFile.Open(file_name)        
     twoD = f.Get('Efficiency/sensor0_TrackResEffFine')
     
     hx = twoD.ProjectionX("px")
@@ -152,17 +169,24 @@ def Fit(_suffix=''):
     can = ROOT.TCanvas("c2","c2",100,10,800,600);
     can.cd()
     #can.SetStats(1111)
+    hx.SetTitle('')
     hx.Draw()
     can.Update()
-    can.WaitPrimitive()
-    hx.SaveAs('projectionx_'+_suffix+'.eps')
+    #can.WaitPrimitive()
+    can.SaveAs('projectionx_'+_suffix+'.eps')
+    can.SaveAs('projectionx_'+_suffix+'.pdf')
+    can.SaveAs('projectionx_'+_suffix+'.C')        
 
 
     hy.Draw()
     can.Update()
-    can.WaitPrimitive()
-    hy.SaveAs('projectiony_'+_suffix+'.eps')
+    #can.WaitPrimitive()
+    can.SaveAs('projectiony_'+_suffix+'.eps')
+    can.SaveAs('projectiony_'+_suffix+'.pdf')
+    can.SaveAs('projectiony_'+_suffix+'.C')
 
 #Style()
 setPlotDefaults(ROOT)
-Fit('60V')
+Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-nocut-align.root','nocut_60V')
+Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-nocut-align.root','nocut_90V')
+Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-nocut-align.root','nocut_120V')

@@ -57,7 +57,6 @@ void landauVsVoltageATLAS(bool config = true)
   TCanvas* c1 = new TCanvas("c1","testbeam efficiency",50,50,600,600);
   TMultiGraph *mg = new TMultiGraph();
 
-  
   //gStyle->SetTitleOffset(1.0,"xz");
   gStyle->SetTitleOffset(1.6,"y");
   //gStyle->SetPadLeftMargin(0.26);

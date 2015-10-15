@@ -126,7 +126,6 @@ def Style():
     ROOT.SetAtlasStyle()
 
 def Fit(file_name='',_suffix=''):
-    rebin=2
     #f = ROOT.TFile.Open('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result.root')
     #f = ROOT.TFile.Open('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutslope.root')
     #f = ROOT.TFile.Open('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result.root')
@@ -139,9 +138,7 @@ def Fit(file_name='',_suffix=''):
     #twoD = f.Get('Efficiency/sensor0_TrackResEffFine')
     twoD = f.Get('Efficiency/DUTPlane0TrackResidualHitFine')
     twoDall = f.Get('Efficiency/DUTPlane0TrackResidualFine')        
-    
-    ring = twoD.Clone()
-
+    DoX=True
     can = ROOT.TCanvas("c2","c2",100,10,800,600);
     can.cd()
     twoD.Draw('colz')
@@ -149,7 +146,7 @@ def Fit(file_name='',_suffix=''):
     can.WaitPrimitive() 
     t1 = raw_input('input the x shift. typically the x-mean: ')
     t2 = raw_input('input the y shift. typically the y-mean: ')
-    
+
     xshift = float(t1)
     yshift = float(t2)
     bin_width=5
@@ -158,59 +155,53 @@ def Fit(file_name='',_suffix=''):
     midY=twoD.GetNbinsY()/2+int(yshift)
     midX_noshift=twoD.GetNbinsX()/2
     midY_noshift=twoD.GetNbinsY()/2
-    for q in range(0,int(midX/float(bin_width))):
-    #for q in range(0,midX):
-        #i=q*bin_width
-        #sum up and average
+
+    if DoX:
+        xshift=0
+    else:
+        yshift=0
+    
+    proj = ROOT.TH1F('proj','',int(twoD.GetNbinsX()/bin_width),twoD.GetXaxis().GetBinLowEdge(0),twoD.GetXaxis().GetBinUpEdge(twoD.GetNbinsX()))
+    
+    for q in range(0,int(twoD.GetNbinsX()/float(bin_width))):
         mysum = 0.0
         entries = 0.0
         for i in range(q*bin_width,(q+1)*bin_width):
-            for j in range(-i,i+1):
-                mysum+=twoD.GetBinContent(midX+i,midY+j)
-                mysum+=twoD.GetBinContent(midX-i,midY+j)
-                entries+=twoDall.GetBinContent(midX+i,midY+j)
-                entries+=twoDall.GetBinContent(midX-i,midY+j)                
-                if j!=i and j!=-1:
-                    mysum+=twoD.GetBinContent(midX+j,midY+i)
-                    mysum+=twoD.GetBinContent(midX+j,midY-i)
-                    entries+=twoDall.GetBinContent(midX+j,midY+i)
-                    entries+=twoDall.GetBinContent(midX+j,midY-i)
-                #else:
-                #    entries-=1
-
-        if bin_width!=1 and q==1:
-            mysum+=twoD.GetBinContent(midX,midY)
-            entries+=twoDall.GetBinContent(midX,midY)            
-            #entries+=1
+            for j in range(-10,11):
+                if DoX:
+                    mysum+=twoD.GetBinContent(i+int(xshift),midY+j)
+                    entries+=twoDall.GetBinContent(i+int(xshift),midY+j)
+                else:
+                    mysum+=twoD.GetBinContent(midX+j,i+int(yshift))
+                    entries+=twoDall.GetBinContent(midX+j,i+int(yshift))                    
         if entries==0.0:
             entries+=1.0
-        #print 'entries: ',entries
-        for i in range(q*bin_width,(q+1)*bin_width):
-            for j in range(-i,i+1):
-                ring.SetBinContent(midX_noshift+i,midY_noshift+j,mysum/entries/0.97)
-                ring.SetBinContent(midX_noshift-i,midY_noshift+j,mysum/entries/0.97)
-                #if j!=i and j!=-1:
-                ring.SetBinContent(midX_noshift+j,midY_noshift+i,mysum/entries/0.97)
-                ring.SetBinContent(midX_noshift+j,midY_noshift-i,mysum/entries/0.97)
-    if bin_width!=1:
-        ring.SetBinContent(midX_noshift,midY_noshift,ring.GetBinContent(midX_noshift+1,midY_noshift))
-    ring.GetXaxis().SetRangeUser(-100,100)
-    ring.GetYaxis().SetRangeUser(-100,100)
-    ring.SetTitle('DUT Hit Efficiency')   
-
-    for q in range(0,int(midX/float(bin_width))):
-        if ring.GetBinContent(midX+q*bin_width+1,midY)>0.0:
-            print 'Distance from center: ',q*bin_width+1,' Eff: ',ring.GetBinContent(midX+q*bin_width+1,midY)
-    ring.GetZaxis().SetRangeUser(0.0,1.0)
-    ring.SetTitle('')
-    ring.SetStats(0)
-    ring.Draw('colz')
+        proj.SetBinContent(q,mysum/entries/0.97)
+        proj.SetBinError(q,0.0)        
+    proj.GetXaxis().SetRangeUser(-100,100)
+    #proj.SetTitle('DUT Hit Efficiency')
+    if DoX:
+        proj.GetXaxis().SetTitle('x Residual [#mum]')
+    else:
+        proj.GetXaxis().SetTitle('y Residual [#mum]')
+    proj.GetYaxis().SetTitle('Fractional DUT Hit Efficiency')
+    proj.SetTitle('')
+    proj.SetStats(0)
+    proj.SetLineWidth(2)
+    proj.SetLineColor(1)
+    proj.SetMarkerColor(1)    
+    proj.Draw()
     can.Update()
     can.WaitPrimitive()
     raw_input('Waiting for you to finish editting')
-    can.SaveAs('efficiencyRing_'+_suffix+'.eps')
-    can.SaveAs('efficiencyRing_'+_suffix+'.pdf')
-    can.SaveAs('efficiencyRing_'+_suffix+'.C')
+    if DoX:
+        can.SaveAs('efficiencyProjX_'+_suffix+'.eps')
+        can.SaveAs('efficiencyProjX_'+_suffix+'.pdf')
+        can.SaveAs('efficiencyProjX_'+_suffix+'.C')
+    else:
+        can.SaveAs('efficiencyProjY_'+_suffix+'.eps')
+        can.SaveAs('efficiencyProjY_'+_suffix+'.pdf')
+        can.SaveAs('efficiencyProjY_'+_suffix+'.C')        
 
 
 #Style()
@@ -218,7 +209,7 @@ setPlotDefaults(ROOT)
 #Fit('60V')
 #Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutt0wider-align.root','cutt0_60V')
 #Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutt0wider-align.root','cutt0_90V')
-#Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutt0wider-align.root','cutt0_120V')
+Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutt0wider-align.root','cutt0_120V')
 
 #Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-nocut-align.root','nocut_60V')
 #Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-nocut-align.root','nocut_90V')
@@ -226,4 +217,4 @@ setPlotDefaults(ROOT)
 #
 #Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutslope-align.root','cutslope_60V')
 #Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutslope-align.root','cutslope_90V')
-Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutslope-align.root','cutslope_120V')
+#Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutslope-align.root','cutslope_120V')

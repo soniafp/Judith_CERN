@@ -126,7 +126,7 @@ def Style():
     ROOT.SetAtlasStyle()
 
 #-----------------------------------------
-def Fit(_file_name='./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutt0.root',_suffix='',_ext='.pdf'):
+def Fit(_file_name='./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutt0.root',_suffix='',_ext='.root'):
     WAIT=False
     f = ROOT.TFile.Open(_file_name)
 
@@ -169,7 +169,7 @@ def Fit(_file_name='./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5
     charge = f.Get('Efficiency/DUTPlane0DUTCharge')
     charge.GetXaxis().SetRangeUser(-100,100)
     charge.GetYaxis().SetRangeUser(-100,100)
-    chargeGetXaxis().SetTitle('Signal Size [V]')     
+    charge.GetXaxis().SetTitle('Signal Size [V]')     
     charge.Draw('colz')
     if WAIT:
         can.Update()
@@ -189,7 +189,7 @@ def Fit(_file_name='./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5
     TvsC.GetXaxis().SetRangeUser(0.0,0.1)
     TvsC.GetYaxis().SetRangeUser(0.0,500.0)
     TvsC.GetYaxis().SetTitle('Time [ns]')
-    chargeGetXaxis().SetTitle('Signal Size [V]')
+    charge.GetXaxis().SetTitle('Signal Size [V]')
     TvsC.Draw('colz')
     if WAIT:
         can.Update()
@@ -238,18 +238,32 @@ def Fit(_file_name='./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5
         
 #Style()
 setPlotDefaults(ROOT)
-Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutt0.root','60V_cutt0')
+#Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutt0.root','60V_cutt0')
+#
+#Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutslope.root','60V_slope')
+#
+#Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutslope.root','90V_slope')
+#
+#Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutt0.root','90V_cutt0')
+#
+#Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result.root','90V_nocut')
+#
+#Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result.root','60V_nocut')
+#Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result.root','120V_nocut1')
+#Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings2_sync_analysis-result.root','120V_nocut2')
 
-Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutslope.root','60V_slope')
-
-Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutslope.root','90V_slope')
-
-Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutt0.root','90V_cutt0')
-
-Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result.root','90V_nocut')
-
-Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result.root','60V_nocut')
-Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result.root','120V_nocut1')
-Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings2_sync_analysis-result.root','120V_nocut2')
+#Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result.root','120V_nocut1_oldalign')
+#Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutt0.root','120V_cutt0_oldalign')
 
 
+Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutt0wider-align.root','60V_cutt0')
+Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutt0wider-align.root','90V_cutt0')
+Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutt0wider-align.root','120V_cutt0')
+
+Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-nocut-align.root','60V_nocut')
+Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-nocut-align.root','90V_nocut')
+Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-nocut-align.root','120V_nocut')
+
+Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutslope-align.root','60V_cutslope')
+Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutslope-align.root','90V_cutslope')
+Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutslope-align.root','120V_cutslope')
