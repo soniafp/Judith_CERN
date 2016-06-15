@@ -235,7 +235,74 @@ void TrackMaker::generateTracks(Event* event,
     }
   }
 }
+  /*
+int TrackMaker::linearFit(const unsigned int npoints, const double* independant,
+                          const double* dependant, const double* uncertainty,
+                          double& slope, double& slopeErr, double& intercept,
+                          double& interceptErr, double& chi2, double& covariance)
+{
+  if (npoints < 3)
+  {
+    if (VERBOSE) cout << "WARN: can't fit a line to less than 3 points";
+    return -1;
+  }
 
+  double* err = new double[npoints];
+
+  slope = 0;
+  slopeErr = 0;
+  intercept = 0;
+  interceptErr = 0;
+  chi2 = 0;
+  covariance = 0;
+  // Check the uncertainties for problems
+  for (unsigned int i = 0; i < npoints; i++)
+  {
+    assert(uncertainty[i] >= 0 &&
+           "Processors: negative uncertainty for fit point");
+
+    // Check if no uncertainty is specified (zeros are exact in binary)
+    if (uncertainty[i] == 0.0) err[i] = 1.0;
+    else err[i] = uncertainty[i];
+  }
+
+  // https://ned.ipac.caltech.edu/level5/Leo/Stats7_2.html
+  double A=0.0, B=0.0, C=0.0, D=0.0, E=0.0, F=0.0;
+
+  for (unsigned int i = 0; i < npoints; i++) {
+    const double wt = 1.0 / pow(uncertainty[i], 2);
+    // Check for divison by 0
+    if (!(wt <= DBL_MAX && wt >= -DBL_MAX))
+    {
+      if (VERBOSE) cout << "WARN: regresssion divided by 0 uncertainty" << endl;
+      return -1;
+    }
+    A += wt*dependant[i];
+    B += wt;
+    C += wt*independant[i];
+    D += wt*dependant[i]*dependant[i];    
+    E += wt*independant[i]*dependant[i];    
+    F += wt*independant[i]*independant[i];    
+  }
+  double DEN = D*B-A*A;
+  if(DEN>0.0){
+    slope = (E*B - C*A)/DEN;
+    intercept = (D*C - E*A) / DEN;
+    slopeErr = sqrt(B/DEN);
+    interceptErr = sqrt(D/DEN);
+    covariance = -A / DEN;    
+  }
+
+  for (unsigned int i = 0; i < npoints; i++)
+    chi2 += pow((dependant[i] - intercept - slope * independant[i]) /
+                uncertainty[i], 2);
+
+  delete[] err;
+
+  return 0;
+}
+
+  */
 int TrackMaker::linearFit(const unsigned int npoints, const double* independant,
                           const double* dependant, const double* uncertainty,
                           double& slope, double& slopeErr, double& intercept,
@@ -284,7 +351,7 @@ int TrackMaker::linearFit(const unsigned int npoints, const double* independant,
     }
     ss += wt;
     sx += independant[i] * wt;
-    sy += dependant[i] * wt;
+    sy += dependant[i]   * wt;
   }
 
   sxoss = sx / ss;
@@ -314,6 +381,7 @@ int TrackMaker::linearFit(const unsigned int npoints, const double* independant,
   return 0;
 }
 
+
 void TrackMaker::fitTrackToClusters(Track* track)
 {
   const unsigned int npoints = track->getNumClusters();
@@ -338,11 +406,13 @@ void TrackMaker::fitTrackToClusters(Track* track)
       {
         dependant[npoint] = track->getCluster(npoint)->getPosX();
         uncertainty[npoint] = track->getCluster(npoint)->getPosErrX();
+	//std::cout << "Point: " << npoint << "track->getCluster(npoint)->getPosErrX(): " << track->getCluster(npoint)->getPosErrX() << " hits: " << track->getCluster(npoint)->getNumHits() << std::endl;
       }
       else
       {
         dependant[npoint] = track->getCluster(npoint)->getPosY();
         uncertainty[npoint] = track->getCluster(npoint)->getPosErrY();
+	//std::cout << "Point: " << npoint << "track->getCluster(npoint)->getPosErrY(): " << track->getCluster(npoint)->getPosErrY()<< " hits: " << track->getCluster(npoint)->getNumHits() << std::endl;	
       }
       independant[npoint] = track->getCluster(npoint)->getPosZ();
     }

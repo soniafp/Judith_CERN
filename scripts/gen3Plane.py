@@ -2,7 +2,7 @@ import math
 import ROOT
 from numpy import mean, sqrt, square
 DEBUG=False
-WAIT=False
+WAIT=True
 REQUIRE_DUT_HIT=True
 class Event:
     def __init__(self,telescope, x_truth, x_slope):
@@ -18,16 +18,25 @@ class Event:
         self.covariance = 0.0;
         
     def GetXTrue(self, plane):
-        return self.x_truth + self.x_slope*plane.z
+        return self.x_truth + self.x_slope * plane.z * (1000.0 / 545.0)
     
     def Digitize(self, r):
-
+        #i=0
         for p in self.telescope:
+            #print i,'pixel X: ',self.GetXTrue(p)
+            #i+=1
             self.points +=[[p.ReturnPixelX(self.GetXTrue(p),r), p.pixelerr, p.z, p.mask]]
             if DEBUG:
                 print 'Telescope: ',p.ReturnPixelX(self.GetXTrue(p),r)
                 
     def Fit(self):
+
+        #self.points = [[1.,71.,1.,0],
+        #[2.,14.,3.,0],
+        #[3.,71.,5.,0],
+        #[4.,14.,7.,0],
+        #[5.,71.,11.,0],
+        #                   ]
         if DEBUG:
             print ''
         self.slope = 0.;
@@ -66,7 +75,11 @@ class Event:
             self.slopeErr     = math.sqrt(B/DEN);
             self.interceptErr = math.sqrt(D/DEN);
             self.covariance   = -A / DEN;
-            
+
+        print 'Slope: ',self.slope
+        print 'SlopeErr: ',self.slopeErr        
+        print 'intercept: ',self.intercept
+        print 'interceptErr: ',self.interceptErr       
     def Residual(self, nplane=2):
         if nplane>len(self.telescope):
             print 'ERROR plane too large'
@@ -117,16 +130,19 @@ class Plane:
                     
         return float(self.ReturnPixel(x_truth,r))*self.pixelwidth + self.x + self.pixelwidth/2.0
 
-NEVENTS=100000
+NEVENTS=10000
 DUT=True
 dut_offset=12.0/2.0*50.0+20.0
-slope_spread = 545.0*math.tan(0.000185)
+#slope_spread = 545.0*math.tan(0.000185)
+slope_spread = 545.0*math.tan(0.000104)
 r = ROOT.TRandom3()
 r.SetSeed(5)
 can = ROOT.TCanvas()
 truth_residual = ROOT.TH1F('truth_residual','truth_residual',2000,-100.0,100.0)
 #for offset in [[0.0, 15.0, 0.0, -4.5, 10.0]]:
-for offset in [[0.0,-40.0, -1.0, 50.5, 12.0]]:
+#-100,-11,-100,19.5,-100,-19
+for offset in [[-11.0,-100.0, 19.5, -100.0, -19.0]]:
+#for offset in [[89.0,-100.0, 119.5, -100.0, 81.0]]:
 
     telescope = []
     hists  = []
@@ -174,7 +190,10 @@ for offset in [[0.0,-40.0, -1.0, 50.5, 12.0]]:
             print 'Event: ',i
         x_truth = r.Rndm()*9.0*50.0+75.0
         x_slope = r.Gaus(0.0,slope_spread)
-        
+
+        #x_truth = 100.0
+        #x_slope = slope_spread
+                
         events+=[Event(telescope,x_truth,x_slope)]
         events[i].Digitize(r)
         events[i].Fit()
@@ -201,7 +220,7 @@ for offset in [[0.0,-40.0, -1.0, 50.5, 12.0]]:
     high_bin=-1
     # Integrated beyond edge for efficiency
     extra_range = 0
-    # central efficiency
+    # central efficiency - the width of the central region used to compute the efficiency
     #central_eff = 0.44
     central_eff = 0.89
     for i in range(0,truth_residual.GetNbinsX()):
