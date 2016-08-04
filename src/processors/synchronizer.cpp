@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <math.h>
+#include <iostream>
 
 #include <Rtypes.h>
 
@@ -47,7 +48,7 @@ void Synchronizer::processEvent(Storage::Event* refEvent,
     _pos = offsetToIndex(1); // Increment _pos by 1
     if (_pos == 0) _bufferFull = true;
   }
-
+  //std::cout << "_diffBuff[_pos]: " << _diffBuff[_pos] << std::endl;
   // Remove the element being overwritten from the buffer
   if (_diffBuff[_pos] > _threshold)
     _numOverThreshold--;

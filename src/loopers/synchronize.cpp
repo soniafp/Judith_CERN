@@ -40,15 +40,26 @@ Analyzers::SyncFluctuation* Synchronize::setupAnalyzer()
     throw "Synchronize: too few events to do anything";
 
   double changeRMS = 0;
-  ULong64_t lastTimeStamp = 0;
+  ULong64_t lastTimeStamp = 0, lastTimeStampDUT=0;
   for (unsigned int nevent = 0; nevent < rmsSample; nevent++)
   {
     Storage::Event* event = _refStorage->readEvent(nevent);
+    Storage::Event* dutevent = _dutStorage->readEvent(nevent);
     const double diff = (event->getTimeStamp() - lastTimeStamp) /
         (double)_refDevice->getReadOutWindow() / (double)_refDevice->getClockRate();
+
+  std::cout << "Telescope start: " << event->getTimeStamp() << " end: " << lastTimeStamp
+	    << " DUT: " <<_refDevice->getReadOutWindow() << " " <<_refDevice->getClockRate()
+	    << " diff: " << (event->getTimeStamp() - lastTimeStamp) << std::endl;
+    
+  std::cout << "DUT start: " << dutevent->getTimeStamp() << " end: " << lastTimeStampDUT
+	    << " DUT: " <<_dutDevice->getReadOutWindow() << " " <<_dutDevice->getClockRate()
+	    << " diff: " << (dutevent->getTimeStamp() - lastTimeStampDUT) << std::endl;
+    
     if (nevent > 0)
       changeRMS += pow(diff, 2);
     lastTimeStamp = event->getTimeStamp();
+    lastTimeStampDUT = dutevent->getTimeStamp();    
     delete event;
   }
 
@@ -99,7 +110,9 @@ unsigned int Synchronize::syncRatioLoop(ULong64_t start, ULong64_t num,
 
   const double refToDut = (refEnd->getTimeStamp() - refStart->getTimeStamp()) /
       (double)(dutEnd->getTimeStamp() - dutStart->getTimeStamp());
-
+  std::cout << "Telescope start: " << refStart->getTimeStamp() << " end: " << dutEnd->getTimeStamp()
+	    << " DUT: " << dutEnd->getTimeStamp() << " " << dutStart->getTimeStamp()
+	    << " diff: " << (refEnd->getTimeStamp() - refStart->getTimeStamp())<< std::endl;
   _dutDevice->setSyncRatio(refToDut);
   _refDevice->setSyncRatio(1.0);
 
@@ -256,6 +269,7 @@ void Synchronize::loop()
   ULong64_t invalidEvents = 0;
   ULong64_t totalReadEvents = 0;
   ULong64_t totalWrittenEvents = 0;
+  ULong64_t totalBufferNotFull = 0;  
   ULong64_t numConsecutiveSyncs = 0;
   ULong64_t numLargeSyncs = 0;
   ULong64_t totalLargeSyncOffsets = 0;
@@ -387,6 +401,9 @@ void Synchronize::loop()
         fluctuations->processEvent(refEvent, dutEvent);
         totalWrittenEvents++;
       }
+    }else{
+      std::cout << "NOT writting " << std::endl;
+      ++totalBufferNotFull;
     }
 
     progressBar(nevent);
@@ -419,6 +436,7 @@ void Synchronize::loop()
     cout << "  Large sync offsets   : " << totalLargeSyncOffsets << "\n";
     cout << "  Total read events    : " << totalReadEvents << "\n";
     cout << "  Total written events : " << totalWrittenEvents << "\n";
+    cout << "  Total NOT written events : " << totalBufferNotFull << "\n";    
     cout << flush;
   }
 }

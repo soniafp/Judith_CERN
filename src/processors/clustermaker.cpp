@@ -1,6 +1,7 @@
 #include "clustermaker.h"
 
 #include <cassert>
+#include <iostream>
 #include <math.h>
 #include <float.h>
 
@@ -56,7 +57,7 @@ void ClusterMaker::generateClusters(Storage::Event* event, unsigned int planeNum
   for (unsigned int nhit = 0; nhit < plane->getNumHits(); nhit++)
   {
      Storage::Hit* hit = plane->getHit(nhit);
-
+     //std::cout << "addHit: " << nhit  << " isclustered: " <<hit->getCluster() << " isHit: " << hit->getIsHit() << std::endl;
     // If the hit isn't clustered, make a new cluster
     if (!hit->getCluster()) {
        Storage::Cluster* cluster = event->newCluster(planeNum);

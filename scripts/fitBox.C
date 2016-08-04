@@ -7,7 +7,8 @@ double boxfun(double *x, double *par)
 int fitBox(TH1F *g1=NULL){
   
   if(!g1) return 0;
-
+  g1->Scale(1.0/500.0);
+  
   double mean = 0.0;
   double rms = 25;
   double minf = mean - 50;
@@ -42,7 +43,7 @@ int fitBox(TH1F *g1=NULL){
   a->SetTextColor(kBlack);
   a->Draw();
 
-  g1->GetYaxis()->SetRangeUser(0.0,1.1);
+  //g1->GetYaxis()->SetRangeUser(0.0,1.1);
   g1->SetLineColor(1);
   g1->SetMarkerColor(1);
   TLine *line = new TLine(-100.0,1.0,100.0,1.0);

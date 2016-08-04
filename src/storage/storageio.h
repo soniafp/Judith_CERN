@@ -84,7 +84,10 @@ private:
   Double_t hitTiming[MAX_HITS];
   Int_t    hitTimingInt[MAX_HITS];
   Int_t    hitInCluster[MAX_HITS];
-
+  Double_t hitChi2[MAX_HITS];
+  Double_t hitIsHit[MAX_HITS];
+  Double_t hitValidFit[MAX_HITS];
+  
   VarType hitValueType;    
   VarType hitTimingType;
   
@@ -134,6 +137,9 @@ private:
   TBranch* bHitTiming;
   TBranch* bHitTimingInt;
   TBranch* bHitInCluster;
+  TBranch* bHitChi2;
+  TBranch* bHitIsHit;
+  TBranch* bHitValidFit;  
 
   TBranch* bNumClusters;
   TBranch* bClusterPixX;

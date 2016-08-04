@@ -1,6 +1,7 @@
 #include "dutcorrelation.h"
 
 #include <cassert>
+#include <iostream>
 #include <sstream>
 #include <math.h>
 
@@ -35,8 +36,10 @@ void DUTCorrelation::processEvent(const Storage::Event* refEvent,
 
   // Check if the event passes the cuts
   for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
-    if (!_eventCuts.at(ncut)->check(refEvent)) return;
-
+    if (!_eventCuts.at(ncut)->check(refEvent)) {
+      //std::cout << "Event cut killed" <<std::endl;
+      return;
+    }
   for (unsigned int nsensor = 0; nsensor < _dutDevice->getNumSensors(); nsensor++)
   {
     Storage::Plane* plane0 = refEvent->getPlane(_nearestRef);
@@ -46,20 +49,19 @@ void DUTCorrelation::processEvent(const Storage::Event* refEvent,
     TH2D* corrY = _corrY.at(nsensor);
     TH1D* alignX = _alignX.at(nsensor);
     TH1D* alignY = _alignY.at(nsensor);
-
+    //std::cout << "nearestRef: " << _nearestRef << " Nclu: " << plane0->getNumClusters() << std::endl;
     //Matevz 20141202 Alignment histograms for pads
     TH1D* alignPadX = NULL;
     TH1D* alignPadY = NULL;
-    if ( _dutDevice->getSensor(nsensor)->getNumX() == 1 )
-      alignPadX = _alignPadX.at(nsensor);
-    if ( _dutDevice->getSensor(nsensor)->getNumY() == 1 )
-      alignPadY = _alignPadY.at(nsensor);
-
+    //if ( _dutDevice->getSensor(nsensor)->getNumX() == 1 )
+    alignPadX = _alignPadX.at(nsensor);
+      //if ( _dutDevice->getSensor(nsensor)->getNumY() == 1 )
+    alignPadY = _alignPadY.at(nsensor);
 
     for (unsigned int ncluster0 = 0; ncluster0 < plane0->getNumClusters(); ncluster0++)
     {
       Storage::Cluster* cluster0 = plane0->getCluster(ncluster0);
-
+      //std::cout << "cluster0: " << ncluster0 << std::endl;
       // Check if the cluster passes the cuts
       bool pass = true;
       for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
@@ -69,7 +71,7 @@ void DUTCorrelation::processEvent(const Storage::Event* refEvent,
       for (unsigned int ncluster1 = 0; ncluster1 < plane1->getNumClusters(); ncluster1++)
       {
         Storage::Cluster* cluster1 = plane1->getCluster(ncluster1);
-
+	//std::cout << "cluster: " << ncluster1 << std::endl;
         // Check if the cluster passes the cuts
         bool pass = true;
         for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
@@ -84,9 +86,9 @@ void DUTCorrelation::processEvent(const Storage::Event* refEvent,
         //Matevz 20141202 Correlation and alignment histograms for pads
         //fill a histogram on refplane's position X/Y if there was a
         //hit in both replane's cluster AND dutplane's pad
-        if ( _dutDevice->getSensor(nsensor)->getNumX() == 1 )
+        //if ( _dutDevice->getSensor(nsensor)->getNumX() == 1 )
           alignPadX->Fill( cluster0->getPosX() );
-        if ( _dutDevice->getSensor(nsensor)->getNumY() == 1 )
+	  // if ( _dutDevice->getSensor(nsensor)->getNumY() == 1 )
           alignPadY->Fill( cluster0->getPosY() );
       }
     }
@@ -138,8 +140,8 @@ void DUTCorrelation::initializeHist(const Mechanics::Sensor* sensor0,
 			  npix1, sens1Low, sens1Upp);
     else // set the telescope as y limits for the dut if only 1 pixel exists
       corr = new TH2D(name.str().c_str(), title.str().c_str(),
-                          npix0, sens0Low, sens0Upp,
-			  npix0, sens0Low, sens0Upp);
+                          1000, -5000, 5000,
+			  1000, -5000, 5000);
 
     axisTitleX.str(""); axisTitleY.str("");
     axisTitleX << ((axis) ? "X " : "Y ") << " position on " << sensor0->getName()
@@ -172,8 +174,10 @@ void DUTCorrelation::initializeHist(const Mechanics::Sensor* sensor0,
       align = new TH1D(name.str().c_str(), title.str().c_str(),
 			   2 * npix0 - 1, sens0Low, sens0Upp); // use the telescope instead of the DUT because there is only 1 pixel
     else
+      //align = new TH1D(name.str().c_str(), title.str().c_str(),
+      //	       2 * npix1 - 1, -sens1Size, sens1Size); 
       align = new TH1D(name.str().c_str(), title.str().c_str(),
-		       2 * npix1 - 1, -sens1Size, sens1Size); 
+		       5000, -50000.0, 50000.0); 
     
                            //2 * npix1 - 1, -sens1Size, sens1Size);
     axisTitleX.str("");
@@ -201,8 +205,10 @@ void DUTCorrelation::initializeHist(const Mechanics::Sensor* sensor0,
           << sensor1->getDevice()->getName() << " " << sensor1->getName()
           << " To " << sensor0->getDevice()->getName() << " " << sensor0->getName()
           << ((axis) ? " X" : " Y");
+    //TH1D* alignPad = new TH1D(name.str().c_str(), title.str().c_str(),
+    //                     2 * npix0 - 1, -sens0Size, sens0Size);
     TH1D* alignPad = new TH1D(name.str().c_str(), title.str().c_str(),
-                           2 * npix0 - 1, -sens0Size, sens0Size);
+                           5000, -50000.0, 50000.0);
     axisTitleX.str("");
     axisTitleX << ((axis) ? "X " : "Y ") << " position difference"
                << " [" << _refDevice->getSpaceUnit() << "]";

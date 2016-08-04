@@ -108,11 +108,11 @@ void fineAlign(const char* inputName, ULong64_t startEvent, ULong64_t numEvents,
 
     unsigned int treeMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
     std::vector<bool> planeMask;
-    planeMask.push_back(true);
+    //planeMask.push_back(true);
     planeMask.push_back(false);
     planeMask.push_back(false);
     planeMask.push_back(false);
-    planeMask.push_back(true);
+    //planeMask.push_back(true);
     planeMask.push_back(false);
     planeMask.push_back(false);
     planeMask.push_back(false);
@@ -207,11 +207,11 @@ void coarseAlign(const char* inputName, ULong64_t startEvent, ULong64_t numEvent
     unsigned int treeMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
       
     std::vector<bool> planeMask;
-    planeMask.push_back(true);
+    //planeMask.push_back(true);
     planeMask.push_back(false);
     planeMask.push_back(false);
     planeMask.push_back(false);
-    planeMask.push_back(true);
+    //planeMask.push_back(true);
     planeMask.push_back(false);
     planeMask.push_back(false);
     planeMask.push_back(false);
@@ -297,6 +297,7 @@ void process(const char* inputName, const char* outputName,
       planeMask.push_back(false);
       planeMask.push_back(false);
       planeMask.push_back(false);
+
     Storage::StorageIO input(inputName, Storage::INPUT, 0, inMask, &planeMask);
     
     unsigned int outMask = 0;
@@ -405,7 +406,6 @@ void synchronize(const char* refInputName, const char* dutInputName,
 {
   try
   {
-    
     ConfigParser refConfig(refDeviceCfg);
     Mechanics::Device* refDevice = Mechanics::generateDevice(refConfig);
     ConfigParser dutConfig(dutDeviceCfg);
@@ -414,10 +414,9 @@ void synchronize(const char* refInputName, const char* dutInputName,
       
     if (refDevice->getAlignment()) refDevice->getAlignment()->readFile();
     if (dutDevice->getAlignment()) dutDevice->getAlignment()->readFile();
- 
     unsigned int inMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
     std::vector<bool> planeMask;
-    planeMask.push_back(true);
+    //planeMask.push_back(true);
     planeMask.push_back(false);
     planeMask.push_back(false);
     planeMask.push_back(false);
@@ -425,7 +424,9 @@ void synchronize(const char* refInputName, const char* dutInputName,
     planeMask.push_back(false);
     planeMask.push_back(false);
     planeMask.push_back(false);
+    
     ConfigParser runConfig(tbCfg);
+    
     Storage::StorageIO refInput(refInputName, Storage::INPUT,0 , inMask, &planeMask);
     Storage::StorageIO dutInput(dutInputName, Storage::INPUT);
     Storage::StorageIO refOutput(refOutputName, Storage::OUTPUT,
@@ -646,7 +647,7 @@ int main(int argc, char** argv)
   inArgs.parseArgs(&argc, argv);
 
   // Static variables
-
+  cout << "\nRead args\n" << endl;
   if (inArgs.getNoBar()) Loopers::Looper::noBar = true;
 
   if ( !inArgs.getCommand().compare("convert") )

@@ -138,7 +138,7 @@ def Fit(file_name='',_suffix=''):
     #twoD = f.Get('Efficiency/sensor0_TrackResEffFine')
     twoD = f.Get('Efficiency/DUTPlane0TrackResidualHitFine')
     twoDall = f.Get('Efficiency/DUTPlane0TrackResidualFine')        
-    DoX=True
+    DoX=False
     can = ROOT.TCanvas("c2","c2",100,10,800,600);
     can.cd()
     twoD.Draw('colz')
@@ -176,7 +176,8 @@ def Fit(file_name='',_suffix=''):
                     entries+=twoDall.GetBinContent(midX+j,i+int(yshift))                    
         if entries==0.0:
             entries+=1.0
-        proj.SetBinContent(q,mysum/entries/0.97)
+        #proj.SetBinContent(q,mysum/entries/0.97)
+        proj.SetBinContent(q,mysum) 
         proj.SetBinError(q,0.0)        
     proj.GetXaxis().SetRangeUser(-100,100)
     #proj.SetTitle('DUT Hit Efficiency')
@@ -209,7 +210,8 @@ setPlotDefaults(ROOT)
 #Fit('60V')
 #Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutt0wider-align.root','cutt0_60V')
 #Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutt0wider-align.root','cutt0_90V')
-Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutt0wider-align.root','cutt0_120V')
+#Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutt0wider-align.root','cutt0_120V')
+Fit('TowerJazz/dut_run804_sync-analysis-result.root','No Cut')
 
 #Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-nocut-align.root','nocut_60V')
 #Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-nocut-align.root','nocut_90V')

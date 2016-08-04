@@ -18,7 +18,10 @@ private:
   int _valueInt; // Time over threshold, typically
   double _timing; // Level 1 accept, typically
   double _t0; // start of hit detection
-
+  int _isHit; // is a hit
+  int _isValidFit; // is a valid fit
+  double _Chi2; // is a valid fit
+  
   Cluster* _cluster; // The cluster containing this hit
 
 protected:
@@ -41,7 +44,11 @@ public:
   inline void setValue(double value) { _value = value; }
   inline void setValueInt(int value) { _valueInt = value; }
   inline void setTiming(double timing) { _timing = timing; }
-  inline void setT0(double t0) { _t0 = t0; }  
+  inline void setT0(double t0) { _t0 = t0; }
+
+  inline void setIsHit(int isHit) { _isHit = isHit; }
+  inline void setValidFit(int isValidFit) { _isValidFit = isValidFit; }
+  inline void setChi2(double chi2) { _Chi2 = chi2; }      
 
   inline unsigned int getPixX() const { return _pixX; }
   inline unsigned int getPixY() const { return _pixY; }
@@ -51,7 +58,11 @@ public:
   inline double getValue() const { return _value; }
   inline int getValueInt() const { return _valueInt; }
   inline double getTiming() const { return _timing; }
-  inline double getT0() const { return _t0; }  
+  inline double getT0() const { return _t0; }
+
+  inline int getIsHit() const { return _isHit; }
+  inline int getValidFit() const { return _isValidFit; }
+  inline double getChi2() const { return _Chi2; }
 
   friend class Plane;     // Access set plane method
   friend class Event;     // Access cluster index

@@ -31,7 +31,8 @@ protected:
 public:
   Hit* getHit(unsigned int n) const;
   Cluster* getCluster(unsigned int n) const;
-
+  void removeHit(int nhit);
+  
   void print();
 
   inline unsigned int getPlaneNum() const { return _planeNum; }

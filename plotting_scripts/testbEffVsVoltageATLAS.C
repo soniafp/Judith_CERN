@@ -55,9 +55,13 @@ void testbEffVsVoltageATLAS(bool config = true)
     // Corrections if needed
     //float scale = 1.0/(1.0-0.03094871794871795);
     float scale = 1.0; // new numbers already have the 1./0.97 applied
-    double correction_20 = 1.0; ///0.995/0.995;
-    double correction_80 = 1.0; // /0.94/0.94;  
-    
+    bool doCorrection=false;
+    double correction_20 = 1.0/0.9882; ///0.995/0.995;
+    double correction_80 = 1.0/0.8675; // /0.94/0.94;  
+    if(!doCorrection){
+      correction_20=1.0;
+      correction_80=1.0;
+    }
     TCanvas* c1 = new TCanvas("c1","testbeam efficiency",50,50,600,600);
     TMultiGraph *mg = new TMultiGraph();
 
@@ -73,24 +77,26 @@ void testbEffVsVoltageATLAS(bool config = true)
   Double_t y1[n1]  = { 0.760*scale*correction_20,0.969*scale*correction_20, 0.979*scale*correction_20}; // 20%- t0 cut from 500-700
   //Double_t y1[n1]  = { 0.732*scale,0.925*0.97*scale, 0.944*scale}; // 20%
   //Double_t ey1[n1] = {0.008, 0.007, 0.004};
-  Double_t ey1[n1] = {0.017*scale, 0.007*scale, 0.007*scale}; // variance systematic is the RMS on the mean efficiency within +/-4um
+  Double_t eyh1[n1] = {0.017*scale, 0.007*scale, 0.007*scale}; // variance systematic is the RMS on the mean efficiency within +/-4um
+  Double_t eyl1[n1] = {0.017*scale, 0.007*scale, 0.007*scale}; // variance systematic is the RMS on the mean efficiency within +/-4um  
 
   if(correction_20>1.0){
     for(unsigned k=0; k<n1; ++k){
-      ey1[k]=sqrt(ey1[k]*ey1[k]+0.005*1.41*1.41*0.005); // adding the uncertainties on the corrections.
+      eyh1[k]=sqrt(eyh1[k]*eyh1[k]+0.006*0.006); // adding the uncertainties on the corrections.
+      eyl1[k]=sqrt(eyl1[k]*eyl1[k]+0.0105*0.0105); // adding the uncertainties on the corrections.      
     }
   }
   
   //Double_t ey1[n1] = {0.008, 0.007, 0.004}; //20%
   Double_t ex1[n1] = {0.0, 0.0, 0.0};  
-  TGraphErrors *gr1 = new TGraphErrors(n1,x1,y1,ex1,ey1);
+  TGraphAsymmErrors *gr1 = new TGraphAsymmErrors(n1,x1,y1,ex1,ex1,eyl1,eyh1);
   gr1->SetName("gr1");
   gr1->SetTitle("Hit detection efficiency vs Voltage");
     gr1->GetXaxis()->SetTitle("Bias Voltage [V]");
     gr1->GetYaxis()->SetTitle("Hit Efficiency [%]");
-    gr1->GetYaxis()->SetRangeUser(0.0,1.0);
+    gr1->GetYaxis()->SetRangeUser(0.4,1.1);
     if(correction_20>1.0){
-    gr1->GetYaxis()->SetRangeUser(0.5,1.1);
+    gr1->GetYaxis()->SetRangeUser(0.4,1.1);
     }
   gr1->SetMarkerColor(1);
     gr1->SetLineColor(1);
@@ -102,9 +108,6 @@ void testbEffVsVoltageATLAS(bool config = true)
   gr1->SetMarkerStyle(22);
   gr1->Draw();
   mg->Add(gr1);
-
-
-    
     
   ////////Graph 2  -- 80% pixel size
   const Int_t n2 = 3;
@@ -116,15 +119,17 @@ void testbEffVsVoltageATLAS(bool config = true)
   //Double_t y2[n2]  = {0.407*scale , 0.739*scale, 0.815*scale};      
   Double_t ex2[n2] = {0.0, 0.0, 0.0};
   //Double_t ey2[n2] = {0.004, 0.02, 0.001};
-  Double_t ey2[n1] = {0.015*scale, 0.023*scale, 0.016*scale}; // variance systematic is the RMS on the mean efficiency within +/-4um
+  Double_t eyl2[n1] = {0.015*scale, 0.023*scale, 0.016*scale}; // variance systematic is the RMS on the mean efficiency within +/-4um
+  Double_t eyh2[n1] = {0.015*scale, 0.023*scale, 0.016*scale}; // variance systematic is the RMS on the mean efficiency within +/-4um  
   if(correction_80>1.0){
     for(unsigned k=0; k<n2; ++k){
-      ey2[k]=sqrt(ey2[k]*ey2[k]+0.03*1.41*1.41*0.03);// adding the uncertainties on the corrections.
+      eyh2[k]=sqrt(eyh2[k]*eyh2[k]+0.0238*0.0238);// adding the uncertainties on the corrections.
+      eyl2[k]=sqrt(eyl2[k]*eyl2[k]+0.0245*0.0245);// adding the uncertainties on the corrections.      
     }
   }
 
   
-  TGraphErrors *gr2 = new TGraphErrors(n2,x2,y2,ex2,ey2);
+  TGraphAsymmErrors *gr2 = new TGraphAsymmErrors(n2,x2,y2,ex2,ex2,eyl2,eyh2);
   gr2->SetName("gr2");
   gr2->SetMarkerColor(2);
     gr2->SetLineColor(2);
@@ -144,7 +149,7 @@ void testbEffVsVoltageATLAS(bool config = true)
     leg->AddEntry(gr2, "80% Pixel Size");
     leg->Draw();
 
-    if(correction_20>1.0){
+    if(correction_20>1.0||true){
       TLine *lin = new TLine(54.0,1.0,126.0,1.0);
       lin->SetLineStyle(2);
       lin->SetLineWidth(2);
@@ -154,8 +159,9 @@ void testbEffVsVoltageATLAS(bool config = true)
     //mg->Draw();
     c1->Update();
     c1->WaitPrimitive();
-    
-  
+
+    if(!doCorrection) c1->SaveAs("notcorrected.pdf");
+    else c1->SaveAs("corrected.pdf");
     //myText(       0.3,  0.85, 1, "#sqrt{s}= 14 TeV");
   //myText(       0.57, 0.85, 1, "|#eta_{jet}|<0.5");
   //myMarkerText( 0.55, 0.75, 1, 20, "Data 2009",1.3);

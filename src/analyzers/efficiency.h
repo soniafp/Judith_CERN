@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include <TH3D.h>
 #include <TH2D.h>
 #include <TH1D.h>
 #include <TEfficiency.h>
@@ -48,6 +49,8 @@ private:
   std::vector<TH2D*> _trackResCharge;  
   std::vector<TH2D*> _trackResTime;  
   std::vector<TH2D*> _hitTimeVsCharge;    
+
+  std::vector<TH3D*> _trackResCharge3D;  
   
   std::vector<TH2D*> _dutHitEff;  
   std::vector<TH1D*> _amplDist;

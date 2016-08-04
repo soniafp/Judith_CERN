@@ -1,6 +1,7 @@
 #include "coarsealigndut.h"
 
 #include <cassert>
+#include <iostream>
 #include <vector>
 
 #include <Rtypes.h>
@@ -33,14 +34,16 @@ void CoarseAlignDut::loop()
 
     if (refEvent->getNumClusters() || dutEvent->getNumClusters())
       throw "CoarseAlignDut: can't recluster an event, mask the tree in the input";
+    //std::cout << "telescope" << std::endl;
     for (unsigned int nplane = 0; nplane < refEvent->getNumPlanes(); nplane++)
       _clusterMaker->generateClusters(refEvent, nplane);
+    //std::cout << "DUT----" << std::endl;    
     for (unsigned int nplane = 0; nplane < dutEvent->getNumPlanes(); nplane++)
       _clusterMaker->generateClusters(dutEvent, nplane);
 
     Processors::applyAlignment(refEvent, _refDevice);
     Processors::applyAlignment(dutEvent, _dutDevice);
-
+    //std::cout << "clustering"  << nevent << std::endl;
     correlation.processEvent(refEvent, dutEvent);
 
     progressBar(nevent);
@@ -85,7 +88,7 @@ void CoarseAlignDut::loop()
       //offsetX = - offsetX;
       std::cout << "X offset " << offsetX << " RMS: " << alignPadX->GetRMS() << " Fit width: " << sigmaX << std::endl;
     }
-    //if the device has one pixel in x direction
+    //if the device has one pixel in y direction
     if ( _dutDevice->getSensor(nsensor)->getNumY() == 1 )
     {
       std::cout << "the device has 1 pixel in Y direction. " << std::endl;
@@ -107,6 +110,11 @@ void CoarseAlignDut::loop()
       //offsetY = -offsetY;
       
       std::cout << "Y offset " << offsetY << " RMS: " << alignPadY->GetRMS() << " Fit width: " << sigmaY << std::endl;
+    } else{
+      TH1D* alignX = correlation.getAlignmentPlotX(nsensor);
+      Processors::fitGaussian(alignX, offsetX, sigmaX, _displayFits);
+      TH1D* alignY = correlation.getAlignmentPlotY(nsensor);
+      Processors::fitGaussian(alignY, offsetY, sigmaY, _displayFits);
     }
     //Add another TH1D for single-pixel coarse alignment
     //add another processor for fitting a gaussian to the new th1d.

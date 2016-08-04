@@ -1,5 +1,6 @@
 #include "dutresiduals.h"
 
+#include <iostream>
 #include <cassert>
 #include <sstream>
 #include <math.h>
@@ -56,13 +57,13 @@ void DUTResiduals::processEvent(const Storage::Event* refEvent,
       for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)
       {
         Storage::Cluster* cluster = plane->getCluster(ncluster);
-
+	//std::cout << "cluster..." << std::endl;
         // Check if the cluster passes the cuts
         bool pass = true;
         for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
           if (!_clusterCuts.at(ncut)->check(cluster)) { pass = false; break; }
         if (!pass) continue;
-
+	//std::cout << "cluster...pass" << std::endl;
         const double rx = tx - cluster->getPosX();
         const double ry = ty - cluster->getPosY();
         _residualsX.at(nplane)->Fill(rx);

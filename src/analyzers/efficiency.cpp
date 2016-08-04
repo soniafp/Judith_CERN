@@ -8,6 +8,7 @@
 
 #include <TDirectory.h>
 #include <TH2D.h>
+#include <TH3D.h>
 #include <TH1D.h>
 #include <TError.h>
 #include <TMath.h>
@@ -67,6 +68,27 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
     for (unsigned int ncut = 0; ncut < _numTrackCuts; ncut++)
       if (!_trackCuts.at(ncut)->check(track)) { pass = false; break; }
     if (!pass) continue;
+
+    // Hack cut on the residuals for strange events.
+    if(false){
+      Storage::Plane* hack_plane = refEvent->getPlane(3);
+      Mechanics::Sensor* hack_sensor = _refDevice->getSensor(3);
+      double hack_tx = 0, hack_ty = 0, hack_tz = 0;
+      Processors::trackSensorIntercept(track, hack_sensor, hack_tx, hack_ty, hack_tz);
+
+      for (unsigned int ncluster = 0; ncluster < hack_plane->getNumClusters(); ncluster++)
+      {
+        Storage::Cluster* cluster = hack_plane->getCluster(ncluster);
+
+        // Check if the cluster passes the cuts
+        for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
+          if (!_clusterCuts.at(ncut)->check(cluster)) continue;
+
+        const double rx = hack_tx - cluster->getPosX();
+	//if(rx<10.0) return; // smaller peak
+	if(rx>10.0) return; // This is the larger peak
+      }
+    }// end hack cut
     
     pass_track_selection=true;
 
@@ -102,7 +124,8 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
 	_trackResHitFine.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY());	
 
 	_trackResT0.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY(), cluster->getT0());
-	_trackResCharge.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY(), cluster->getValue());	
+	_trackResCharge.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY(), cluster->getValue());
+	_trackResCharge3D.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY(), cluster->getValue());
 	_trackResTime.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY(), cluster->getTiming());
 	_hitTimeVsCharge.at(nsensor)->Fill(cluster->getValue(), cluster->getTiming());
 	_hitT0.at(nsensor)->Fill(cluster->getT0());
@@ -652,11 +675,30 @@ Efficiency::Efficiency(const Mechanics::Device* refDevice,
           << ";Y position [" << _dutDevice->getSpaceUnit() << "]"
           << ";Tracks";
     TH2D* trackResCharge = new TH2D(name.str().c_str(), title.str().c_str(),
-			      2*pixBinsX, -2.0*num_pixels*sensor->getPitchX(), 2.0*num_pixels*sensor->getPitchX(),
-			      2*pixBinsY, -2.0*num_pixels*sensor->getPitchY(), 2.0*num_pixels*sensor->getPitchY());
+				    2*pixBinsX, -2.0*num_pixels*sensor->getPitchX(), 2.0*num_pixels*sensor->getPitchX(),
+				    2*pixBinsY, -2.0*num_pixels*sensor->getPitchY(), 2.0*num_pixels*sensor->getPitchY());
 
     trackResCharge->SetDirectory(plotDir);
     _trackResCharge.push_back(trackResCharge);
+
+
+    // Average Charge 
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         <<  "DUTCharge3D" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+          << " Charge "
+          << ";X position [" << _dutDevice->getSpaceUnit() << "]"
+          << ";Y position [" << _dutDevice->getSpaceUnit() << "]"
+          << "; Signal Size [V] "      
+          << ";Tracks";
+    TH3D* trackResCharge3D = new TH3D(name.str().c_str(), title.str().c_str(),
+				      5*2*pixBinsX, -1.0*num_pixels*sensor->getPitchX(), 1.0*num_pixels*sensor->getPitchX(),
+				      5*2*pixBinsY, -1.0*num_pixels*sensor->getPitchY(), 1.0*num_pixels*sensor->getPitchY(),
+				      25, 0.0, 0.02);
+
+    trackResCharge3D->SetDirectory(plotDir);
+    _trackResCharge3D.push_back(trackResCharge3D);    
 
 
     // Average T0 
@@ -701,8 +743,8 @@ Efficiency::Efficiency(const Mechanics::Device* refDevice,
           << "; Time " 
           << ";Tracks";
     TH2D* hitTimeVsCharge = new TH2D(name.str().c_str(), title.str().c_str(),
-			      200, -0.1, 0.2,
-			      200, 0.0, 1000.0);
+				     600, -0.1, 0.2,
+				     1000, 0.0, 1000.0);
 
     hitTimeVsCharge->SetDirectory(plotDir);
     _hitTimeVsCharge.push_back(hitTimeVsCharge);      

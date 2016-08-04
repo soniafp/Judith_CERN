@@ -226,4 +226,5 @@ setPlotDefaults(ROOT)
 #
 #Fit('./../Judith_original/TestData/dut-60V_runs-2-3-4-5-6-7-1-4-5-6_settings1_sync_analysis-result-cutslope-align.root','cutslope_60V')
 #Fit('./../Judith_original/TestData/dut-90V_runs-9-11-1-2-3-5-6-8-9_settings_sync_analysis-result-cutslope-align.root','cutslope_90V')
-Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutslope-align.root','cutslope_120V')
+#Fit('./../Judith_original/TestData/dut-120V_runs-23-24-25-26-27-28-29-30-1-2-3-4-5-6-7_settings1_sync_analysis-result-cutslope-align.root','cutslope_120V')
+Fit('TowerJazz/dut_run804_sync-analysis-result.root','No Cut')

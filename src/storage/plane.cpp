@@ -32,6 +32,19 @@ void Plane::addHit(Hit* hit)
   hit->_plane = this;
   _numHits++;
 }
+  
+void Plane::removeHit(int nhit)
+{
+  int a=0;
+  for(std::vector<Hit*>::iterator ihit = _hits.begin(); ihit!=_hits.end(); ++ihit){
+    if(a==nhit){
+      _hits.erase(ihit);
+      //std::cout << "Removing hit" << std::endl;
+      _numHits--;
+    }
+    ++a;
+  }
+}
 
 void Plane::addCluster(Cluster* cluster)
 {

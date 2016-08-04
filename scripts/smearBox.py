@@ -6,6 +6,8 @@ f = ROOT.TFile.Open('quick.root','recreate')
 hbox=ROOT.TH1F('box','',100,-50.0,50.0)
 hsmear=ROOT.TH1F('smear','',100,-50.0,50.0)
 
+
+reso = 8.5
 r = ROOT.TRandom3();
 r.SetSeed(5)
 NEVT=1000000
@@ -15,7 +17,7 @@ for e in range(0,NEVT): #for i in range(25,75):
     #if round(a)==0:
     #    print a, round(a)
     hbox.Fill(round(a),w)
-    a+=r.Gaus(0.0,7.0)    
+    a+=r.Gaus(0.0,reso)    
     hsmear.Fill(round(a),w)
 
 can.cd()
@@ -29,7 +31,9 @@ can.WaitPrimitive()
 hsmear.SetDirectory(f)
 hbox.SetDirectory(f)
 
-print 'eff for central 80%: ',hsmear.Integral(47,66)/hbox.Integral(47,66)
+print 'Reso: ',reso
+print 'eff for central 20%: ',hsmear.Integral(39,60)/hbox.Integral(39,60)
+print 'eff for central 80%: ',hsmear.Integral(28,72)/hbox.Integral(28,72)
 
 f.Write()
 f.Close()

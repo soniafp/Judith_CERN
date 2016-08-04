@@ -34,7 +34,7 @@ void FineAlign::loop()
   // Build a vector of sensor indices which will be permutated at each iteration
   std::vector<unsigned int> sensorPermutations(_refDevice->getNumSensors(), 0);
   for (unsigned int i = 0; i < _refDevice->getNumSensors(); i++)
-    sensorPermutations[i] = i;
+    sensorPermutations[i] = _refDevice->getNumSensors()-i-1;
   // Start with permutation so that the first itertation permutes back to the
   // ordered list (just looks less strange if the first iteration is ordered)
   std::prev_permutation(sensorPermutations.begin(), sensorPermutations.end());
@@ -50,6 +50,31 @@ void FineAlign::loop()
 
     // Permute the order in which the sensors will be processed
     std::next_permutation(sensorPermutations.begin(), sensorPermutations.end());
+    /*
+    if(niter==_numIterations-1){
+      sensorPermutations[0]=4;
+      sensorPermutations[1]=5;
+      sensorPermutations[2]=3;
+      sensorPermutations[3]=2;
+      sensorPermutations[4]=1;
+      sensorPermutations[5]=0;      
+    }
+    if(niter==_numIterations-2){
+      sensorPermutations[0]=3;
+      sensorPermutations[1]=4;
+      sensorPermutations[2]=5;
+      sensorPermutations[3]=2;
+      sensorPermutations[4]=1;
+      sensorPermutations[5]=0;      
+    }
+    if(niter==_numIterations-3){
+      sensorPermutations[0]=3;
+      sensorPermutations[1]=4;
+      sensorPermutations[2]=5;
+      sensorPermutations[3]=0;
+      sensorPermutations[4]=2;
+      sensorPermutations[5]=1;      
+    }        
     if(niter==_numIterations){
       sensorPermutations[0]=5;
       sensorPermutations[1]=4;
@@ -65,7 +90,7 @@ void FineAlign::loop()
       sensorPermutations[3]=3;
       sensorPermutations[4]=5;
       sensorPermutations[5]=1;      
-    }    
+      }    */
     // Print the permutation
     for(unsigned j=0; j<sensorPermutations.size(); ++j){ std::cout << sensorPermutations.at(j) << " ";}
     cout << std::endl;
@@ -88,7 +113,7 @@ void FineAlign::loop()
       std::stringstream name; // Build name strings for each histo
       double my_rotation=0.0;
       std::vector<double> rot_residuals;
-      for(unsigned rot=0; rot<12; ++rot){
+      for(unsigned rot=0; rot<1; ++rot){//12
 
 	// setting up the rotations
 	if(rot>0){
@@ -122,7 +147,6 @@ void FineAlign::loop()
       for (ULong64_t nevent = _startEvent; nevent <= _endEvent; nevent++)
       {
         Storage::Event* refEvent = _refStorage->readEvent(nevent);
-
         if (refEvent->getNumClusters())
           throw "FineAlign: can't recluster an event, mask the tree in the input";
         for (unsigned int nplane = 0; nplane < refEvent->getNumPlanes(); nplane++)
@@ -236,6 +260,8 @@ FineAlign::FineAlign(Mechanics::Device* refDevice,
 {
   assert(refInput && refDevice && clusterMaker && trackMaker &&
          "Looper: initialized with null object(s)");
+  cout << "refInput->getNumPlanes() : " << refInput->getNumPlanes()
+       << " refDevice->getNumSensors(): " << refDevice->getNumSensors() << endl;
   assert(refInput->getNumPlanes() == refDevice->getNumSensors() &&
          "Loopers: number of planes / sensors mis-match");
 }

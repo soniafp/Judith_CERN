@@ -202,10 +202,11 @@ ConfigParser::ConfigParser(const char* filePath) :
   _filePath(filePath), _numRows(0)
 {
   _inputFile.open(_filePath);
-
-    if (!_inputFile.is_open()) {throw "ConfigParser: input file failed to open";
-        cout << "input file" << _filePath <<endl;}
-
+  if (!_inputFile.is_open()) {
+    cout << "input file" << _filePath << endl;
+    throw "ConfigParser: input file failed to open";
+  }
+  
   _currentHeader = "";
   _currentValue  = "";
   _currentKey    = "";

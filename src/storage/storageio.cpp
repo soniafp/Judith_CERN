@@ -92,7 +92,10 @@ Event* StorageIO::readEvent(Long64_t n)
         cluster->setTrack(track);
       }
     }
-
+    //cout << "numHits " << numHits <<endl;
+    // Kill if there are no hits for Tower Jazz
+    if(numHits==0) event->setInvalid(true);
+    
     // Generate a list of all hit objects
     for (int nhit = 0; nhit < numHits; nhit++)
     {
@@ -103,6 +106,11 @@ Event* StorageIO::readEvent(Long64_t n)
         continue;
       }
 
+      // cut on hits: valid fit & is hit
+      //std::cout << "adding hit: " << nhit << " branch: " << bHitIsHit << " vf: " << bHitValidFit
+      //	<< " hit: " << hitIsHit[nhit] << " vf: " << hitValidFit[nhit] << std::endl;
+      if(bHitIsHit && bHitValidFit && (hitIsHit[nhit]<0.5 || hitValidFit[nhit]<0.5)) continue;
+      //std::cout << "pass " << std::endl;
       Hit* hit = event->newHit(nplane);
       hit->setPix(hitPixX[nhit], hitPixY[nhit]);
       hit->setPos(hitPosX[nhit], hitPosY[nhit], hitPosZ[nhit]);
@@ -113,6 +121,10 @@ Event* StorageIO::readEvent(Long64_t n)
       if(hitTimingType==kInt)	
 	hitTiming[nhit] = (double)hitTimingInt[nhit];      
       hit->setTiming(hitTiming[nhit]);
+      
+      if(bHitChi2) hit->setChi2(hitChi2[nhit]);
+      if(bHitIsHit) hit->setIsHit(int(hitIsHit[nhit]));
+      if(bHitValidFit) hit->setValidFit(int(hitValidFit[nhit]));
 
       // If this hit is in a cluster, mark this (and the clusters tree is active)
       if (_clusters.at(nplane) && hitInCluster[nhit] >= 0)
@@ -197,6 +209,10 @@ void StorageIO::writeEvent(Event* event)
       hitT0[nhit] = hit->getT0();      
       hitTiming[nhit] = hit->getTiming();
       hitInCluster[nhit] = hit->getCluster() ? hit->getCluster()->getIndex() : -1;
+      hitIsHit[nhit] = hit->getIsHit() ? 1.0: 0.0;
+      hitValidFit[nhit] = hit->getValidFit() ? 1.0: 0.0; 
+      hitChi2[nhit] = hit->getChi2();
+      //if(!hit->getIsHit() || !hit->getValidFit()) { plane->removeHit(nhit); --nhit; }//bHitIsHit
     }
 
     if (nplane >= _hits.size()) throw "StorageIO: event has too many planes for the storage";
@@ -286,6 +302,10 @@ StorageIO::StorageIO(const char* filePath, Mode fileMode, unsigned int numPlanes
       hits->Branch("PosX", hitPosX, "HitPosX[NHits]/D");
       hits->Branch("PosY", hitPosY, "HitPosY[NHits]/D");
       hits->Branch("PosZ", hitPosZ, "HitPosZ[NHits]/D");
+      
+      hits->Branch("IsHit", hitIsHit, "HitIsHit[NHits]/D");
+      hits->Branch("ValidFit", hitValidFit, "HitValidFit[NHits]/D");
+      hits->Branch("Chi2", hitChi2, "HitChi2[NHits]/D");      
 
       clusters->Branch("NClusters", &numClusters, "NClusters/I");
       clusters->Branch("PixX", clusterPixX, "ClusterPixX[NClusters]/D");
@@ -415,6 +435,12 @@ StorageIO::StorageIO(const char* filePath, Mode fileMode, unsigned int numPlanes
         hits->SetBranchAddress("PosX", hitPosX, &bHitPosX);
         hits->SetBranchAddress("PosY", hitPosY, &bHitPosY);
         hits->SetBranchAddress("PosZ", hitPosZ, &bHitPosZ);
+        if(hits->GetBranch("Chi2")) hits->SetBranchAddress("Chi2", hitChi2, &bHitChi2);
+	else bHitChi2=NULL;
+        if(hits->GetBranch("IsHit")) hits->SetBranchAddress("IsHit", hitIsHit, &bHitIsHit);
+	else bHitIsHit=NULL;
+        if(hits->GetBranch("ValidFit")) hits->SetBranchAddress("ValidFit", hitValidFit, &bHitValidFit);
+	else bHitValidFit=NULL;
       }
 
       if (clusters)
