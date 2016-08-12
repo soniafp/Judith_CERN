@@ -67,7 +67,7 @@ Event* StorageIO::readEvent(Long64_t n)
     track->setCovariance(trackCovarianceX[ntrack], trackCovarianceY[ntrack]);
     track->setChi2(trackChi2[ntrack]);
   }
-
+  //std::cout << "Nplanes: " << _numPlanes << std::endl;
   for (unsigned int nplane = 0; nplane < _numPlanes; nplane++)
   {
     if (_hits.at(nplane) && _hits.at(nplane)->GetEntry(n) <= 0)
@@ -93,8 +93,8 @@ Event* StorageIO::readEvent(Long64_t n)
       }
     }
     //cout << "numHits " << numHits <<endl;
-    // Kill if there are no hits for Tower Jazz
-    if(numHits==0) event->setInvalid(true);
+    // Kill if there are no hits for Tower Jazz, only for 1 plane dut
+    if(bHitIsHit && bHitValidFit && numHits==0 && _numPlanes==1) event->setInvalid(true);
     
     // Generate a list of all hit objects
     for (int nhit = 0; nhit < numHits; nhit++)
@@ -108,8 +108,10 @@ Event* StorageIO::readEvent(Long64_t n)
 
       // cut on hits: valid fit & is hit
       //std::cout << "adding hit: " << nhit << " branch: " << bHitIsHit << " vf: " << bHitValidFit
-      //	<< " hit: " << hitIsHit[nhit] << " vf: " << hitValidFit[nhit] << std::endl;
-      if(bHitIsHit && bHitValidFit && (hitIsHit[nhit]<0.5 || hitValidFit[nhit]<0.5)) continue;
+      //	<< std::endl;
+	//	<< " hit: " << hitIsHit[nhit] << " vf: " << hitValidFit[nhit] << std::endl;
+      if(_numPlanes==1 && bHitIsHit && bHitValidFit && (hitIsHit[nhit]<0.5 || hitValidFit[nhit]<0.5)) continue;
+      if(_numPlanes==1 && bHitIsHit && bHitValidFit && !(hitValue[nhit]>0.005 && hitT0[nhit]>180.0 && hitT0[nhit]<240.0 && hitTiming[nhit]<100.0)) continue;
       //std::cout << "pass " << std::endl;
       Hit* hit = event->newHit(nplane);
       hit->setPix(hitPixX[nhit], hitPixY[nhit]);
@@ -130,6 +132,7 @@ Event* StorageIO::readEvent(Long64_t n)
       if (_clusters.at(nplane) && hitInCluster[nhit] >= 0)
       {
         Cluster* cluster = event->getCluster(hitInCluster[nhit]);
+	//std::cout << "add Hit StorageIO..." << nhit << " timing: " << hitTiming[nhit] << " isHit: " << hitIsHit[nhit] << " validFit: " << hitValidFit[nhit] << std::endl;
         cluster->addHit(hit);
       }
     }
