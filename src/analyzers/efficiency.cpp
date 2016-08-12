@@ -44,6 +44,8 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
 
   // Throw an error for sensor / plane mismatch
   eventDeivceAgree(refEvent, dutEvent);
+
+  //std::cout << "EFFFrameNumber DUT: " << dutEvent->getFrameNumber() << " Telescope: " << refEvent->getFrameNumber() << std::endl;
   //fill in the amplitude distribution histogram
   for (unsigned int nsensor = 0; nsensor < _dutDevice->getNumSensors(); nsensor++)
   {
@@ -98,9 +100,11 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
 
       double tx = -9999.0, ty = -9999.0, tz = -9999.0;
       Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
-      
+      //std::cout << "    EFFTrack_to_sensor x: " << (tx - sensor->getOffX()) << " y: " << (ty - sensor->getOffY()) << std::endl;      
       // Fill Track occupancy at DUT
       _trackOcc.at(nsensor)->Fill(tx - sensor->getOffX(), ty - sensor->getOffY());
+      //_trackRes.at(nsensor)->Fill(tx - sensor->getOffX(), ty - sensor->getOffY());
+      //_trackResFine.at(nsensor)->Fill(tx - sensor->getOffX(), ty - sensor->getOffY());      
       _trackRes.at(nsensor)->Fill(tx - sensor->getOffX(), ty - sensor->getOffY());
       _trackResFine.at(nsensor)->Fill(tx - sensor->getOffX(), ty - sensor->getOffY());      
 
@@ -118,10 +122,16 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
 	for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
 	  if (!_clusterCuts.at(ncut)->check(cluster)) { cluster_pass = false; break; }
 	if (!cluster_pass) continue;
+	//std::cout << "    EFFTrack_to_cluster x: " << (tx - cluster->getPosX()) << " y: " << (ty - cluster->getPosY()) << " charge: " << cluster->getValue()
+	// << " T0: " << cluster->getT0() << " NHits: " << cluster->getNumHits()
+	//	  << " collection_time: " << cluster->getTiming() << std::endl;      	
+	//std::cout << "    EFFCluster_to_sensor x: " << (sensor->getOffX()) << " cluster: " <<  (cluster->getPosX()) << " y: " << sensor->getOffY() << " cluster: " << cluster->getPosY() << std::endl; 
 	//std::cout << "getclustX: " << cluster->getPosX() << " tx: " << tx << std::endl;
 	//std::cout << "getclustY: " << cluster->getPosY() << " ty: " << ty << std::endl;	
-	_trackResHit.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY());
-	_trackResHitFine.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY());	
+	//_trackResHit.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY());
+	//_trackResHitFine.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY());	
+	_trackResHit.at(nsensor)->Fill(tx - sensor->getOffX(), ty - sensor->getOffY());
+	_trackResHitFine.at(nsensor)->Fill(tx - sensor->getOffX(), ty - sensor->getOffY());	
 
 	_trackResT0.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY(), cluster->getT0());
 	_trackResCharge.at(nsensor)->Fill(tx - cluster->getPosX(), ty - cluster->getPosY(), cluster->getValue());
@@ -759,8 +769,8 @@ Efficiency::Efficiency(const Mechanics::Device* refDevice,
           << ";Y position [" << _dutDevice->getSpaceUnit() << "]"
           << ";Tracks";
     TH2D* trackRes = new TH2D(name.str().c_str(), title.str().c_str(),
-			      2*pixBinsX, -2.0*num_pixels*sensor->getPitchX(), 2.0*num_pixels*sensor->getPitchX(),
-			      2*pixBinsY, -2.0*num_pixels*sensor->getPitchY(), 2.0*num_pixels*sensor->getPitchY());
+			      20*pixBinsX, -20.0*num_pixels*sensor->getPitchX(), 20.0*num_pixels*sensor->getPitchX(),
+			      20*pixBinsY, -20.0*num_pixels*sensor->getPitchY(), 20.0*num_pixels*sensor->getPitchY());
 
     trackRes->SetDirectory(plotDir);
     _trackRes.push_back(trackRes);    
@@ -775,8 +785,8 @@ Efficiency::Efficiency(const Mechanics::Device* refDevice,
           << ";Y position [" << _dutDevice->getSpaceUnit() << "]"
           << ";Tracks";
     TH2D* trackResHit = new TH2D(name.str().c_str(), title.str().c_str(),
-			      2*pixBinsX, -2.0*num_pixels*sensor->getPitchX(), 2.0*num_pixels*sensor->getPitchX(),
-			      2*pixBinsY, -2.0*num_pixels*sensor->getPitchY(), 2.0*num_pixels*sensor->getPitchY());
+			      20*pixBinsX, -20.0*num_pixels*sensor->getPitchX(), 20.0*num_pixels*sensor->getPitchX(),
+			      20*pixBinsY, -20.0*num_pixels*sensor->getPitchY(), 20.0*num_pixels*sensor->getPitchY());
 
     trackResHit->SetDirectory(plotDir);
     _trackResHit.push_back(trackResHit);

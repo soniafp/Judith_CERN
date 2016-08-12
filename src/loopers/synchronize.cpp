@@ -220,6 +220,7 @@ bool Synchronize::findLargeOffset(unsigned int nevent,
   // Fill the two buffers
   for (unsigned int n = 0; n < _bufferSize; n++)
   {
+    std::cout << "Event Number: " << nevent + n << std::endl;
     const Storage::Event* refEvent = _refStorage->readEvent(nevent + n);
     const Storage::Event* dutEvent = _dutStorage->readEvent(nevent + n);
     refSync.addEvents(refEvent, dutEvent);
@@ -232,6 +233,7 @@ bool Synchronize::findLargeOffset(unsigned int nevent,
   // The remaining events are shifting the non-static device
   for (unsigned int n = 0; n < _maxOffset; n++)
   {
+    //std::cout << "XXEvent Number: " << (nevent + _bufferSize + n) << std::endl;    
     const Storage::Event* refEvent = _refStorage->readEvent(nevent + _bufferSize + n);
     const Storage::Event* dutEvent = _dutStorage->readEvent(nevent + _bufferSize + n);
     refSync.addEvents(refEvent, dutEvent);
@@ -292,7 +294,7 @@ void Synchronize::loop()
       refShift -= smallOffset;
       dutShift -= smallOffset;
     }
-
+    //std::cout << "XXEvent Number: " << (nevent + refShift) << " dut: " << (nevent + dutShift) << std::endl;   
     Storage::Event* refEvent = _refStorage->readEvent(nevent + refShift);
     Storage::Event* dutEvent = _dutStorage->readEvent(nevent + dutShift);
 

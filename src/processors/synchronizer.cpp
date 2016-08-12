@@ -61,7 +61,10 @@ void Synchronizer::processEvent(Storage::Event* refEvent,
   const ULong64_t dutClockDiff = (dutEvent->getTimeStamp() - lastDut);
   const double dutFrameDiff = dutClockDiff * _dutDevice->getSyncRatio() /
       (double)_refDevice->getReadOutWindow();
-
+  //std::cout << "DUT diff: " << dutClockDiff << " Ref: " << refClockDiff 
+  //<< "   DUT RelDiff: " << dutFrameDiff << " Ref: " << refFrameDiff
+  //	    << " DUTTime: " << dutEvent->getTimeStamp() << " RCETime: " << refEvent->getTimeStamp() << std::endl;
+  
   // Overwrite the current position
   if (_refEventBuff[_pos]) delete _refEventBuff[_pos];
   _refEventBuff[_pos] = 0;

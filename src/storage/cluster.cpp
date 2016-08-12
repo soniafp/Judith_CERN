@@ -45,7 +45,8 @@ void Cluster::addHit(Hit* hit)
   _hits.push_back(hit);
   // Fill the value and timing from this hit
   _value += hit->getValue();
-  _t0 += hit->getT0();  
+  _t0 += hit->getT0();
+  //std::cout << "Timing " << _numHits << ": " <<  hit->getTiming() << std::endl;
   if (_numHits == 0) _timing = hit->getTiming();
   _numHits++;
 }
